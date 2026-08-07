@@ -168,7 +168,9 @@ function _botCardHTML(b) {
       <div><dt>service</dt><dd><code>${_cEsc(b.unit)}</code>${
         b.installed ? "" : ` <span class="mMeta">(not installed)</span>`}</dd></div>
       <div><dt>token</dt><dd>${b.token_set
-        ? `<code>${_cEsc(b.token_env)}</code> set`
+        ? `<code>${_cEsc(b.token_env)}</code> set
+           <button type="button" class="botTokSwap" data-key="${_cEsc(b.key)}"
+                   title="Paste a different token — revoked the old bot, made a new one">replace</button>`
         : `<span class="short"><code>${_cEsc(b.token_env)}</code> empty</span>`}</dd></div>
     </dl>
     <div class="botActs">${_botNext(b)}</div>
@@ -193,6 +195,23 @@ async function loadCollect() {
     after: host => {
       host.querySelectorAll(".botProbe").forEach(b => b.onclick = () => _probeBot(b));
       host.querySelectorAll(".botTok").forEach(f => f.onsubmit = _saveToken);
+      // "replace": swap the actions area for the SAME verified paste form the
+      // no-token state uses — a revoked token is set yet useless, and Probe
+      // can only report that, not fix it.
+      host.querySelectorAll(".botTokSwap").forEach(btn => btn.onclick = () => {
+        const card = btn.closest("article");
+        const acts = card && card.querySelector(".botActs");
+        if (!acts) return;
+        acts.innerHTML = `<form class="botTok" data-key="${btn.dataset.key}">
+            <label class="botTokLab">Paste the token from @BotFather
+              <input type="password" class="botTokIn" autocomplete="off"
+                     spellcheck="false" placeholder="1234567890:AA…">
+            </label>
+            <button type="submit">Verify &amp; save</button>
+          </form>`;
+        acts.querySelector(".botTok").onsubmit = _saveToken;
+        acts.querySelector(".botTokIn").focus();
+      });
       host.querySelectorAll(".botWho").forEach(f => f.onsubmit = _saveWho);
       host.querySelectorAll(".botWhoEdit").forEach(b => b.onclick = () => _editWho(b));
       host.querySelectorAll(".botInstall").forEach(b => b.onclick = () => _install(b));
