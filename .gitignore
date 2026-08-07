@@ -23,3 +23,6 @@ __pycache__/
 
 # Frontend tooling
 node_modules/
+
+# Local audit notes — never shipped.
+/AUDIT.md
