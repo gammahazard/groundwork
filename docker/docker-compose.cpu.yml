@@ -2,8 +2,9 @@
 # label, curate and manage projects and accounts. Torch installs from the cpu
 # wheel channel, so the image is a fraction of the GPU one's size.
 #
-# There is deliberately NO trainer service here: this box cannot train, and a
-# trainer that exists but always fails would just be a lie on the dashboard.
+# The trainer service IS here: CPU training is slow but real, and the app
+# spools jobs unconditionally — a stack with no claimant would turn every
+# Train click into silence, which is worse than slow.
 # Train by pairing a GPU worker machine, or run docker-compose.yml on a GPU
 # box — the data layout is identical, so switching files later is the whole
 # migration.
@@ -17,7 +18,12 @@ x-base: &base
     args:
       TORCH_CHANNEL: cpu
   image: groundwork:cpu                  # its own tag, so it never shadows a GPU build
-  user: "${GW_UID:-1000}:${GW_GID:-1000}"
+  # Starts as root only long enough for the entrypoint to chown /data to
+  # GW_UID:GW_GID and drop privileges (gosu) — see the GPU compose file.
+  environment:
+    - GW_UID=${GW_UID:-1000}
+    - GW_GID=${GW_GID:-1000}
+    - GW_TRAINER=spool
   volumes:
     - ./data:/data                       # same host directory as the GPU stack
     - gw-venvs:/data/venvs
@@ -34,6 +40,14 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+
+  trainer:
+    <<: *base
+    command: ["python", "-m", "groundwork.ops.trainerd"]
+    # CPU training is slow but real (small models, small epochs) — and the app
+    # spools jobs unconditionally, so a stack without a claimant would turn
+    # every Train click into silence.
+    shm_size: "2gb"
 
   scheduler:
     <<: *base

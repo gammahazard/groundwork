@@ -12,6 +12,7 @@ FROM python:3.12-slim
 # curl      the compose healthcheck
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        gosu \
         tini rsync openssh-client git curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 

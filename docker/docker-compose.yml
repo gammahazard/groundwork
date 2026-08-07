@@ -37,9 +37,18 @@ x-base: &base
   # published package to skip building entirely:
   #   GW_IMAGE=ghcr.io/gammahazard/groundwork:0.1.0 docker compose up -d
   image: ${GW_IMAGE:-groundwork:local}
-  # Run as YOUR uid/gid so everything under ./data is plain host files you own:
+  # Starts as root ONLY long enough for the entrypoint to chown the /data
+  # bind mount to GW_UID:GW_GID and drop privileges (gosu). Set these so the
+  # files under ./data are plain host files you own:
   #   export GW_UID=$(id -u) GW_GID=$(id -g)
-  user: "${GW_UID:-1000}:${GW_GID:-1000}"
+  environment:
+    - GW_UID=${GW_UID:-1000}
+    - GW_GID=${GW_GID:-1000}
+    # The app WRITES training jobs to the spool; the trainer service claims
+    # and parents them — that separation is why recreating `app` never
+    # kills a live run. Without this the app trains in-process and the
+    # trainer container watches an empty directory forever.
+    - GW_TRAINER=spool
   volumes:
     # Host paths resolve relative to THIS file, so the data lands at
     # docker/data. A bind mount, not a named volume, on purpose: datasets,
