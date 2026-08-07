@@ -62,9 +62,19 @@ NTFS/exFAT hosts.
 
 ## Settings: the `.env` rule
 
-Settings go in `docker/data/config/.env` (see `.env.example` at the repo
-root). The entrypoint sources it on every container start, and the cockpit
-writes it when you change settings in the UI.
+There are **two** kinds of setting, and they live in different places:
+
+- **App settings** (GW_ROLE, bot tokens, admin bootstrap, GW_AUTH…) go in
+  `docker/data/config/.env` (see `.env.example` at the repo root). The
+  entrypoint sources it on every container start, and the cockpit writes it
+  when you change settings in the UI.
+- **Compose variables** — `GW_UID`, `GW_GID`, `GW_PORT` (the *host* port),
+  `TORCH_CHANNEL`, `GW_IMAGE` — are read by Compose itself to build the
+  command, so set them by `export` or an inline prefix, exactly as the
+  quickstart shows. **Do not put these in a repo-root `.env`:** with
+  `-f docker/docker-compose.yml`, Compose's project directory is `docker/`, so
+  it reads `docker/.env` — a root `.env` is silently ignored. If you prefer a
+  file over `export`, put it at `docker/.env` or pass `--env-file <path>`.
 
 **Never bind-mount the `.env` file itself.** The cockpit writes it atomically —
 temp file, then `os.replace` — and a file bind mount pins the inode, so the
@@ -87,8 +97,9 @@ and restarts. `--force` overrides the refusal, loudly.
   KillMode=process equivalent across that boundary. This is exactly why
   `scripts/upgrade.sh` checks for a live run first. Spooled jobs that have not
   started yet survive fine — they are files in `/data/jobs`.
-- The GPU image is large (roughly 7–9 GB): that is the torch CUDA wheels, and
-  the layer is cached — rebuilds after code changes do not re-download it.
+- The GPU image is large (~13 GB on disk, measured): the torch CUDA wheels
+  dominate, and that layer is cached — rebuilds after code changes do not
+  re-download it. The `-cpu` image is a fraction of the size.
 - `docker compose down -v` deletes the `gw-venvs` volume; challenger stacks
   rebuild on next use, which takes minutes, not data. Your `docker/data/` is
   never touched by compose.
