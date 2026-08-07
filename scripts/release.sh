@@ -46,7 +46,10 @@ command -v gh >/dev/null 2>&1 || die "the gh CLI is required (creates the Releas
 gh auth status >/dev/null 2>&1 || die "gh is not authenticated — run: gh auth login"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 [ "$branch" = "main" ] || die "not on main (on '$branch') — releases are cut from main"
-[ -z "$(git status --porcelain)" ] || die "the working tree is dirty — commit or stash first"
+# A real cut demands a clean tree (nothing stray in the release commit); a
+# dry run is a preview and reads whatever is on disk, committed or not.
+[ "$DRY" = 1 ] || [ -z "$(git status --porcelain)" ] \
+    || die "the working tree is dirty — commit or stash first"
 
 cur="$(grep -oE '^version = "[0-9.]+"' pyproject.toml | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')" \
     || die "could not read the current version from pyproject.toml"
