@@ -136,9 +136,11 @@ class Model:
     # DOES ITS TRAINER TAKE --dataset-dir? True means the run gets its OWN
     # converted COCO tree (web/lab_dataset.py) and can therefore train beside
     # another challenger. False means it still reads the single shared tree, so a
-    # second launch would rmtree the data out from under it — DEIM is the only
-    # False today, because it ALSO derives a second shared directory (coco_deim)
-    # that needs the same treatment before it can be isolated.
+    # second launch would rmtree the data out from under it. NO FAMILY IS FALSE
+    # TODAY — DEIM was, until its derived classic tree moved inside the per-run
+    # source (_deim_dest), and a False here would now be a real bug: the
+    # launcher converts into the per-run tree and only passes it when this is
+    # True, so a False family would train on a shared tree nothing wrote.
     isolated_dataset: bool = True
 
     @property

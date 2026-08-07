@@ -109,7 +109,11 @@ def sync_one(slug: str, machine_key: str, dry: bool = False,
                 "sent": 0, "deleted": 0, "note": "no dataset directory"}
     rel_parent = _rel(src.parent)
     dest = f"{host}:{remote_root}/{rel_parent}/"
-    cmd = ["rsync", "-az", "--delete", "--stats", "--mkpath", "-e", ssh]
+    # --out-format=%o%n: one line per ACTION, so deletions are countable. Plain
+    # --stats does not name them and the deleted count read 0 forever, which
+    # made a --delete mirror look like it never removed anything.
+    cmd = ["rsync", "-az", "--delete", "--stats", "--mkpath",
+           "--out-format=%o %n", "-e", ssh]
     for e in EXCLUDES:
         cmd += ["--exclude", e]
     cmd += [str(src), dest]
@@ -131,7 +135,7 @@ def sync_one(slug: str, machine_key: str, dry: bool = False,
         print(f"    FAILED: {err}", file=sys.stderr)
         return {"ok": False, "slug": slug, "machine": machine_key, "error": err}
     sent = _stat(r.stdout, "Number of regular files transferred")
-    deleted = r.stdout.count("deleting ")
+    deleted = sum(1 for ln in r.stdout.splitlines() if ln.startswith("del. "))
 
     # THE MANIFEST TRAVELS TOO, and without it the project could not train
     # remotely at all. `src` is the project's DATASET dir; project.json lives

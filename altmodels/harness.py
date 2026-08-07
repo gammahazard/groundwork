@@ -60,15 +60,23 @@ def _pinned_reference(pp) -> Path | None:
     """
     try:
         from groundwork.serve import runtime_model
-        active = runtime_model.get_active()
+        # WITH THE PROJECT. This called get_active() with no argument — a
+        # TypeError the except below swallowed, so the follow-the-pin behaviour
+        # this function exists for never happened even once.
+        active = runtime_model.get_active(pp)
         if active:
             w = Path(active["weights"]).parent.parent / "count_eval.json"
             if w.is_relative_to(pp.RUNS_DIR):
                 return w
-    except Exception:  # noqa: BLE001
-        pass
-    fallback = pp.RUNS_DIR / "yolov8n-29" / "count_eval.json"
-    return fallback if fallback.exists() else None
+    except Exception as e:  # noqa: BLE001
+        print(f"[harness] no pinned reference ({type(e).__name__}: {e})", flush=True)
+    # NEWEST SCORED RUN as the fallback. This named one specific run from the
+    # machine this code grew up on, which exists on no other install — so every
+    # fresh install silently had no reference at all.
+    scored = sorted((d / "count_eval.json" for d in pp.RUNS_DIR.glob("*")
+                     if (d / "count_eval.json").exists()),
+                    key=lambda f: f.stat().st_mtime, reverse=True)
+    return scored[0] if scored else None
 
 
 def _boxes_for(pred, raw_cache, stem, pil, conf, iou):
