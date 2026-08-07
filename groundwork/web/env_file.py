@@ -161,6 +161,7 @@ def set_key(key: str, value: str) -> None:
 
     body = "\n".join(lines) + "\n"
     d = ENV_PATH.parent
+    d.mkdir(parents=True, exist_ok=True)   # a fresh box has no config/ yet
     fd, tmp = tempfile.mkstemp(dir=d, prefix=".env.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:

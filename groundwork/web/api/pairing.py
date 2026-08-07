@@ -171,8 +171,19 @@ def hq_pair(body: HqPair, _: str = Depends(require_admin)):
     except Exception:  # noqa: BLE001
         raise HTTPException(422, "pairing code did not decode — copy the "
                                  "whole string") from None
+    return enroll(p, name_override=body.name, admin=_)
+
+
+def enroll(p: dict, name_override: str | None = None, admin: str = "") -> dict:
+    """Register + trust + key-install + test + probe, from a pairing payload.
+
+    ONE implementation for two doors: the human paste (hq_pair above) and the
+    worker's own push (/api/machines/join). The payload shape is identical —
+    the only difference is who carried it here and which credential opened
+    the door.
+    """
     import re
-    name = (body.name or p.get("name") or "worker").strip()
+    name = (name_override or p.get("name") or "worker").strip()
     key = re.sub(r"[^a-z0-9-]+", "-", name.lower()).strip("-")
     if not key:
         raise HTTPException(422, "the machine needs a usable name")
@@ -228,12 +239,12 @@ def hq_pair(body: HqPair, _: str = Depends(require_admin)):
     # their functions so the wizard shows one combined outcome.
     from .machine import test_data_plane, probe
     try:
-        result["test"] = test_data_plane(key, _)
+        result["test"] = test_data_plane(key, admin)
     except HTTPException as e:
         result["test"] = {"ok": False, "error": str(e.detail)}
     if result["test"].get("ok"):
         try:
-            result["probe"] = probe(key, _)
+            result["probe"] = probe(key, admin)
         except HTTPException as e:
             result["probe"] = {"ok": False, "error": str(e.detail)}
     return result

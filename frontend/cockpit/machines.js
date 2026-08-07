@@ -237,4 +237,26 @@ async function _remove(key) {
   };
 })();
 
+/* The one-command join card: mint on click, show, copy. */
+(() => {
+  const mint = document.getElementById("joinMint");
+  if (!mint) return;
+  const out = document.getElementById("joinOut");
+  const copy = document.getElementById("joinCopy");
+  mint.onclick = async () => {
+    mint.disabled = true;
+    try {
+      const r = await apiOrThrow("/api/machines/join-token", {method: "POST"});
+      out.textContent = r.command;
+      out.hidden = false;
+      copy.hidden = false;
+      copy.onclick = () => navigator.clipboard?.writeText(r.command)
+        .then(() => { copy.textContent = "Copied ✓"; });
+    } catch (e) {
+      out.textContent = e.message || String(e);
+      out.hidden = false;
+    } finally { mint.disabled = false; }
+  };
+})();
+
 window.loadMachines = loadMachines;

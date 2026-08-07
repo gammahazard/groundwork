@@ -24,9 +24,9 @@ overwritten on the next sync (see docs/machines.md).
 from __future__ import annotations
 
 from . import (bot_setup, bots, buckets, collect_page, count, export,
-               history, images, la, lab, lab_ops, machine, project_classes,
-               pairing, projects, setup, snapshot, state, train,
-               train_dispatch, upload)
+               history, images, join, la, lab, lab_ops, machine,
+               project_classes, pairing, projects, setup, snapshot, state,
+               train, train_dispatch, upload)
 # Signing in is not an "area" of the cockpit, it is how you reach any of them —
 # so it lives in web/auth/ with the gate and the account store rather than as a
 # sibling here. It is enumerated in the SAME list because this docstring's rule
@@ -39,12 +39,12 @@ from ..auth import routes as auth_routes
 ROUTERS = (auth_routes.router,
            bot_setup.router, bots.router, buckets.router, collect_page.router,
            count.router, export.router, history.router, images.router,
-           la.router, lab.router, lab_ops.router, machine.router,
+           join.router, la.router, lab.router, lab_ops.router, machine.router,
            pairing.router, project_classes.router, projects.router,
            setup.router, snapshot.router, state.router, train.router,
            train_dispatch.router, upload.router)
 
 __all__ = ["ROUTERS", "auth_routes", "bot_setup", "bots", "buckets",
-           "collect_page", "count", "export", "history", "images", "la",
+           "collect_page", "count", "export", "history", "images", "join", "la",
            "lab", "lab_ops", "machine", "pairing", "project_classes", "projects",
            "setup", "snapshot", "state", "train", "train_dispatch", "upload"]

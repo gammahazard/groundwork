@@ -17,7 +17,27 @@ how pairing works, what syncs when, and what to do when ssh says no.
   ever supplies a destination. A registered machine that never finished pairing is
   "setup incomplete" and is never dispatched to.
 
-## Pairing a worker
+## Adding a worker — one command (recommended)
+
+On the HQ's Machines tab press **Create join command** and run the line it
+shows *on the GPU machine*:
+
+```sh
+curl -fsSL http://<hq>:8000/join.sh | bash -s -- http://<hq>:8000 gwj_…
+```
+
+The box downloads Groundwork **from the HQ itself** (no GitHub credential
+needed, and always the version the fleet runs), installs into `~/groundwork`
+(venv + the right torch wheel channel for its newest card), configures itself
+as a worker with its own admin account (random password, printed once), and
+announces itself. The HQ registers it, records its sshd host keys, installs
+its ssh public key through the same single-use ticket the manual flow uses,
+tests the data plane, and probes the cards — the machine appears in the Train
+matrix at the end, verified. The join token is single-use and expires in 30
+minutes. A box without `sshd` still registers; the output shows the one
+manual `authorized_keys` line and the Machines tab holds the resume path.
+
+## Pairing a worker (manual alternative)
 
 On the **worker**:
 

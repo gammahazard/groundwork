@@ -10,6 +10,16 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 ## [Unreleased]
 
 ### Added
+- **One-command worker join**: the Machines tab mints a single-use,
+  30-minute join command; run on a GPU box it downloads the source bundle
+  from the HQ itself (private-repo friendly, version-matched), installs,
+  self-configures as a worker — own admin account, key + pairing ticket,
+  service started — and announces itself. The HQ runs the same enroll chain
+  as the manual paste (register → trust host keys → ticketed key install →
+  data-plane test → card probe). New: `/join.sh`, `/api/join/bundle`,
+  `/api/machines/join-token`, `/api/machines/join`; `join_worker` CLI.
+
+### Added
 - `docs/api.md`: the API reference — auth model, scopes, the project rule,
   error conventions, worked curl examples, and a generated catalog of every
   route (96 today) that CI regenerates and diffs so it cannot go stale. The

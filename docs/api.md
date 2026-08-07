@@ -182,6 +182,18 @@ line of its handler's docstring. Regenerate with
 |---|---|---|
 | `/img/{collection}/{stem}` | GET | Image |
 
+### `join`
+
+| Route | Methods | What it does |
+|---|---|---|
+| `/api/join/bundle` | GET | Bundle |
+
+### `join.sh`
+
+| Route | Methods | What it does |
+|---|---|---|
+| `/join.sh` | GET | Join Script |
+
 ### `keys`
 
 | Route | Methods | What it does |
@@ -250,6 +262,8 @@ line of its handler's docstring. Regenerate with
 | Route | Methods | What it does |
 |---|---|---|
 | `/api/machines` | GET,POST | List Machines |
+| `/api/machines/join` | POST | Join |
+| `/api/machines/join-token` | POST | Mint Join Token |
 | `/api/machines/pair` | POST | Hq Pair |
 | `/api/machines/{key}` | DELETE | Remove Machine |
 | `/api/machines/{key}/probe` | POST | Probe |

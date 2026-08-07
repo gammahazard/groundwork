@@ -46,7 +46,12 @@ from . import keys, sessions
 
 # Exact paths anyone may reach.
 _OPEN_EXACT = {"/", "/login", "/api/login", "/api/me", "/favicon.ico",
-               "/healthz"}
+               "/healthz",
+               # The join door: the script is the same text for everyone;
+               # the bundle and the join validate a single-use token
+               # themselves — the gate has nothing to add there, and a
+               # joining box has no credential yet by definition.
+               "/join.sh", "/api/join/bundle", "/api/machines/join"}
 
 # The two SETUP endpoints are open only while the instance has zero accounts —
 # a DYNAMIC membership, asked per request through the router's one-way latch
