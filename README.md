@@ -11,10 +11,13 @@ you can read with `cat`. It runs on a laptop; it scales to a small fleet of GPU 
 over ssh and rsync.
 
 <p align="center">
-  <img src="frontend/guide/label-editor.png" alt="The dot editor: one click per object" width="49%">
-  <img src="frontend/guide/try-it.png" alt="Try it: upload a photo, get the count and an overlay" width="49%">
+  <img src="frontend/guide/label-editor.png" alt="The dot editor: one click per object" width="720">
 </p>
-<p align="center"><i>Label by clicking once per object — then upload any photo and get the count back with an overlay.</i></p>
+<p align="center"><i>Label by clicking once per object — the count in the corner is the label.</i></p>
+<p align="center">
+  <img src="frontend/guide/try-it.png" alt="Try it: upload a photo, get the count and an overlay" width="720">
+</p>
+<p align="center"><i>Then upload any photo and get the count back with an overlay.</i></p>
 
 ## Features
 
