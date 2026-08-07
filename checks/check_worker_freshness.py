@@ -167,13 +167,19 @@ def main() -> int:
              f"the worker silently trains on stale data")
 
         print("\n6. a dry run transfers nothing and stamps nothing")
+        # READ THE STAMP FIRST, then compare it to itself afterwards. This used
+        # to assert `before <= time.time()`, which is true of every timestamp
+        # ever written — it could not fail, so the claim in its own message was
+        # unverified. A check that cannot fail is worse than no check.
+        before = int(stamp("worker-b").read_text())
+        time.sleep(1.1)
         dry_run = FakeRun(returncode=0)
         r = mirror.sync_one(SLUG, "worker-b", dry=True, run=dry_run)
         note(r.get("dry") is True and not dry_run.calls,
              "dry mode never invokes rsync")
-        before = int(stamp("worker-b").read_text())
-        note(before <= int(time.time()),
-             "…and left the existing stamp alone (no fresh write)")
+        note(int(stamp("worker-b").read_text()) == before,
+             "…and left the existing stamp EXACTLY as it was (a second passed, "
+             "so a fresh write would show)")
     finally:
         shutil.rmtree(project_mod.manifest_path(SLUG).parent, ignore_errors=True)
         (reg_mod.REGISTRY_PATH, ssh_identity.SSH_DIR,
