@@ -32,14 +32,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from pydantic import BaseModel
 
-from ...config import OUTPUTS_DIR, ROOT
+from ...config import PRIVATE_DIR, ROOT
 from .. import machines as machines_mod
 from ..auth.routes import require_admin
 from .pairing import enroll
 
 router = APIRouter()
 
-_TOKENS = OUTPUTS_DIR / "pending_join.json"
+_TOKENS = PRIVATE_DIR / "pending_join.json"
 _TTL_S = 30 * 60
 
 # What the bundle carries: the source tree, nothing that is data or secret.

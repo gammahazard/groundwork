@@ -7,7 +7,7 @@ import socket
 import time
 from dataclasses import dataclass
 
-from ...config import OUTPUTS_DIR
+from ...config import OUTPUTS_DIR, PRIVATE_DIR
 from .model import MACHINES, Machine  # noqa: F401
 
 # ======================================================================== #
@@ -24,10 +24,29 @@ from .model import MACHINES, Machine  # noqa: F401
 # no request ever supplies a destination. Same shape as web/bot_roles.py: a
 # closed set of things, extended by a commit or by an admin, never by a caller.
 
-REGISTRY_PATH = OUTPUTS_DIR / "machines_registry.json"
+# PRIVATE, not outputs/: this file holds other machines' API keys, and
+# outputs/ is the HTTP-served StaticFiles tree — there, any signed-in
+# account (a read-scope key included) could download every worker's
+# train-scope credential.
+REGISTRY_PATH = PRIVATE_DIR / "machines_registry.json"
+_LEGACY_REGISTRY = OUTPUTS_DIR / "machines_registry.json"
+
+
+def _migrate_legacy() -> None:
+    """One-time move out of the served tree. Runs on every read, does work
+    only while the old file still exists and the new one does not."""
+    if REGISTRY_PATH.exists() or not _LEGACY_REGISTRY.exists():
+        return
+    try:
+        REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _LEGACY_REGISTRY.replace(REGISTRY_PATH)
+        REGISTRY_PATH.chmod(0o600)
+    except OSError:
+        pass                     # next read retries; worst case is status quo
 
 
 def _registry() -> dict:
+    _migrate_legacy()
     try:
         d = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
     except (OSError, ValueError):

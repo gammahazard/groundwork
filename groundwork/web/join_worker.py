@@ -27,7 +27,7 @@ import socket
 import time
 import urllib.request
 
-from ..config import OUTPUTS_DIR, ROOT
+from ..config import OUTPUTS_DIR, PRIVATE_DIR, ROOT
 
 
 def _wait_healthy(port: int, tries: int = 40) -> bool:
@@ -74,8 +74,8 @@ def main() -> int:
     #    that authorizes installing the hub's ssh key — the exact artifacts
     #    /api/machine/pairing-code mints, made without the HTTP hop.
     kid, raw_key = keys_mod.mint("admin", name="hq", scope=keys_mod.TRAIN)
-    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-    (OUTPUTS_DIR / "pending_pair.json").write_text(json.dumps(
+    PRIVATE_DIR.mkdir(parents=True, exist_ok=True)
+    (PRIVATE_DIR / "pending_pair.json").write_text(json.dumps(
         {"sha": hashlib.sha256(raw_key.encode()).hexdigest(),
          "minted": time.time()}), encoding="utf-8")
 

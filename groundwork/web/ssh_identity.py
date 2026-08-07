@@ -22,9 +22,12 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from ..config import ROOT
+from ..config import PRIVATE_DIR
 
-SSH_DIR = ROOT / "private" / "ssh"
+# Under PRIVATE_DIR so the seam applies: with GW_DATA_DIR set (every Docker
+# install) the keypair lands on the persistent volume — ROOT would put it in
+# the image, where it dies with the container and every pairing breaks.
+SSH_DIR = PRIVATE_DIR / "ssh"
 KEY_FILE = SSH_DIR / "id_ed25519"
 KNOWN_HOSTS = SSH_DIR / "known_hosts"
 

@@ -33,7 +33,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from ...config import OUTPUTS_DIR, ROOT, is_worker
+from ...config import OUTPUTS_DIR, PRIVATE_DIR, ROOT, is_worker
 from .. import machine_self, machines as machines_mod
 from ..auth import keys as keys_mod
 from ..auth.routes import require_admin
@@ -69,8 +69,8 @@ def mint_pairing_code(body: MintReq, request: Request,
     # exact key minted here, for 15 minutes. Any other credential — even a
     # perfectly valid one — is refused, because "holds some API key" must
     # never escalate to "may install an ssh key on this box".
-    (OUTPUTS_DIR).mkdir(parents=True, exist_ok=True)
-    (OUTPUTS_DIR / "pending_pair.json").write_text(json.dumps(
+    PRIVATE_DIR.mkdir(parents=True, exist_ok=True)
+    (PRIVATE_DIR / "pending_pair.json").write_text(json.dumps(
         {"sha": hashlib.sha256(raw_key.encode()).hexdigest(),
          "minted": time.time()}), encoding="utf-8")
     payload = {
@@ -115,7 +115,7 @@ def accept_pair(body: PairReq, request: Request):
     auth = request.headers.get("authorization", "")
     presented = auth.removeprefix("Bearer ").strip()
     try:
-        pend = json.loads((OUTPUTS_DIR / "pending_pair.json")
+        pend = json.loads((PRIVATE_DIR / "pending_pair.json")
                           .read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
         pend = {}
@@ -125,7 +125,7 @@ def accept_pair(body: PairReq, request: Request):
         raise HTTPException(403, "pairing is not open — mint a fresh pairing "
                                  "code on this machine first (15-minute, "
                                  "single-use window)")
-    (OUTPUTS_DIR / "pending_pair.json").unlink(missing_ok=True)
+    (PRIVATE_DIR / "pending_pair.json").unlink(missing_ok=True)
     pub = (body.hq_pubkey or "").strip()
     if not pub.startswith(("ssh-ed25519 ", "ssh-rsa ", "ecdsa-")) \
             or "\n" in pub:

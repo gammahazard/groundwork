@@ -83,6 +83,9 @@ def main() -> int:
     # Redirect the machine registry and the ssh identity BEFORE anything runs:
     # this check registers fake machines and must never touch private/ssh.
     reg_mod.REGISTRY_PATH = tmp / "machines_registry.json"
+    # ...and the legacy path, or the migration shim would MOVE the real
+    # HQ registry into this check's tmp dir the moment it reads.
+    reg_mod._LEGACY_REGISTRY = tmp / "machines_registry_legacy.json"
     ssh_identity.SSH_DIR = tmp / "ssh"
     ssh_identity.KEY_FILE = tmp / "ssh" / "id_ed25519"
     ssh_identity.KNOWN_HOSTS = tmp / "ssh" / "known_hosts"

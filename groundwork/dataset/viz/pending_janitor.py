@@ -57,7 +57,7 @@ def sweep_overlays(older_than_days: float = 7.0) -> int:
 
 # EXPLICIT PATTERNS, NEVER A BROAD GLOB. outputs/ root also holds
 # training_history.json (the ledger — every run ever, and not reproducible),
-# machines.json, machines_registry.json, users.json, api_keys.json,
+# machines.json, users.json, api_keys.json,
 # sessions.json, retrain_state.json and the gpu locks. What currently SERVES
 # moved out of this directory on 2026-08-05 — active_model.json and
 # serving_engine.json are per project now, under outputs/serving/<slug>/ — so
