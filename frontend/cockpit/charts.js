@@ -343,7 +343,18 @@ if (!window.__chartTapWired){
   }, true);
 }
 
-const BUCKET_TREND_COLORS = {object: "#3987e5", capsule: "#b07de0", stacked: "#2fbfa0"};
+/* Bucket colours are DERIVED, not enumerated. A fixed three-name map meant a
+ * project's own tags — anything the user typed — never plotted at all, which
+ * reads as "no data" rather than "no colour". Same rotation everywhere, keyed
+ * on the tag name so a tag keeps its colour between renders and pages. */
+const BUCKET_TREND_PALETTE = ["#3987e5", "#b07de0", "#2fbfa0", "#e0a23d",
+                              "#e07d9a", "#6fc4e8", "#9ac45a", "#c98a5e"];
+function bucketColor(name){
+  let h = 0;
+  for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return BUCKET_TREND_PALETTE[h % BUCKET_TREND_PALETTE.length];
+}
+window.bucketColor = bucketColor;
 
 /* ONE model palette, beside the charts that draw it. dashboard.js's families
  * race chart and lab.js's challenger trend both colour by architecture, and a

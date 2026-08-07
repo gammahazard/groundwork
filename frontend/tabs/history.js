@@ -15,8 +15,12 @@ function drawRunCharts(runs){
   // solved?"). Only runs whose eval carried tags participate.
   const bruns = chrono.filter(r => r.buckets &&
     Object.keys(r.buckets).some(k => k !== "untagged" && r.buckets[k] && r.buckets[k].images));
-  const series = Object.keys(BUCKET_TREND_COLORS).map(name => ({
-    label: name, color: BUCKET_TREND_COLORS[name],
+  // EVERY tag these runs carry, in a stable order — the names come from the
+  // data, so a project's own vocabulary plots like the built-in one.
+  const bnames = [...new Set(bruns.flatMap(r => Object.keys(r.buckets || {})))]
+    .filter(k => k !== "untagged").sort();
+  const series = bnames.map(name => ({
+    label: name, color: bucketColor(name),
     pts: bruns.map((r, i) => r.buckets[name] && r.buckets[name].images
       ? {i, y: r.buckets[name].mae} : null).filter(Boolean),
   })).filter(s => s.pts.length);

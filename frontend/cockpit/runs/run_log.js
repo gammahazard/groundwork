@@ -111,7 +111,10 @@ function _rlAge(age) {
 
 window.runLogTick = async function () {
   const el = _rlEl();
-  if (!el || el.closest("section")?.hidden) return;
+  // A TAB IS HIDDEN BY THE `active` CLASS (.tab{display:none}), not the
+  // hidden attribute — this guard was never true, so the tick paid for
+  // a fetch on every heartbeat while the tab was closed.
+  if (!el || !el.closest("section.tab")?.classList.contains("active")) return;
 
   // BOTH CARDS, NOT THE FIRST ONE FOUND. This used to pick a single source in
   // priority order and return — fine when one card trained, wrong the moment

@@ -70,7 +70,10 @@ function _rvPaint(blocks) {
 
 window.runVisTick = async function () {
   const el = _rvEl();
-  if (!el || el.closest("section")?.hidden) return;
+  // A TAB IS HIDDEN BY THE `active` CLASS (.tab{display:none}), not the
+  // hidden attribute — this guard was never true, so the tick paid for
+  // a fetch on every heartbeat while the tab was closed.
+  if (!el || !el.closest("section.tab")?.classList.contains("active")) return;
   const live = window.LIVE_RUNS || [];
   if (!live.length) { _rvPaint([]); return; }
 

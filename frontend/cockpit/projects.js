@@ -240,6 +240,11 @@ function openProject(slug, push = true) {
     history.pushState({project: slug}, "", u);
   }
   const p = PROJECT_CARDS[slug];
+  // The dashboard heading names the project. index.html claims every id in
+  // that section is written by dashboard.js; this one had no writer anywhere,
+  // so the heading read "Serving now" for every project you ever opened.
+  const title = $("#dashProjectTitle");
+  if (title) title.textContent = p ? `${p.name} — serving now` : "Serving now";
   applyExtensionTabs(p);                // a project's tools are its own
   const bar = $("#projectBar");
   if (bar && p) {

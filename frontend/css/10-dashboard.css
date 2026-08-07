@@ -23,6 +23,12 @@ body.lab .dashCard.hero{background:linear-gradient(180deg,#241c11,#1d150c)}
 .servedMeta{color:var(--mut);font-size:.86rem;margin-top:.3rem}
 .servedMeta b{color:var(--txt)}
 .dot{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:var(--ok);margin-right:.5rem;box-shadow:0 0 6px var(--ok)}
+/* The serving dot's THREE states. It is written by dashboard.js loadState;
+   the shape changes with the colour (ring vs filled) because colour alone is
+   not a signal everyone can read. */
+.dot[data-state="warn"]{background:var(--warn);box-shadow:0 0 6px var(--warn)}
+.dot[data-state="none"]{background:transparent;box-shadow:none;
+  border:2px solid var(--mut);width:.5rem;height:.5rem}
 .actRow{padding:.4rem 0;border-bottom:1px solid var(--edge)}
 .actRow:last-child{border-bottom:0}
 .sbRow{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--edge)}

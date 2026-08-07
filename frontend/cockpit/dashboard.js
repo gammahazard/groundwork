@@ -95,6 +95,17 @@ async function loadState(){
         + "are separate copies and keep working unchanged.";
     const hero = $("#projdash .dashCard.hero");
     if (hero) hero.classList.toggle("experimental", exp);
+    // The dot beside "Answering photographs" had no writer at all — a status
+    // light that never changed state. Three states, each with a title, because
+    // a colour on its own says nothing to someone who cannot separate them.
+    const dot = $("#servedDot");
+    if (dot) {
+      const state = !sv.name ? "none" : exp ? "warn" : "ok";
+      dot.dataset.state = state;
+      dot.title = state === "none" ? "nothing is serving yet — train a run"
+        : state === "warn" ? `${sv.engine} is serving (experimental)`
+        : "a champion run is serving";
+    }
   }
   const o = s.odometer || {};
   const ch = o.challenger || {};
