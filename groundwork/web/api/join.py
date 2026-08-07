@@ -87,7 +87,7 @@ def mint_join_token(request: Request, user: str = Depends(require_admin)):
 def join_script():
     """The bootstrap script. Open: same text for everyone, no secrets — the
     token is the argument the admin carried over."""
-    return _JOIN_SH
+    return _join_sh()
 
 
 @router.get("/api/join/bundle")
@@ -134,4 +134,18 @@ def join(body: JoinReq):
 
 # The worker-side bootstrap lives as a real file so it can be shell-checked
 # and read as a script, not a string. Served verbatim by /join.sh above.
-_JOIN_SH = (ROOT / "deploy" / "join.sh").read_text(encoding="utf-8")
+#
+# READ PER REQUEST, not at import. At import a missing or unreadable file took
+# down the ENTIRE APPLICATION — one absent shell script and the cockpit will not
+# boot — and the honest failure is a 500 on /join.sh alone. It also means an
+# edited script is served without a restart.
+_JOIN_SH_PATH = ROOT / "deploy" / "join.sh"
+
+
+def _join_sh() -> str:
+    try:
+        return _JOIN_SH_PATH.read_text(encoding="utf-8")
+    except OSError as e:
+        raise HTTPException(500, f"the join bootstrap is missing on this HQ "
+                                 f"({_JOIN_SH_PATH.name}: {e.strerror}) — "
+                                 f"reinstall or pair manually") from None

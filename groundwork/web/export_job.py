@@ -219,22 +219,27 @@ def _remote_yolo(run_dir: Path, fmt: str, imgsz: int, card: int,
     is cheap and removes the question entirely.
     """
     from . import export_remote
-    host = machine["ssh_host"]
-    root = machine.get("remote_root") or "~/counter1"
+    # THE KEY, not the host string: every ssh below resolves its identity,
+    # pinned host keys and port from it (web/ssh_identity.py).
+    key = machine["key"]
+    root = (machine.get("remote_root") or "").rstrip("/")
+    if not root:
+        raise RuntimeError(f"{machine.get('name') or key} has no remote_root "
+                           f"recorded — finish pairing on the Machines tab")
     # REFUSE IF IT IS TRAINING. A TensorRT build is a real GPU job, and two GPU
     # jobs at once has failed three of four trials on this fleet. Unreachable
     # raises out of training_now rather than reading as idle.
-    busy = export_remote.training_now(host)
+    busy = export_remote.training_now(key)
     if busy:
         raise RuntimeError(
-            f"{machine.get('name') or host} is running a GPU job ({busy}). A "
+            f"{machine.get('name') or key} is running a GPU job ({busy}). A "
             f"TensorRT build compiles on the card, so it would be the second — "
             f"and that pairing has failed three of four trials on this fleet. "
             f"Wait for it to finish.")
     weights = run_dir / "weights" / "best.pt"
     stem = f"{run_dir.name}-{imgsz}"
     remote_pt = f"{root}/outputs/exports/_in/{stem}.pt"
-    export_remote.push(str(weights), host, remote_pt)
+    export_remote.push(str(weights), key, remote_pt)
     # The marker is printed rather than the path guessed: ultralytics decides the
     # filename, and guessing it is how an export "succeeds" and fetches nothing.
     code = ("import sys;from ultralytics import YOLO;"
@@ -244,13 +249,13 @@ def _remote_yolo(run_dir: Path, fmt: str, imgsz: int, card: int,
               f"CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES={int(card)} "
               f".venv/bin/python -c {shlex.quote(code)} "
               f"{shlex.quote(remote_pt)} {shlex.quote(fmt)} {int(imgsz)}")
-    r = export_remote.ssh(host, script, timeout=3600)
+    r = export_remote.ssh(key, script, timeout=3600)
     line = next((l for l in (r.stdout or "").splitlines()
                  if l.startswith("EXPORTED:")), None)
     if not line:
         tail = ((r.stderr or r.stdout or "").strip().splitlines()
                 or ["no output"])[-1]
-        raise RuntimeError(f"export failed on {host}: {tail[:400]}")
+        raise RuntimeError(f"export failed on {key}: {tail[:400]}")
     remote_out = line.split("EXPORTED:", 1)[1].strip()
     # Same rule as the local path: name from the FORMAT, because a directory
     # format (openvino, ncnn) has no suffix to borrow. TensorRT is the only
@@ -260,9 +265,9 @@ def _remote_yolo(run_dir: Path, fmt: str, imgsz: int, card: int,
     dst = EXPORT_DIR / f"{stem}{(spec.ext if spec else '') or Path(remote_out).suffix or ''}"
     if dst.exists():
         shutil.rmtree(dst) if dst.is_dir() else dst.unlink()
-    export_remote.pull(host, remote_out, str(dst))
+    export_remote.pull(key, remote_out, str(dst))
     if not dst.exists():
-        raise RuntimeError(f"built on {host} but nothing arrived at {dst}")
+        raise RuntimeError(f"built on {key} but nothing arrived at {dst}")
     return dst
 
 

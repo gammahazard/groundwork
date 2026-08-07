@@ -41,7 +41,11 @@ REMOTE_FORMATS = {"onnx": ".onnx", "torchscript": ".torchscript.pt"}
 
 
 def find_host(run: str) -> tuple[str, str]:
-    """(ssh_host, remote_root) of a registered machine that HAS this run.
+    """(machine_key, remote_root) of a registered machine that HAS this run.
+
+    A KEY, not a bare ssh host: everything downstream goes through
+    ssh_identity, which resolves the HQ's own key, the pinned known_hosts and
+    the machine's ssh port from that key alone.
 
     Asks each registered machine with an ssh host rather than assuming the worker,
     so a second trainer added later works without touching this file. The run
@@ -51,14 +55,22 @@ def find_host(run: str) -> tuple[str, str]:
     """
     tried = []
     for r in export_remote.machines_with_ssh():
-        host, root = r.get("ssh_host"), r.get("remote_root") or "~/counter1"
+        key = r.get("key")
+        root = (r.get("remote_root") or "").rstrip("/")
+        if not key or not root:
+            continue
         d = f"{root}/outputs/alt/{run}"
-        probe = export_remote.ssh(host, f"ls {shlex.quote(d)}/train/*.pth 2>/dev/null | head -1",
-                     timeout=45)
+        try:
+            probe = export_remote.ssh(
+                key, f"ls {shlex.quote(d)}/train/*.pth 2>/dev/null | head -1",
+                timeout=45)
+        except KeyError as e:           # unpaired machine — name it, keep going
+            tried.append(f"{r.get('name') or key} ({e})")
+            continue
         found = (probe.stdout or "").strip().splitlines()
         if found and found[0]:
-            return host, root
-        tried.append(f"{r.get('name') or r.get('key')} ({host})")
+            return key, root
+        tried.append(f"{r.get('name') or key} ({r.get('ssh_host')})")
     raise FileNotFoundError(
         f"no registered machine has weights for {run!r}"
         + (f" — asked {', '.join(tried)}" if tried else
@@ -67,7 +79,7 @@ def find_host(run: str) -> tuple[str, str]:
            "reached."))
 
 
-def _weights(host: str, root: str, run: str) -> str:
+def _weights(machine_key: str, root: str, run: str) -> str:
     """The checkpoint to export, PREFERRING what the run itself nominated.
 
     meta.json carries `best_checkpoint`, written last by the trainer; falling
@@ -75,7 +87,8 @@ def _weights(host: str, root: str, run: str) -> str:
     one the holdout score describes, and nothing downstream would say so.
     """
     d = f"{root}/outputs/alt/{run}"
-    r = export_remote.ssh(host, f"cat {shlex.quote(d)}/meta.json 2>/dev/null", timeout=45)
+    r = export_remote.ssh(machine_key, f"cat {shlex.quote(d)}/meta.json 2>/dev/null",
+                          timeout=45)
     best = ""
     try:
         best = (json.loads(r.stdout or "{}") or {}).get("best_checkpoint") or ""
@@ -85,16 +98,18 @@ def _weights(host: str, root: str, run: str) -> str:
         # It may be recorded as a bare name or a full path; normalise to a path
         # on the remote and confirm it is really there before committing to it.
         cand = best if best.startswith("/") else f"{d}/train/{Path(best).name}"
-        if (export_remote.ssh(host, f"test -f {shlex.quote(cand)} && echo yes", timeout=45)
+        if (export_remote.ssh(machine_key, f"test -f {shlex.quote(cand)} && echo yes",
+                              timeout=45)
                 .stdout or "").strip() == "yes":
             return cand
     # Nothing nominated, or it has been moved: take the newest .pth and SAY so
     # at the call site rather than pretending it was chosen.
-    r = export_remote.ssh(host, f"ls -t {shlex.quote(d)}/train/*.pth 2>/dev/null | head -1",
+    r = export_remote.ssh(machine_key,
+                          f"ls -t {shlex.quote(d)}/train/*.pth 2>/dev/null | head -1",
              timeout=45)
     got = (r.stdout or "").strip()
     if not got:
-        raise FileNotFoundError(f"{run} has no .pth on {host}")
+        raise FileNotFoundError(f"{run} has no .pth on {machine_key}")
     return got
 
 
@@ -115,8 +130,8 @@ def export(run: str, fmt: str, imgsz: int, dest_dir: Path) -> Path:
     if remote_fmt not in REMOTE_FORMATS:
         raise ValueError(f"DEIM cannot export {fmt!r}")
 
-    host, root = find_host(run)
-    weights = _weights(host, root, run)
+    machine_key, root = find_host(run)
+    weights = _weights(machine_key, root, run)
     venv = _venv(run)
     out_name = f"{run}-{imgsz}{REMOTE_FORMATS[remote_fmt]}"
     remote_out = f"{root}/outputs/exports/{out_name}"
@@ -132,19 +147,20 @@ def export(run: str, fmt: str, imgsz: int, dest_dir: Path) -> Path:
         f"--weights {shlex.quote(weights)} --imgsz {int(imgsz)} "
         f"--format {remote_fmt} --no-postprocess "
         f"--out {shlex.quote(remote_out)}")
-    r = export_remote.ssh(host, script, timeout=1800)
+    r = export_remote.ssh(machine_key, script, timeout=1800)
     if r.returncode != 0:
         tail = ((r.stderr or r.stdout or "").strip().splitlines()
                 or ["no output"])[-1]
-        raise RuntimeError(f"export failed on {host}: {tail[:400]}")
+        raise RuntimeError(f"export failed on {machine_key}: {tail[:400]}")
 
     dest_dir.mkdir(parents=True, exist_ok=True)
     local = dest_dir / out_name
     # NO --delete, and no --delete-excluded: this pulls ONE file into a
     # directory that holds other people's artifacts.
-    export_remote.pull(host, remote_out, str(local))
+    export_remote.pull(machine_key, remote_out, str(local))
     if not local.exists():
-        raise RuntimeError(f"exported on {host} but nothing arrived at {local}")
+        raise RuntimeError(f"exported on {machine_key} but nothing arrived "
+                           f"at {local}")
     if not want_coreml:
         return local
 

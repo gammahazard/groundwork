@@ -123,6 +123,15 @@ def main() -> int:
     except urllib.error.HTTPError as e:
         print(f"[join] hub refused: {e.read().decode()[:300]}")
         return 1
+    except (urllib.error.URLError, OSError, ValueError) as e:
+        # UNREACHABLE HUB IS THE COMMON CASE — wrong URL, firewall, HQ not
+        # running — and it used to end a one-command install in a Python
+        # traceback. Say what could not be reached and what to check.
+        print(f"[join] could not reach the hub at {args.hub}: "
+              f"{getattr(e, 'reason', e)}\n"
+              f"[join] check the URL, that the HQ is running, and that this "
+              f"box can reach it (curl {args.hub}/healthz).")
+        return 1
 
     print("[join] hub result:")
     print(json.dumps(result, indent=2)[:1200])

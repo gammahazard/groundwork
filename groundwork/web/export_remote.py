@@ -34,50 +34,61 @@ from __future__ import annotations
 
 import shlex
 
-from . import safe_proc
+from . import safe_proc, ssh_identity
 
-# The same options mirror.py uses. BatchMode above all: without it a missing key
-# makes rsync/ssh SIT on a password prompt, and a timer run piles up behind it.
-SSH_OPTS = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=20",
-            "-o", "ServerAliveInterval=10", "-o", "ServerAliveCountMax=3"]
+# THE CONNECTION IS THE ONE ssh_identity BUILDS. This module used to hand-roll
+# its own option list, which meant the export path alone: used whatever key the
+# agent offered rather than the HQ's own, wrote no pinned known_hosts (so it
+# either trusted blind or failed once the rest of the fleet pinned), and ignored
+# ssh_port entirely — a worker on any port but 22 was simply unreachable here.
+# Callers pass a MACHINE KEY now, not a bare host, because a key is what
+# resolves to all three.
 
-_SSH_CMD = "ssh " + " ".join(SSH_OPTS)
+
+def _argv(machine_key: str, connect_timeout: int = 20) -> list[str]:
+    return ssh_identity.ssh_argv(machine_key, connect_timeout)
 
 
-def ssh(host: str, script: str, timeout: float) -> safe_proc.Result:
-    """Run a bash snippet on `host`. See the module docstring on the quoting."""
+def ssh(machine_key: str, script: str, timeout: float) -> safe_proc.Result:
+    """Run a bash snippet on a registered machine. See the module docstring on
+    the quoting."""
+    host, _ = ssh_identity.target(machine_key)
     return safe_proc.run(
-        ["ssh", *SSH_OPTS, host, "bash -lc " + shlex.quote(script)],
+        [*_argv(machine_key), host, "bash -lc " + shlex.quote(script)],
         timeout=timeout)
 
 
-def push(local: str, host: str, remote: str, timeout: float = 900) -> None:
+def push(local: str, machine_key: str, remote: str, timeout: float = 900) -> None:
     """Copy one file up, creating its directory first.
 
     NO --delete AND NO --delete-excluded. --delete-excluded is BANNED in this
     repo — it wiped the Pi once, venv and weights and exam set together. This
     copies a single file into a directory holding other artifacts.
     """
+    host, _ = ssh_identity.target(machine_key)
     d = remote.rsplit("/", 1)[0]
-    mk = ssh(host, f"mkdir -p {shlex.quote(d)}", timeout=60)
+    mk = ssh(machine_key, f"mkdir -p {shlex.quote(d)}", timeout=60)
     if mk.returncode != 0:
         raise RuntimeError(f"could not make {d} on {host}: "
                            f"{(mk.stderr or '').strip()[:200]}")
-    r = safe_proc.run(["rsync", "-az", "-e", _SSH_CMD, local,
+    r = safe_proc.run(["rsync", "-az", "-e",
+                       ssh_identity.ssh_option_string(machine_key), local,
                        f"{host}:{remote}"], timeout=timeout)
     if r.returncode != 0:
         raise RuntimeError(f"could not send {local} to {host}: "
                            f"{(r.stderr or '').strip()[:300]}")
 
 
-def pull(host: str, remote: str, local: str, timeout: float = 900) -> None:
+def pull(machine_key: str, remote: str, local: str, timeout: float = 900) -> None:
     """Copy one artifact back. -r because some formats are DIRECTORIES.
 
     openvino, ncnn and .mlpackage are directory formats; a plain file copy
     silently fetches nothing for those and the caller then reports a missing
     artifact rather than a missing flag.
     """
-    r = safe_proc.run(["rsync", "-azr", "-e", _SSH_CMD,
+    host, _ = ssh_identity.target(machine_key)
+    r = safe_proc.run(["rsync", "-azr", "-e",
+                       ssh_identity.ssh_option_string(machine_key),
                        f"{host}:{remote}", local], timeout=timeout)
     if r.returncode != 0:
         raise RuntimeError(f"exported on {host} but could not fetch it: "
@@ -103,8 +114,9 @@ def machines_with_ssh() -> list[dict]:
 TRAIN_MARKERS = ("altmodels.trainers", "ultralytics", "dataset.pipeline.train")
 
 
-def training_now(host: str) -> str | None:
-    """What is using a GPU on `host`, or None. Scans /proc, NEVER nvidia-smi.
+def training_now(machine_key: str) -> str | None:
+    """What is using a GPU on that machine, or None. Scans /proc, NEVER
+    nvidia-smi.
 
     Under WSL2 an nvidia-smi call crosses the paravirtualised /dev/dxg, where a
     blocked thread sits in uninterruptible D-state and cannot be killed by
@@ -130,10 +142,10 @@ def training_now(host: str) -> str | None:
     the words. It is the `pgrep -f matches itself` footgun this repo already
     documents, wearing a different hat.
     """
-    r = ssh(host, "for c in /proc/[0-9]*/cmdline; do "
+    r = ssh(machine_key, "for c in /proc/[0-9]*/cmdline; do "
                   "tr '\\0' ' ' < \"$c\" 2>/dev/null; echo; done", timeout=60)
     if r.returncode != 0:
-        raise RuntimeError(f"could not ask {host} whether it is training: "
+        raise RuntimeError(f"could not ask {machine_key} whether it is training: "
                            f"{(r.stderr or '').strip()[:200] or 'ssh failed'}")
     for line in (r.stdout or "").splitlines():
         for m in TRAIN_MARKERS:
