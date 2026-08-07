@@ -27,7 +27,7 @@ apiGroup({
           "Pre-label each one with the serving model."
         ]
       ],
-      "example": "curl -X POST \"$HOST/api/upload?project=the first project\" \\\n  -H \"Authorization: Bearer $GW_KEY\" \\\n  -F \"files=@tray1.jpg\" -F \"files=@tray2.jpg\" \\\n  -F \"predict=true\""
+      "example": "curl -X POST \"$HOST/api/upload?project=widgets\" \\\n  -H \"Authorization: Bearer $GW_KEY\" \\\n  -F \"files=@tray1.jpg\" -F \"files=@tray2.jpg\" \\\n  -F \"predict=true\""
     },
     {
       "method": "GET",
@@ -41,7 +41,7 @@ apiGroup({
       "path": "/api/points/{collection}/{stem}",
       "auth": "key",
       "what": "One image's labels, size and target count.",
-      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \\\n  \"$HOST/api/points/raw/IMG_4376?project=the first project\""
+      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \\\n  \"$HOST/api/points/raw/IMG_4376?project=widgets\""
     },
     {
       "method": "POST",
@@ -57,7 +57,7 @@ apiGroup({
           "What to look for — <code>object</code>, <code>bolt</code>, your own words."
         ]
       ],
-      "example": "curl -X POST \"$HOST/api/la/needs_fix/IMG_4376?project=the first project\" \\\n  -H \"Authorization: Bearer $GW_KEY\" \\\n  -H \"Content-Type: application/json\" -d '{\"desc\":\"object\"}'"
+      "example": "curl -X POST \"$HOST/api/la/needs_fix/IMG_4376?project=widgets\" \\\n  -H \"Authorization: Bearer $GW_KEY\" \\\n  -H \"Content-Type: application/json\" -d '{\"desc\":\"object\"}'"
     }
   ]
 });

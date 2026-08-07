@@ -132,6 +132,7 @@ walkthrough — prerequisites, headless bootstrap, upgrades, WSL2 notes — is i
 - [docs/machines.md](docs/machines.md) — pairing GPU workers, what syncs when
 - [docs/bots.md](docs/bots.md) — Telegram bots
 - [docs/models.md](docs/models.md) — the model registry and the challenger stacks
+- [docs/api.md](docs/api.md) — auth, conventions, examples, and a generated catalog of every route
 - Interactive API reference: `/docs` on your own instance, once signed in
 
 ---

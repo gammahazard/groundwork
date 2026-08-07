@@ -52,7 +52,7 @@ apiGroup({
           "TensorRT only — which physical card."
         ]
       ],
-      "example": "curl -X POST \"$HOST/api/export?project=the first project\" \\\n  -H \"Authorization: Bearer $GW_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"run\":\"yolov8n-65\",\"format\":\"coreml\"}'",
+      "example": "curl -X POST \"$HOST/api/export?project=widgets\" \\\n  -H \"Authorization: Bearer $GW_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"run\":\"yolov8n-65\",\"format\":\"coreml\"}'",
       "notes": [
         "NCNN measured here: 4.3× faster on a Pi and <b>one object worse</b>. Fine for a live preview, not for a count that matters.",
         "TensorRT compiles on the card and is refused while that machine is training. Everything else converts on CPU and can run beside a training job."

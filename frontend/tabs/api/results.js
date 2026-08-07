@@ -14,7 +14,7 @@ apiGroup({
       "auth": "key",
       "what": "Everything about a single run — either family.",
       "detail": "Answers for yolo and challenger runs from the same name. Carries\n          the ledger row, an eval summary, what is actually on disk, and which\n          formats it can export to — the last read from the same table the Export\n          tab uses, so it cannot disagree with what pressing the button offers.",
-      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \\\n  \"$HOST/api/runs/yolov8n-65?project=the first project\"",
+      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \\\n  \"$HOST/api/runs/yolov8n-65?project=widgets\"",
       "returns": "{\"run\":\"yolov8n-65\",\"kind\":\"yolo\",\"model\":\"YOLOv8n (default)\",\n \"on_disk\":true,\n \"eval\":{\"mae\":0.0147,\"conf\":0.3,\"iou\":0.3,\"n\":68,\"misses\":1,\"worst\":1,\n         \"source\":\"testset\",\"imgsz\":960,\"on_tray_filter\":false,\n         \"dupes\":0,\"dropped\":0},\n \"artifacts\":{\"weights\":true,\"count_eval\":true,\"eval_preview\":true},\n \"export_formats\":[\"onnx\",\"torchscript\",\"coreml\",\"tflite\",\"openvino\",\"ncnn\",\"engine\"]}",
       "notes": [
         "<code>misses</code> is how many holdout images it counted wrong, at any margin. <code>worst</code> is the largest error on a single image — the risk a mean hides.",
@@ -26,21 +26,21 @@ apiGroup({
       "path": "/api/runs",
       "auth": "key",
       "what": "The yolo ledger, newest first, with deltas against the previous run.",
-      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \"$HOST/api/runs?project=the first project\""
+      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \"$HOST/api/runs?project=widgets\""
     },
     {
       "method": "GET",
       "path": "/api/lab/runs",
       "auth": "key",
       "what": "The challenger ledger.",
-      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \"$HOST/api/lab/runs?project=the first project\""
+      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \"$HOST/api/lab/runs?project=widgets\""
     },
     {
       "method": "GET",
       "path": "/api/runs/{run}/images",
       "auth": "key",
       "what": "Per-image results for a run — predicted vs true, per holdout image.",
-      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \\\n  \"$HOST/api/runs/yolov8n-65/images?project=the first project\""
+      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \\\n  \"$HOST/api/runs/yolov8n-65/images?project=widgets\""
     },
     {
       "method": "GET",

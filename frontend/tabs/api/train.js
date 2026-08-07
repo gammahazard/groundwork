@@ -62,7 +62,7 @@ apiGroup({
           "Varies the train/val split. The one knob that asks whether a result survives a different split."
         ]
       ],
-      "example": "curl -X POST \"$HOST/api/train?project=the first project\" \\\n  -H \"Authorization: Bearer $GW_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\":\"deimv2-n\",\"machine\":\"the worker\",\"card\":1,\n       \"imgsz\":1280,\"epochs\":60,\"batch\":8,\n       \"run_name\":\"deimv2-n-1280-x1\"}'",
+      "example": "curl -X POST \"$HOST/api/train?project=widgets\" \\\n  -H \"Authorization: Bearer $GW_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\":\"deimv2-n\",\"machine\":\"the worker\",\"card\":1,\n       \"imgsz\":1280,\"epochs\":60,\"batch\":8,\n       \"run_name\":\"deimv2-n-1280-x1\"}'",
       "returns": "{\"ok\":true,\"card\":1,\"epochs\":60,\"synced\":{\"sent\":0},\"machine\":\"the worker\"}",
       "notes": [
         "A challenger under a live yolo retrain is allowed <b>only if the split is already current</b> — then it is reused, not rebuilt. If it is stale the run is refused, because re-splitting deletes the images the retrain is reading.",
@@ -75,14 +75,14 @@ apiGroup({
       "auth": "key",
       "what": "Every model × machine × card, and why anything is refused.",
       "detail": "What the Train control is built from. Each model carries its\n          default size, epochs and batch, the sizes it accepts, and per machine\n          which cards can run it — with a reason for each that cannot.",
-      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \\\n  \"$HOST/api/train/options?project=the first project\""
+      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \\\n  \"$HOST/api/train/options?project=widgets\""
     },
     {
       "method": "GET",
       "path": "/api/retrain",
       "auth": "key",
       "what": "The yolo retrain's status, step and progress.",
-      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \"$HOST/api/retrain?project=the first project\""
+      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \"$HOST/api/retrain?project=widgets\""
     },
     {
       "method": "GET",
@@ -90,7 +90,7 @@ apiGroup({
       "auth": "key",
       "what": "Challenger runs on this machine — or on the Trainer, when asked from HQ.",
       "detail": "Reports <code>actives</code> (every live challenger, with its\n          card), <code>yolo_retrain</code>, and <code>split_current</code> —\n          the boolean that decides whether a challenger may start while a\n          retrain runs. <code>split_current</code> is computed only while a\n          retrain is running, and is <code>null</code> when not asked or not\n          knowable.",
-      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \"$HOST/api/lab/status?project=the first project\""
+      "example": "curl -H \"Authorization: Bearer $GW_KEY\" \"$HOST/api/lab/status?project=widgets\""
     },
     {
       "method": "DELETE",

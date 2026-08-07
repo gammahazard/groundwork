@@ -10,6 +10,10 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 ## [Unreleased]
 
 ### Added
+- `docs/api.md`: the API reference — auth model, scopes, the project rule,
+  error conventions, worked curl examples, and a generated catalog of every
+  route (96 today) that CI regenerates and diffs so it cannot go stale. The
+  in-app API tab gains the machine-pairing family and a bots group.
 - README: table of contents, section dividers, and a marked case-study block
   telling the origin deployment's story (owner-approved; the vocabulary gate
   exempts exactly that delimited block and nothing else — mutation-proven).
