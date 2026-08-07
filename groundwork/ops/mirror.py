@@ -70,8 +70,19 @@ def _rel(p: Path) -> str:
                          f"datasets that live under the install root") from None
 
 
+def _run_captured(cmd, *, timeout):
+    """The default runner: capture text output, bounded. The `run` parameter's
+    CONTRACT is exactly `run(cmd, timeout=) -> .returncode/.stdout/.stderr` —
+    the web dispatcher injects safe_proc.run, whose signature is that minimal
+    shape and nothing more. Passing subprocess.run's richer kwargs here once
+    made the seam a lie: every check stubbed `run` with **kwargs, so the first
+    real dispatch through safe_proc was the first time the signatures met.
+    """
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+
+
 def sync_one(slug: str, machine_key: str, dry: bool = False,
-             run=subprocess.run) -> dict:
+             run=_run_captured) -> dict:
     """Push one project's dataset to one worker. Returns what happened.
 
     {ok, slug, machine, sent, deleted, seconds, error} — `sent` counts regular
@@ -113,7 +124,7 @@ def sync_one(slug: str, machine_key: str, dry: bool = False,
         return {"ok": True, "slug": slug, "machine": machine_key,
                 "sent": 0, "deleted": 0, "dry": True}
     t0 = time.time()
-    r = run(cmd, capture_output=True, text=True, timeout=RSYNC_TIMEOUT)
+    r = run(cmd, timeout=RSYNC_TIMEOUT)
     if r.returncode != 0:
         err = (r.stderr or "rsync failed").strip()[:400]
         print(f"    FAILED: {err}", file=sys.stderr)
@@ -130,7 +141,7 @@ def sync_one(slug: str, machine_key: str, dry: bool = False,
     if man.exists():
         mdest = f"{host}:{remote_root}/{_rel(man.parent)}/"
         mr = run(["rsync", "-az", "--mkpath", "-e", ssh, str(man), mdest],
-                 capture_output=True, text=True, timeout=120)
+                 timeout=120)
         if mr.returncode != 0:
             # NOT FATAL TO THE DATASET SYNC that already succeeded, but it must
             # be said: a remote run for this project will fail to resolve it.
