@@ -54,7 +54,7 @@ polled functions) and `checks/check_polled_endpoints.py` (no GET blocks on the n
 
 ## Frontend rules — `checks/check_frontend.py`
 
-`frontend/` is a plain SPA: ~50 classic `<script>` tags and **one shared lexical
+`frontend/` is a plain SPA: ~60 classic `<script>` tags and **one shared lexical
 environment**. That has consequences the checker exists to catch:
 
 - A duplicate top-level `const`/`let` in two files is a TypeError at load, and the browser
@@ -83,8 +83,12 @@ path, a real pipeline stage — not by reading.
 
 ## Dataset CLIs name their project
 
-Every CLI that touches a dataset takes a required `--project` and prints its project, its
-dataset root and its image count before doing work. Silently operating on the wrong data
+Every dataset CLI in `groundwork/` takes a required `--project` and prints its project,
+its dataset root and its image count before doing work. (Machine-level jobs — the adopt
+scan, the janitor — take an OPTIONAL `--project` and iterate every project without one,
+because the question they answer is about the box. The challenger trainers under
+`altmodels/` are the exception: they are handed an already-converted dataset directory
+and never resolve a project themselves.) Silently operating on the wrong data
 is this platform's most expensive failure mode, and a stage that announces itself turns a
 wrong launch into one readable log line instead of a wrong number three stages later. Keep
 the rule when adding a stage.
@@ -100,7 +104,7 @@ Each check runs standalone:
 ...
 ```
 
-`python checks/run.py` runs the CI-safe set if present. `checks/gpu/` needs real hardware
+`python checks/run.py` runs the CI-safe set. `checks/gpu/` needs real hardware
 and is run manually before a release; `checks/ui/` drives a real browser.
 
 ## Releases

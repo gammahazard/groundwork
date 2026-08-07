@@ -27,9 +27,11 @@ What it does, in order:
    capability, and selects the matching CUDA wheel index (or CPU wheels when there is no
    GPU). This matters: a torch build carries a fixed set of compiled kernels, and a wheel
    without your card's architecture *imports fine and fails at first use*.
-3. Creates `.venv` and installs Groundwork with its training extra.
-4. Installs `ultralytics` without letting it drag its own torch pin over the one chosen
-   in step 2.
+3. Creates `.venv` and installs torch and torchvision FIRST, from that index.
+4. Installs Groundwork with its `[train,bots]` extras. The order is what protects
+   step 2: with torch already satisfied, the unpinned `torch` those extras carry
+   resolves to the build you just chose, so nothing installed afterwards
+   (ultralytics included) can swap in a generic one.
 
 Nothing outside the repo directory is touched at this stage.
 
@@ -107,7 +109,18 @@ No wizard, no env vars, and locked out? The CLI works from the box itself:
 ## Upgrading
 
 ```sh
+scripts/upgrade.sh          # native or compose — it detects which, and refuses mid-run
+```
+
+It pulls (fast-forward only), rebuilds the stack it finds — a compose stack with
+containers, else the `.venv` — re-renders units, and restarts. It refuses while a
+training run is live, reading the run state from disk rather than asking the server.
+
+By hand, natively:
+
+```sh
 git pull
+.venv/bin/pip install -e ".[train,bots]"
 .venv/bin/groundwork install --units-only   # re-render units/timers if they changed
 systemctl --user restart groundwork-web
 ```

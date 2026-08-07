@@ -1,7 +1,7 @@
 {
-  "name": "counter1-frontend-checks",
+  "name": "groundwork-ui-checks",
   "private": true,
-  "description": "dev-only: playwright for check_cockpit_live.mjs. npm --prefix scratch install && npx playwright install chromium webkit",
+  "description": "dev-only: playwright for check_cockpit_live.mjs. npm --prefix checks/ui install && npx playwright install chromium webkit",
   "type": "module",
   "devDependencies": { "playwright": "^1.62.1" }
 }

@@ -49,7 +49,7 @@ git pull --ff-only \
 # on the box: the compose file ships with the repo, so its presence proves
 # nothing, and docker being installed proves nothing either. A compose stack
 # with containers wins; a .venv is the native fallback.
-compose_file="${GW_COMPOSE_FILE:-docker/docker-compose.yml}"   # cpu stack: point this at docker-compose.cpu.yml
+compose_file="${GW_COMPOSE_FILE:-docker/docker-compose.yml}"   # cpu stack: GW_COMPOSE_FILE=docker/docker-compose.cpu.yml
 if command -v docker >/dev/null 2>&1 \
         && docker info >/dev/null 2>&1 \
         && [ -n "$(docker compose -f "$compose_file" ps -aq 2>/dev/null)" ]; then

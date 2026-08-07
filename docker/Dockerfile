@@ -10,6 +10,7 @@ FROM python:3.12-slim
 # rsync + openssh-client   dataset sync between paired machines
 # git       challenger-stack checkouts into /data/venvs
 # curl      the compose healthcheck
+# gosu      drop from root to the host uid after chowning /data (entrypoint)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         gosu \

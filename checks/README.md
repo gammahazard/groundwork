@@ -27,6 +27,8 @@ requires the failure to be seen. A check that cannot fail verifies nothing.
 | `check_detection_ceiling` | No model config may cap detections below the densest labelled image (×1.2 headroom) — a capped detector scores as a bad counter with no error anywhere. |
 | `check_editor_mirrors` | The JS editor functions (`frontend/editor/editor_mirrors.js`) stay numerically equal to their Python originals — executed under node on shared fixtures, including a banker's-rounding tie that catches the known drift. |
 | `check_exam_freeze` | A frozen, named exam is scored whole or not at all: a missing or relabelled image refuses loudly, so a number under an exam's name is always comparable to its history. |
+| `check_api_docs` | `docs/api.md`'s route catalog matches the live app — it is generated from `app.openapi()`, so "every route" stays a promise the build enforces rather than one someone has to remember. |
+| `check_import_targets` | Every relative and `groundwork.*` import resolves to a module that exists — including the ones written INSIDE functions, which compileall and pyflakes both miss and which crash at call time. |
 | `check_frontend` | The SPA holds together: every asset tag resolves, every tab pairs a button with a section, every fetched `/api` path is a served route, every script parses, no top-level name collisions, nothing orphaned. |
 | `check_gpu_gate` | One authority per card: `/api/train` refuses a second GPU job in BOTH directions, treats "could not ask" as busy (unknown ≠ idle), and honours `allow_concurrent` as a deliberate opt-in. |
 | `check_janitor_safety` | The pending-queue janitor can only ever delete its own kinds of files — serving pins, ledgers, locks and logs are untouchable. |
@@ -52,6 +54,7 @@ requires the failure to be seen. A check that cannot fail verifies nothing.
   at a time; `check_vram_guard.py` exercises the VRAM guard on real hardware.
 - **`checks/ui/`** — manual; needs a running instance on `:8000` (or
   `COCKPIT=<url>`) plus playwright (`npm --prefix checks/ui install`,
-  `npx playwright install chromium`). Real-browser assertions for entry
+  `npx playwright install chromium webkit` — the live cockpit check
+  drives Safari's engine too). Real-browser assertions for entry
   states, dashboard scope, multi-project isolation and the challenger media
   gallery — the class of composition bug no static check sees.
