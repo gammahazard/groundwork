@@ -30,7 +30,7 @@ a bot NAME containing newlines was enough to append arbitrary directives to a
 unit systemd then executed. Everything written into a unit is validated now, and
 refused rather than escaped.
 
-The unit template is deliberately close to the hand-written the counting bot.service that
+The unit template is deliberately close to the hand-written counting-bot unit that
 has been running for months — same Restart policy, same WorkingDirectory, same
 network-online ordering. A generated unit that behaves differently from the one
 you already trust is a second thing to debug.

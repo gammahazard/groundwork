@@ -380,8 +380,8 @@ def probe(key: str, _: str = Depends(require_admin)):
     # TRAINING deliberately answers with no cards — enumerating them crosses
     # /dev/dxg, which can wedge in unkillable D-state, so neither side reads
     # card properties mid-run. So probing a busy machine ERASED the cards HQ had
-    # measured when it was idle, and the Train control then offered no card at
-    # at all for the machine that does all the training (measured
+    # measured when it was idle, and the Train control then offered no card at all
+    # for the machine that does all the training (measured
     # 2026-08-05).
     #
     # The docstring above always claimed a busy machine "answers with its

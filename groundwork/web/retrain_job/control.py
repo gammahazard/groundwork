@@ -32,7 +32,7 @@ def _launch_pipeline(sizes: list[int], val_frac: float,
                      card: int | None = None) -> int:
     """Start the retrain as a detached process and return its pid.
 
-    start_new_session is NOT what makes it survive a the web service restart (systemd
+    start_new_session is NOT what makes it survive a web-service restart (systemd
     kills by cgroup, which setsid does not leave — see retrain_worker). It buys
     the pipeline its own process group, so cancel() can take down the pipeline
     and whichever stage subprocess it is inside with one killpg.

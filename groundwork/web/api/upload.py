@@ -146,7 +146,7 @@ async def upload(files: list[UploadFile] = File(...),
             skipped.append({"name": name, "why": f"unusable filename ({e.args[0]})"})
             continue
         (img_dir / f"{stem}{suffix}").write_bytes(data)
-        # The empty label file is what makes it a IMAGE rather than a loose image
+        # The empty label file is what makes it an IMAGE rather than a loose image
         # — see the module docstring. Written FIRST, so an image exists even if the
         # optional pre-label below fails.
         (lbl_dir / f"{stem}.txt").write_text("", encoding="utf-8")

@@ -18,7 +18,7 @@ That cap is also what makes the NAMES derivable, which is the security half.
 `key`, `unit`, `token_env` and `log` used to be typed or free-derived from a
 display name and checked for uniqueness only WITHIN a project — while systemd
 units and .env are machine-global namespaces. So a second account could claim
-`the counting bot.service` or `TELEGRAM_BOT_TOKEN` from inside its own project and take
+a hand-written counting-bot unit or `TELEGRAM_BOT_TOKEN` from inside its own project and take
 over the owner's bot. With at most one bot per (project, role) and slugs already
 globally unique, `<slug>-<role>` is unique by construction: nothing to check,
 nothing to collide, and no 409 that would reveal a bot the caller cannot see.

@@ -42,7 +42,7 @@ of it needed only an ordinary signed-in account:
     returned the first key match, so every bot on the box was everyone's;
   * a bot NAME containing newlines injected directives into the systemd unit
     (`bot_roles.unit_text`), giving code execution as the user who owns .env;
-  * `unit` came off the request and the denylist did not include the counting bot.service,
+  * `unit` came off the request and the denylist did not include the hand-written counting-bot unit,
     so another account could stop or hijack the owner's bot;
   * `token_env` was unique per PROJECT while .env is machine-global, so a bot
     registered elsewhere could overwrite the owner's token;

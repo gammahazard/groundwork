@@ -7,7 +7,7 @@ Both halves were broken, and they broke differently:
 
   THE NAME. `unit` came straight off the request (`^[A-Za-z0-9@._-]+\\.service$`)
   and was checked against a DENYLIST of seven infrastructure units — which did
-  not include `the counting bot.service` or `a legacy unit`. So a second account
+  not include a hand-written counting-bot unit or `a legacy unit`. So a second account
   could register a bot in its OWN project claiming the owner's unit name, then
   stop it, or install over it and repoint the owner's Telegram photos at their
   own dataset. It is an ALLOWLIST now: `gw-<slug>-<role>.service`, derived and

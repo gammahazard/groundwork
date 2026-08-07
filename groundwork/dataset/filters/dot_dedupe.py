@@ -53,6 +53,11 @@ def find_stacked(centers, dot_r: float) -> set[int]:
             if i != j:
                 best = min(best, math.hypot(a[0] - b[0], a[1] - b[1]))
         nn.append(best)
+    # UPPER median on an even count (sorted[n//2], not the mean of the middle
+    # pair) — deliberately left as-is. This threshold is mirrored in the
+    # editor's JS and in every scored count_eval.json on disk, so "more
+    # correct" here would silently change counts and invalidate the recorded
+    # exams. Change it only alongside a re-score and the mirrors.
     med = sorted(nn)[n // 2]
     thresh = max(dot_r * 1.2, med * 0.4)
     drop: set[int] = set()

@@ -183,7 +183,7 @@ def train(req: TrainReq, p=Depends(current_project)):
               f"reusing it instead of rebuilding", flush=True)
     # SPLIT FIRST — do not remove this. `convert --match-split` reads the
     # machine-local split dirs (outputs/dataset/images/{train,val}), and
-    # the mirror job.service deliberately EXCLUDES those from the mirror, so on the
+    # the mirror job deliberately EXCLUDES those from the mirror, so on the
     # lab they only change when something runs a split here. They therefore go
     # stale the moment HQ gains an image.
     #

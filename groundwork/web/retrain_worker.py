@@ -1,4 +1,4 @@
-"""Detached entrypoint for a retrain — its OWN process, not a the web service thread.
+"""Detached entrypoint for a retrain — its OWN process, not a thread inside the web service.
 
 Why this module exists: the pipeline used to run as a `threading.Thread` inside
 the web service, so `systemctl --user restart the web service` took the whole retrain down
