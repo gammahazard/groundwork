@@ -68,6 +68,23 @@ async function _upModelName() {
       const mae = s.served.mae != null ? ` · holdout MAE ${fmtScore(s.served.mae)}` : "";
       el.textContent = `${name}${mae} — you still check its work in the fix queue`;
       if (box) box.disabled = false;
+      // WHICH model draws the dots. Default = whatever serves; the list is
+      // this project's completed runs, so an older/better run can pre-label
+      // without touching what the bot answers with.
+      const row = $("#upModelRow"), sel = $("#upModel");
+      if (row && sel) {
+        try {
+          const m = await apiOrThrow("/api/models");
+          const runs = (m.runs || []);
+          if (runs.length > 1) {
+            sel.innerHTML = `<option value="">serving model (${_uEsc(name)})</option>`
+              + runs.map(r =>
+                  `<option value="${_uEsc(r.name)}">${_uEsc(r.name)} @${r.imgsz}</option>`)
+                .join("");
+            row.hidden = false;
+          } else row.hidden = true;
+        } catch (e) { row.hidden = true; }
+      }
     } else {
       el.textContent = "this project has no model serving yet — train one first";
       if (box) { box.checked = false; box.disabled = true; }
@@ -109,6 +126,8 @@ async function uploadFiles(files, predict) {
       // FormData values are strings on the wire; FastAPI's Form(bool) reads
       // "true"/"false", so send the word rather than a checkbox's "on".
       fd.append("predict", "true");
+      const chosen = $("#upModel")?.value;
+      if (chosen) fd.append("model", chosen);
       const r = await apiOrThrow("/api/upload", {method: "POST", body: fd});
       added.push(...(r.added || []));
       skipped.push(...(r.skipped || []));

@@ -297,6 +297,24 @@ def make_counter(pp, **kw):
     return YoloCounter(pp=pp, **kw)
 
 
+def counter_for_run(pp, run_name: str, **kw):
+    """A YOLO counter over ONE NAMED RUN of this project — the upload
+    pre-labeler's model picker. Serving stays exactly as pinned; the chosen
+    run's own tuned conf/iou and trained size apply, as if it were serving.
+    """
+    for r in list_runs(pp):
+        if r["name"] == run_name:
+            conf, iou = _tuning(Path(r["weights"]))
+            if conf is not None:
+                kw.setdefault("conf", conf)
+            if iou is not None:
+                kw.setdefault("iou", iou)
+            from .yolo_counter import YoloCounter
+            return YoloCounter(pp=pp, weights=r["weights"],
+                               imgsz=r["imgsz"], **kw)
+    raise FileNotFoundError(f"no completed run {run_name!r} in this project")
+
+
 def _tuning(weights: Path) -> tuple[float | None, float | None]:
     """(conf, iou) that count_eval tuned for this run, or (None, None). Written to
     <run>/count_eval.json on every evaluation, so the served thresholds track the

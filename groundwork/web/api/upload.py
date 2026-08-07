@@ -81,6 +81,7 @@ def _stem_for(name: str, taken: set[str], img_dir: Path) -> str:
 @router.post("/api/upload")
 async def upload(files: list[UploadFile] = File(...),
                  predict: bool = Form(False),
+                 model: str | None = Form(None),
                  pp: ProjectPaths = Depends(project_paths)):
     """Add images to this project's fix queue, ready to label.
 
@@ -109,7 +110,8 @@ async def upload(files: list[UploadFile] = File(...),
             # THIS project's model. It was the machine-global one, so ticking
             # pre-label on a bolts upload ran the OBJECT counter over bolts
             # photos and saved the output as draft labels.
-            counter = runtime_model.make_counter(pp)
+            counter = (runtime_model.counter_for_run(pp, model)
+                       if model else runtime_model.make_counter(pp))
         except Exception as e:  # noqa: BLE001
             # No pinned model, or it will not load. The upload still HAPPENS —
             # refusing twenty photos because the optional half failed would be

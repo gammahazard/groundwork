@@ -96,7 +96,10 @@ async function _paintBusy() {
      *
      * `remote` is set by lab_ops.status when the answer came from the proxy, so
      * it names the Trainer; anything else is this cockpit's own machine. */
-    const rigKey = (TRAIN_OPTS.machines || []).find(m => !m.local)?.key || "";
+    // Prefer the machine the PAYLOAD names; "first non-local" is only the
+    // fallback for older servers, and wrong the day a second worker exists.
+    const rigKey = (retrain && retrain.machine)
+      || (TRAIN_OPTS.machines || []).find(m => !m.local)?.key || "";
     const hereKey = (TRAIN_OPTS.machines || []).find(m => m.local)?.key || "here";
     for (const a of running)
       jobs.push({card: a.card ?? 1, kind: "challenger", what: a.run,

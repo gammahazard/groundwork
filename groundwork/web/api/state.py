@@ -171,7 +171,13 @@ def _remote_challenger_mileage() -> dict | None:
         wk = lab_proxy.first_worker_key()
         if wk is None:
             return None                 # no workers registered — nothing to ask
-        d, _age = lab_proxy.get(wk, "/api/state")
+        # The worker's /api/state REQUIRES a project (clean slate); the
+        # odometer inside it is machine-wide, so any mirrored slug works.
+        from ... import project as project_mod
+        slugs = project_mod.slugs()
+        if not slugs:
+            return None
+        d, _age = lab_proxy.get(wk, f"/api/state?project={slugs[0]}")
     except Exception:  # noqa: BLE001
         return None
     if not isinstance(d, dict):
@@ -294,7 +300,7 @@ def lab_status(pp: ProjectPaths = Depends(project_paths)) -> dict:
     wk = lab_proxy.first_worker_key()
     if wk is None:
         return {"ok": False, "no_workers": True}
-    d, age = lab_proxy.get(wk, "/api/retrain")
+    d, age = lab_proxy.get(wk, f"/api/retrain?project={pp.slug}")
     if d is None:
         return {"ok": False}
     p = d.get("progress") or {}
@@ -340,6 +346,9 @@ def lab_status(pp: ProjectPaths = Depends(project_paths)) -> dict:
         r.get("project") == pp.slug and (r.get("finished") or 0) >= fin
         for r in rows)
     return {"ok": True, "age_s": age,
+            # WHICH worker answered — with several registered, a job must
+            # be drawn on the machine that owns it, not "the first remote".
+            "machine": wk,
             "status": d.get("status"), "step": d.get("step"),
             "imgsz": d.get("imgsz"), "finished": fin, "adopted": adopted,
             "progress": peek_prog,
