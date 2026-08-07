@@ -5,7 +5,7 @@ from telegram import BotCommand
 
 HELP = (
     "💊 *Object Counter*\n"
-    "Send a photo of the image and I'll reply with the count + a point overlay "
+    "Send a photo and I'll reply with the count + a point overlay "
     "(a dot on each object) in about a second.\n\n"
     "• *Frame the image tightly* — fill the shot with it. Nothing is cropped for "
     "you any more, so a bench edge, your hand or a bottle cap in frame can be "
