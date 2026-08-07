@@ -10,7 +10,11 @@ It is one FastAPI service, a plain-JS frontend with no build step, and filesyste
 you can read with `cat`. It runs on a laptop; it scales to a small fleet of GPU workers
 over ssh and rsync.
 
-<!-- screenshot: the cockpit's Images tab and the dot editor go here -->
+<p align="center">
+  <img src="frontend/guide/label-editor.png" alt="The dot editor: one click per object" width="49%">
+  <img src="frontend/guide/try-it.png" alt="Try it: upload a photo, get the count and an overlay" width="49%">
+</p>
+<p align="center"><i>Label by clicking once per object — then upload any photo and get the count back with an overlay.</i></p>
 
 ## Features
 

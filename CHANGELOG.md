@@ -9,6 +9,11 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Added
+- In-app screenshots in the README and the guide (editor, live training,
+  Try-it), shot on a synthetic dataset generated for the purpose — fully
+  owned imagery, allowlisted by name in the media gate.
+
 ### Fixed
 - Data-dir installs (Docker's `/data`, any `GW_DATA_DIR`) could not count,
   sync, adopt, or save a portable project manifest: five call sites resolved

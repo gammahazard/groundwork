@@ -99,6 +99,11 @@ def main() -> int:
     MEDIA_OK = {
         "frontend/favicon.svg",
         "frontend/guide/verdict.jpg",      # ultralytics loss curves — neutral
+        # Reviewed 2026-08-07: shot on a synthetic washers project generated
+        # by this repo's own asset session — no third-party or domain imagery.
+        "frontend/guide/label-editor.png",
+        "frontend/guide/try-it.png",
+        "frontend/guide/train-live.png",
     }
     MEDIA_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".ico",
                  ".mp4", ".webm", ".avif", ".bmp"}

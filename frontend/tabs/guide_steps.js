@@ -74,6 +74,9 @@ const GUIDE_STEPS = [
   {
     key: "marking",
     title: "Mark what you want counted",
+    media: {src: "/static/guide/label-editor.png",
+            alt: "The editor: one dot per object, 41 marked",
+            cap: "One click per object. The count in the corner is the label."},
     lede: "Open any photograph and click once on each object. That is the whole job.",
     body: `
       <ul>
@@ -114,6 +117,9 @@ const GUIDE_STEPS = [
   {
     key: "training",
     title: "Train it",
+    media: {src: "/static/guide/train-live.png",
+            alt: "The Train tab mid-run: model, machine and card chosen; live progress below",
+            cap: "Model × machine × card — refusals and trade-offs are stated before you press Train."},
     lede: "Pick a model, a machine and a card. Combinations that cannot work are greyed out with the reason.",
     body: `
       <p>Open <span class="gWhere">Train</span> and press <b>▶ Train</b>. It then runs
