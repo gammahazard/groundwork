@@ -1,0 +1,20 @@
+# Dependabot: version updates for the two ecosystems this repo actually has.
+# Security ALERTS are a repo setting, not this file — this only opens PRs.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One PR per week for the boring bumps; majors stay individual so a
+      # breaking torch or fastapi release is never buried in a group.
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
