@@ -63,9 +63,9 @@ git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null 2>&1 && die "tag v$VE
 # --- changelog surgery + notes (in temp files; real files touched only later) -
 NOTES="$(mktemp)"; NEWCL="$(mktemp)"
 trap 'rm -f "$NOTES" "$NEWCL"' EXIT
-python3 - "$VERSION" "$NEWCL" "$NOTES" <<'PY' || exit 1
+python3 - "$VERSION" "$cur" "$NEWCL" "$NOTES" <<'PY' || exit 1
 import datetime, re, sys
-ver, out_cl, out_notes = sys.argv[1:4]
+ver, cur, out_cl, out_notes = sys.argv[1:5]
 src = open("CHANGELOG.md", encoding="utf-8").read()
 m = re.search(r'(?m)^## \[Unreleased\]\s*\n(.*?)(?=^## \[|\Z)', src, re.S)
 if not m:
@@ -77,9 +77,19 @@ today = datetime.date.today().isoformat()
 stamped = (src[:m.start()]
            + f"## [Unreleased]\n\n## [{ver}] - {today}\n\n{body}\n\n"
            + src[m.end():])
+# Keep the compare-link footer honest: point [Unreleased] at the new tag and
+# add a [ver] compare line. Self-heals from whatever the old links said,
+# because the base URL is reused and the range comes from cur/ver.
+u = re.search(r'(?m)^\[Unreleased\]:\s*(\S+?/compare/)', stamped)
+if u:
+    base = u.group(1)
+    stamped = re.sub(r'(?m)^\[Unreleased\]:.*$',
+                     f"[Unreleased]: {base}v{ver}...HEAD\n[{ver}]: {base}v{cur}...v{ver}",
+                     stamped, count=1)
 open(out_cl, "w", encoding="utf-8").write(stamped)
 open(out_notes, "w", encoding="utf-8").write(body + "\n")
-print(f"  changelog: [Unreleased] -> [{ver}] - {today}  ({body.count(chr(10)) + 1} lines of notes)")
+print(f"  changelog: [Unreleased] -> [{ver}] - {today}  ({body.count(chr(10)) + 1} lines of notes)"
+      + ("  + compare links" if u else ""))
 PY
 
 # --- dry run stops here, having changed nothing -------------------------------

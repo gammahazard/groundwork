@@ -227,6 +227,7 @@ First cut. Everything is new; the highlights:
 - **Checks**: 29 CI-safe invariant checks (most with mutation arms), plus
   manual GPU-smoke and real-browser suites.
 
-[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/gammahazard/groundwork/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/gammahazard/groundwork/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/gammahazard/groundwork/releases/tag/v0.1.0
