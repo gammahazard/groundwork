@@ -76,12 +76,12 @@ def main() -> int:
         except users.UserError:
             note(True, "under 8 characters is refused")
         note(users.hash_password("abcdefgh") != "", "exactly 8 is accepted")
-    for bad in ("changeme", "Change-Me", "change_me", "12345678", "PASSWORD"):
-        try:
-            users.hash_password(bad)
-            note(False, f"guess-list password {bad!r} must be refused")
-        except users.UserError:
-            note(True, f"guess-list password {bad!r} is refused")
+        for bad in ("changeme", "Change-Me", "change_me", "12345678", "PASSWORD"):
+            try:
+                users.hash_password(bad)
+                note(False, f"guess-list password {bad!r} must be refused")
+            except users.UserError:
+                note(True, f"guess-list password {bad!r} is refused")
         note(users.hash_password("!!!!!!!!") != "",
              "no complexity rule — 8 identical symbols is fine")
         users.add("casey", PW, admin=True)
