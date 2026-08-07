@@ -6,7 +6,7 @@
 # satisfied and nothing later can swap in a generic build.
 
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
