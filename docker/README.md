@@ -10,7 +10,8 @@ Version tags publish images to ghcr.io (CUDA build plus a `-cpu` variant) —
 once the repository is public. Run one without building anything:
 
 ```sh
-GW_IMAGE=ghcr.io/gammahazard/groundwork:latest docker compose up -d
+GW_IMAGE=ghcr.io/gammahazard/groundwork:latest \
+  docker compose -f docker/docker-compose.yml up -d
 ```
 
 While the repo is private, build locally as below — the release workflow
@@ -38,8 +39,10 @@ skips itself (private ghcr storage is smaller than a CUDA torch image).
    account, instance name, GPU probe, first project.
 
 No NVIDIA GPU? `docker compose -f docker/docker-compose.cpu.yml up -d --build`
-gives you everything except training: collect, label, curate, manage accounts.
-Training happens on a paired GPU machine, or on this box once it has a card.
+runs the same stack on CPU-only torch: collect, label, curate, manage
+accounts — and train, slowly (the trainer service is included; a small model
+on a small dataset is genuinely feasible on CPU). Heavy training belongs on
+a paired GPU machine.
 
 ## Where your data lives
 

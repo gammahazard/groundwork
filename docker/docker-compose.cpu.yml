@@ -17,7 +17,8 @@ x-base: &base
     dockerfile: docker/Dockerfile
     args:
       TORCH_CHANNEL: cpu
-  image: groundwork:cpu                  # its own tag, so it never shadows a GPU build
+  image: ${GW_IMAGE:-groundwork:cpu}      # default tag never shadows a GPU build;
+                                          # GW_IMAGE picks a published -cpu image
   # Starts as root only long enough for the entrypoint to chown /data to
   # GW_UID:GW_GID and drop privileges (gosu) — see the GPU compose file.
   environment:

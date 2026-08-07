@@ -41,9 +41,23 @@ mkdir -p "$data/outputs" "$data/private" "$data/config" "$data/models" \
 chmod 700 "$data/private"
 
 if [ -f "$data/config/.env" ]; then
-    set -a                    # every assignment in the file becomes exported env
-    . "$data/config/.env"
-    set +a
+    # python-dotenv PARSES, the shell only evals the quoted exports it emits.
+    # `.`-sourcing the cockpit-written file word-splits values differently
+    # from the app (and under set -eu a token containing a space, quote or $
+    # kills the container at boot). Same parser as the app = same values.
+    eval "$(python - "$data/config/.env" <<'PYEOF'
+import re, shlex, sys
+from dotenv import dotenv_values
+for k, v in (dotenv_values(sys.argv[1]) or {}).items():
+    if v is not None and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", k):
+        print(f"export {k}={shlex.quote(v)}")
+PYEOF
+)"
 fi
+
+# The compose port mapping and healthcheck are fixed at 8000, so inside the
+# container the listener must be too — GW_PORT from .env is a native-install
+# setting and must not move it (the HOST port is the compose-time GW_PORT).
+export GW_PORT=8000
 
 exec "$@"
