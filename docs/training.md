@@ -16,8 +16,10 @@ and can size boxes in either case.
 Three routes, mix freely:
 
 - **Upload** (Images tab). If the project already has a trained run, uploads can be
-  pre-labelled by the *current* model as a draft — you fix, rather than start from
-  nothing. Uploads land in the fix queue, never directly in training.
+  pre-labelled as a draft — you fix, rather than start from nothing. The serving
+  model draws by default; when several runs exist a picker lets any completed run
+  do the drawing (its own tuned thresholds apply, and what the bot serves is
+  untouched). Uploads land in the fix queue, never directly in training.
 - **A Telegram bot** ([bots.md](bots.md)): every counted photo plus its ✓/✗ verdict
   flows into the pending inbox and fix queue. This is how a deployed counter keeps
   feeding its own training set.

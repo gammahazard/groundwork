@@ -16,6 +16,11 @@ data. No cockpit, no login — a phone camera and a chat.
   needs most.
 - **🗑 Discard** — a photo of the floor is a photo of the floor.
 
+**A bot works from day zero.** Before the project has any trained model it runs in
+intake mode: photos are accepted and land straight in the fix queue, unlabeled, with a
+running count in the reply. The moment the first run finishes, the same bot starts
+counting — no restart, no reconfiguration.
+
 Everything staged lands in the project's pending inbox and fix queue; a human pass in
 the editor is what promotes an image into training or holdout ([training.md](training.md)
 §3–4). Bots also answer `/status` (health), `/restart` (reload), and `/whoami` (your
