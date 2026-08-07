@@ -33,7 +33,10 @@ x-base: &base
       # cu128 is the default; pre-Blackwell cards can use cu126:
       #   TORCH_CHANNEL=cu126 docker compose -f docker/docker-compose.yml up -d --build
       TORCH_CHANNEL: ${TORCH_CHANNEL:-cu128}
-  image: groundwork:local                # one shared tag → one build for all three
+  # One shared tag → one build for all three services. Point GW_IMAGE at a
+  # published package to skip building entirely:
+  #   GW_IMAGE=ghcr.io/gammahazard/groundwork:0.1.0 docker compose up -d
+  image: ${GW_IMAGE:-groundwork:local}
   # Run as YOUR uid/gid so everything under ./data is plain host files you own:
   #   export GW_UID=$(id -u) GW_GID=$(id -g)
   user: "${GW_UID:-1000}:${GW_GID:-1000}"

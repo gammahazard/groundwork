@@ -4,6 +4,18 @@ The primary way to run Groundwork: one image, three services — `app` (web UI +
 bots), `trainer` (parents training runs, so the app can be recreated without
 killing one), `scheduler` (background jobs). Compose v2 required.
 
+## Published images
+
+Version tags publish images to ghcr.io (CUDA build plus a `-cpu` variant) —
+once the repository is public. Run one without building anything:
+
+```sh
+GW_IMAGE=ghcr.io/gammahazard/groundwork:latest docker compose up -d
+```
+
+While the repo is private, build locally as below — the release workflow
+skips itself (private ghcr storage is smaller than a CUDA torch image).
+
 ## Quickstart (GPU)
 
 1. Preflight — prove Docker can see your GPU at all, before blaming Groundwork:
