@@ -19,6 +19,25 @@ class Note(BaseModel):
     note: str
 
 
+def _safe(run: str) -> str:
+    """A run name is a single path segment. FastAPI decodes %2F into the
+    param AFTER routing, so without this a caller reaches `LOGS_DIR / run`
+    with separators in hand and reads any like-suffixed file on disk."""
+    if not run or "/" in run or "\\" in run or ".." in run:
+        raise HTTPException(422, "bad run name")
+    return run
+
+
+def _row_in_project(run: str, p, pp) -> dict:
+    """The ledger row, refused unless it belongs to the caller's project —
+    the ledger and the log dir are machine-wide, so the project dependency
+    alone scopes nothing without this lookup."""
+    row = next((r for r in runs(p, pp) if r.get("run") == run), None)
+    if row is None:
+        raise HTTPException(404, f"no run {run!r} in {p.slug}")
+    return row
+
+
 @router.get("/api/runs")
 def runs(p=Depends(current_project), pp: ProjectPaths = Depends(project_paths)):
     """All recorded training runs, newest first."""
@@ -78,8 +97,7 @@ def run_detail(run: str, p=Depends(current_project),
     plain boolean rather than a path — a path invites a caller to construct URLs
     into the run tree, which is the containment problem all over again.
     """
-    if not run or "/" in run or "\\" in run or ".." in run:
-        raise HTTPException(422, "bad run name")
+    _safe(run)
 
     m = registry.for_run(run)
     family = getattr(m, "name", None)
@@ -159,7 +177,9 @@ def run_detail(run: str, p=Depends(current_project),
 
 
 @router.get("/api/runs/{run}/log")
-def run_log(run: str):
+def run_log(run: str, p=Depends(current_project),
+            pp: ProjectPaths = Depends(project_paths)):
+    _row_in_project(_safe(run), p, pp)
     text = training_history.get_log(run)
     if text is None:
         raise HTTPException(404, "no saved log for this run")
@@ -168,17 +188,19 @@ def run_log(run: str):
 
 @router.get("/api/runs/{run}/curve")
 def run_curve(run: str, pp: ProjectPaths = Depends(project_paths)):
-    curve = training_history.get_curve(run, pp)
+    curve = training_history.get_curve(_safe(run), pp)
     if not curve:
         raise HTTPException(404, "no results.csv for this run")
     return {"run": run, "curve": curve}
 
 
 @router.post("/api/runs/{run}/note")
-def set_note(run: str, body: Note):
+def set_note(run: str, body: Note, p=Depends(current_project),
+             pp: ProjectPaths = Depends(project_paths)):
     # notes belong in HQ's ledger — a note typed on the Trainer would land in
     # its machine-local copy and silently never reach the ledger of record
     lab_guard.no_lab_edits()
+    _row_in_project(_safe(run), p, pp)
     return {"ok": training_history.set_note(run, body.note)}
 
 
@@ -187,7 +209,7 @@ def run_peek(run: str, pp: ProjectPaths = Depends(project_paths)):
     """Post-mortem 🔬 payload: curves + the training artifacts (augmented
     batches, labels plot, val pairs) ultralytics saved in the run dir."""
     from .. import run_stats
-    p = run_stats.peek(run, pp)
+    p = run_stats.peek(_safe(run), pp)
     if p is None:
         raise HTTPException(404, "no such run")
     return p
@@ -195,12 +217,12 @@ def run_peek(run: str, pp: ProjectPaths = Depends(project_paths)):
 
 def _preview_base(run: str, pp) -> str | None:
     """`/outputs/...` URL prefix of this run's eval_preview dir, or None."""
-    from ...config import ROOT
+    from ...config import OUTPUTS_DIR
     d = pp.RUNS_DIR / run / "eval_preview"
     if not d.is_dir():
         return None
     try:
-        return "/outputs/" + d.relative_to(ROOT / "outputs").as_posix()
+        return "/outputs/" + d.relative_to(OUTPUTS_DIR).as_posix()
     except ValueError:
         return None
 
@@ -210,6 +232,7 @@ def run_images(run: str, pp: ProjectPaths = Depends(project_paths)):
     """Per-image holdout results for the eval gallery: pred/gt/dropped/bucket + the
     overlay image path (served via the /outputs static mount). Only runs scored
     after the gallery feature shipped have these."""
+    _safe(run)
     ce = pp.RUNS_DIR / run / "count_eval.json"
     if not ce.exists():
         raise HTTPException(404, "no eval for this run")
