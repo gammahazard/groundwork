@@ -112,7 +112,12 @@ class DeimCounter(YoloCounter):
         x = x.permute(2, 0, 1).float().div_(255.0).unsqueeze(0)  # ToTensor()
         with torch.no_grad():
             logits, boxes = self.model(x)
-        scores = logits.sigmoid().flatten().tolist()
+        # BATCH-INDEXED like the boxes below, then reduced over classes. A bare
+        # .flatten() over the whole tensor is only right while there is exactly
+        # one class: with C classes it yields N*C scores against N boxes, and
+        # zip() silently pairs each box with the wrong score.
+        lg = logits[0].sigmoid()
+        scores = (lg.max(dim=-1).values if lg.dim() > 1 else lg).tolist()
         bx = boxes[0].tolist()                          # cxcywh, normalised
         cand, keep_scores = [], []
         for s, (cx, cy, bw, bh) in zip(scores, bx):
