@@ -1,5 +1,7 @@
 # Groundwork
 
+**[groundwork-site.vercel.app](https://groundwork-site.vercel.app)** — the tour, in one scroll.
+
 Groundwork is a self-hosted trainer for object-detection models, built around one loop:
 create a project, collect images, label them in the browser, train — on this machine or
 on a paired GPU box — and judge every run on a frozen holdout by the metric that matters
