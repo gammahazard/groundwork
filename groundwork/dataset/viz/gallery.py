@@ -35,10 +35,15 @@ def _points(stem: str, w: int, h: int, pp=None) -> list[Detection]:
 def build_gallery(pp=None) -> int:
     OUT_DIR = _out_dir(pp)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    stems = sorted(p.stem for p in pp.RAW_IMAGES.glob("*.jpeg"))
+    # EVERY image, not just .jpeg. Phone uploads are .jpg and screenshots are
+    # .png, and both were silently missing from the review sheet — which is the
+    # one place a human checks whether the labels are right.
+    files = {p.stem: p for p in sorted(pp.RAW_IMAGES.iterdir())
+             if p.is_file() and p.suffix.lower() != ".txt"}
+    stems = sorted(files)
     tiles = []
     for stem in stems:
-        img = Image.open(pp.RAW_IMAGES / f"{stem}.jpeg").convert("RGB")
+        img = Image.open(files[stem]).convert("RGB")
         dets = Detections(items=_points(stem, *img.size, pp=pp))
         annotate(img, dets, numbered=False).save(OUT_DIR / f"{stem}.jpg", quality=85)
         tiles.append((stem, dets.count))

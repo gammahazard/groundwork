@@ -103,10 +103,17 @@ def _in_progress() -> set[str]:
             # something else started training.
             from ..dataset import paths
             slug = d.get("project")
-            runs = paths.for_project(slug).RUNS_DIR if slug else _runs()
+            # NO PROJECT ON THE STATE FILE, no answer. This used to call
+            # _runs() with no argument — a TypeError the bare except below
+            # swallowed, so the set came back empty and a half-trained run
+            # could be listed and served as the newest.
+            if not slug:
+                return set()
+            runs = paths.for_project(slug).RUNS_DIR
             return {p.name for p in runs.glob("*") if p.is_dir()} - set(pre)
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as e:  # noqa: BLE001 — a missing/……… state file is normal
+        print(f"[runtime_model] in-progress check skipped: "
+              f"{type(e).__name__}: {e}", flush=True)
     return set()
 
 

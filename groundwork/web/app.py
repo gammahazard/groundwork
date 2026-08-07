@@ -151,6 +151,25 @@ def _migrate() -> None:
 _migrate()
 
 
+# SUPERVISOR-MODE BOTS AUTOSTART. Under systemd the units do this; in a
+# container (or `groundwork run`) nothing did — botsup.boot_enabled existed
+# and had no caller, so an enabled bot stayed dead until someone pressed Start
+# in the cockpit. Same thread posture as the probe: never block the bind, never
+# let a bad bot stop the server.
+def _boot_bots() -> None:
+    try:
+        from groundwork import project as _project
+        from groundwork.web import botsup
+        n = botsup.boot_enabled([_project.load(s) for s in _project.slugs()])
+        if n:
+            print(f"[web] started {n} enabled bot(s)", flush=True)
+    except Exception as e:  # noqa: BLE001
+        print(f"[web] bot autostart skipped ({type(e).__name__}: {e})", flush=True)
+
+
+_threading.Thread(target=_boot_bots, daemon=True).start()
+
+
 # INLINE SCHEDULER for installs with neither systemd timers nor the compose
 # scheduler service (`groundwork run`, WSL without systemd). Explicit opt-in.
 if os.environ.get("GW_SCHEDULER", "").strip() == "inline":

@@ -160,7 +160,12 @@ def backup_one(slug: str, machine_key: str, dry: bool = False,
     want = {}
     for lbl, attr in PARTS:
         d = getattr(pp, attr)
-        want[lbl] = len([f for f in d.iterdir() if f.is_file()]) if d.exists() else 0
+        # NOT dotfiles: the remote count is `ls -1`, which hides them, so one
+        # .DS_Store on this side made verification fail forever and no backup
+        # was ever accepted. Both sides count the same set now.
+        want[lbl] = (len([f for f in d.iterdir()
+                          if f.is_file() and not f.name.startswith(".")])
+                     if d.exists() else 0)
     total = sum(want.values())
     # SAY WHAT IS MOVING AND WHERE BEFORE MOVING IT — the same rule the mirror
     # follows, for the same reason: silent wrong-data is the expensive failure.
