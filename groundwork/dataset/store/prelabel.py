@@ -58,7 +58,7 @@ def from_model(counter, image, collection: str, stem: str, pp) -> dict:
             x1, y1, x2, y2 = (float(v) for v in b[:4])
         except (TypeError, ValueError):
             continue
-        # [cx, cy, cls, bw, bh] — cls 0 is "whole", the only class every project
+        # [cx, cy, cls, bw, bh] — cls 0 is the default class every project
         # has. save_points keeps an extent when one is given.
         points.append([(x1 + x2) / 2 + ox, (y1 + y2) / 2 + oy, 0,
                        abs(x2 - x1), abs(y2 - y1)])

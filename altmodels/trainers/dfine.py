@@ -41,7 +41,7 @@ DATASET_DEFAULT = ALT / "datasets" / "coco_rfdetr"
 DEFAULT_MODEL = "ustc-community/dfine-small-obj2coco"
 
 
-class TrayDataset:
+class ImageDataset:
     """Our converted COCO tree -> what DFineForObjectDetection wants.
 
     Boxes go in as NORMALISED cxcywh (the DETR-family convention); the json
@@ -142,8 +142,8 @@ def main() -> None:
             args.model, num_labels=1, num_queries=args.queries,
             ignore_mismatched_sizes=True).to(dev)
 
-        tr = TrayDataset(args.dataset_dir / "train", args.size, flip=True)
-        va = TrayDataset(args.dataset_dir / "valid", args.size)
+        tr = ImageDataset(args.dataset_dir / "train", args.size, flip=True)
+        va = ImageDataset(args.dataset_dir / "valid", args.size)
         dl = DataLoader(tr, batch_size=args.batch, shuffle=True,
                         collate_fn=_collate, num_workers=4, drop_last=True)
         vl = DataLoader(va, batch_size=args.batch, collate_fn=_collate,

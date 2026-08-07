@@ -28,7 +28,7 @@ At this level, deliberately not in a package:
                the run pipeline. Grouping these is the next slice (REFACTOR.md);
                they carry the adopt job's systemd unit, so they move deliberately.
     point_to_box, yolo_export       point <-> box <-> YOLO-line conversions
-    gallery, heatmap, timelapse, live_trainer, point_editor, dedup_check,
+    gallery, heatmap, timelapse, live_trainer, dedup_check,
     pending_janitor                 review + visualisation tools
 
 A module launched as `python -m groundwork.dataset.<name>` cannot be moved by a

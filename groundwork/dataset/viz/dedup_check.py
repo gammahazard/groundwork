@@ -5,7 +5,7 @@ Buckets are exclusive file-moves, so the *same file* can't be in two places. Thi
 catches the subtler case: two DIFFERENT files that are really the same arrangement
 (an IMG_ and a tg_ of one capture). Uses a perceptual hash (dHash) on image structure:
 near-identical re-shoots score a tiny Hamming distance; genuinely different captures of
-the same drug score far apart, so same-drug/different-capture is NOT flagged. GPU-free.
+the same subject score far apart, so same-subject/different-capture is NOT flagged. GPU-free.
 
     python -m groundwork.dataset.viz.dedup_check                 # raw vs testset
     python -m groundwork.dataset.viz.dedup_check --a raw --b testset --threshold 8
@@ -61,8 +61,8 @@ def _count_plausible(a_col, a_stem, b_col, b_stem, pp) -> bool:
     the hash disagreed, because distance 7 sits inside this module's own
     "7-12 = similar, eyeball it" band while the threshold flags <= 8.
 
-    Same rule, both detectors. A shared image and lighting rig makes DIFFERENT
-    captures of the same drug look alike to a perceptual hash — that is the exact
+    Same rule, both detectors. A fixed camera and lighting setup makes DIFFERENT
+    captures of the same subject look alike to a perceptual hash — that is the exact
     false positive this removes, and it matters because a spurious leak warning
     on the train/test boundary is one somebody eventually stops reading.
 

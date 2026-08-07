@@ -4,8 +4,6 @@ Nothing here is on the counting path. Every module exists so a human can SEE
 what happened, or so the working tree stays tidy. If one of these breaks, counts
 keep working; that is the line that puts a module in this package.
 
-    point_editor.py    the desktop dot editor (PyQt). Reads/writes through
-                       store.labelio so a dot's class round-trips.
     gallery.py         contact sheets of labelled images for review.
     dedup_check.py     perceptual-hash near-duplicate finder. This one guards a
                        RULE rather than just showing something: the same capture on
@@ -37,4 +35,4 @@ than fail. Keep that shape.
 from __future__ import annotations
 
 __all__ = ["dedup_check", "gallery", "heatmap", "live_trainer",
-           "pending_janitor", "point_editor", "timelapse"]
+           "pending_janitor", "timelapse"]

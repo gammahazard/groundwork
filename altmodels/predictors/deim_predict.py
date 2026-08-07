@@ -36,9 +36,9 @@ class DeimPredictor:
         from engine.core import YAMLConfig
 
         weights = Path(weights)
-        cfg_path = weights.parent.parent / "pills_config.yml"   # trainer saved it
+        cfg_path = weights.parent.parent / "run_config.yml"   # trainer saved it
         if not cfg_path.exists():
-            raise SystemExit(f"no pills_config.yml beside {weights} — "
+            raise SystemExit(f"no run_config.yml beside {weights} — "
                              "point --weights at a trainers.deim run checkpoint")
         # Their loader resolves __include__ relative to the config file, which
         # points into the vendor tree — run from a copy placed there.

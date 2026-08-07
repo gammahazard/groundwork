@@ -46,7 +46,7 @@ function projdashHold(){
 /* Every id loadState() fills in the hero and the tiles. Kept beside the hold so
  * a field added to one and not the other is visible in a single screen. */
 const PROJDASH_FIELDS = ["stServed", "stConf", "stIou", "stServedMae", "stExact",
-                         "stTrays", "stTest", "stObjects", "stFix"];
+                         "stImages", "stTest", "stObjects", "stFix"];
 
 /* Clear it in ONE place, at the end of loadState, rather than at each of the
  * forty sites that write a number — those write .textContent and would each
@@ -143,7 +143,7 @@ async function loadState(){
     + (o.power ? `<div class="sbRow" title="ESTIMATED, not metered: ${o.power.watts}W whole-system while training (PSU losses included) x ${(f.complete ? f.hours : o.total_hours) ?? o.gpu_hours}h x $${o.power.rate}/kWh${f.complete ? " across all machines" : ""}. Set GW_KWH_RATE / GW_TRAIN_WATTS to correct."><span>electricity (est.)</span>`
         + `<span class="sbMae">$${o.power.usd} <span class="mMeta">${o.power.kwh} kWh</span></span></div>` : "")
     + `<div class="sbRow"><span>largest count on file</span><span class="sbMae">${o.biggest ?? "–"}</span></div>`;
-  $("#stTrays").textContent = s.raw;
+  $("#stImages").textContent = s.raw;
   $("#stTest").textContent = s.testset;
   // Thousands-separated, like every other big number on the page — it sits
   // directly under the Overview's "14,997 labelled objects" and the two were

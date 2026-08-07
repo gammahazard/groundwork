@@ -5,7 +5,7 @@ champion's `best.pt` is adopted here, ultralytics is in the main venv, and the
 conversion is a CPU graph rewrite. None of that is true for DEIM:
 
   - A DEIM run adopted to HQ is a SCORE snapshot — meta.json, count_eval.json,
-    pills_config.yml, eval_preview/. It carries no .pth at all. Measured
+    run_config.yml, eval_preview/. It carries no .pth at all. Measured
     2026-08-05: zero weights across every deim* directory here.
   - Leg 1 needs the vendor repo (~/DEIMv2) and a DEIM venv, neither of which
     exists on HQ.

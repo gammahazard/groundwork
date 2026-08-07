@@ -2,7 +2,7 @@
 
 The vendor's tools/deployment/export_onnx.py traces a batch of 32 at full
 resolution (untenable on CPU at 1280px) and re-reads its own configs; this
-does the same job for OUR runs: the trainer's pills_config.yml, batch 1,
+does the same job for OUR runs: the trainer's run_config.yml, batch 1,
 static shapes (CoreML prefers them), and the same Deploy wrapper the
 challenger predictor uses, so what we export is what we scored.
 
@@ -52,9 +52,9 @@ def main() -> None:
     from engine.core import YAMLConfig
 
     w = args.weights
-    cfg_path = w.parent.parent / "pills_config.yml"
+    cfg_path = w.parent.parent / "run_config.yml"
     if not cfg_path.exists():
-        raise SystemExit(f"no pills_config.yml beside {w}")
+        raise SystemExit(f"no run_config.yml beside {w}")
     vcfg = VENDOR / "configs" / "deimv2" / "_export_tmp.yml"
     vcfg.write_text(cfg_path.read_text(), encoding="utf-8")
     cfg = YAMLConfig(str(vcfg))

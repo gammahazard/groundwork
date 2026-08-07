@@ -300,9 +300,9 @@ def main() -> None:
             epochs=args.epochs, flat=flat, stop=stop,
             no_aug=args.no_aug_epochs, ema_decay=args.ema_decay,
             batch=args.batch, size=args.size, queries=args.queries)
-        cfg_path = VENDOR / "configs" / "deimv2" / f"pills_{args.run_name}.yml"
+        cfg_path = VENDOR / "configs" / "deimv2" / f"gw_{args.run_name}.yml"
         cfg_path.write_text(cfg_text, encoding="utf-8")
-        (run_dir / "pills_config.yml").write_text(cfg_text, encoding="utf-8")
+        (run_dir / "run_config.yml").write_text(cfg_text, encoding="utf-8")
         print(f"[train_deim] config -> {cfg_path}")
 
         # their backbone calls torch.distributed.get_rank() unconditionally —

@@ -43,7 +43,7 @@ const shown = () => page.evaluate(() => {
           // the same .navGroupProject rule as every other project tab.
           navBtn: (() => { const b = document.querySelector('nav button[data-tab="projdash"]');
                            return !!b && b.offsetParent !== null; })(),
-          served: txt("stServed"), imgs: txt("stTrays"), mae: txt("stServedMae")};
+          served: txt("stServed"), imgs: txt("stImages"), mae: txt("stServedMae")};
 });
 
 await page.goto(BASE, {waitUntil: "networkidle"});

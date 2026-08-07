@@ -111,10 +111,10 @@ def _mm_progress(run_dir: Path, with_curve: bool = False) -> dict:
 
 
 def _deim_progress(run_dir: Path) -> dict:
-    """Progress from a DEIMv2 run: pills_config.yml carries the epoch budget;
+    """Progress from a DEIMv2 run: run_config.yml carries the epoch budget;
     train/log.txt is one json line per epoch with the val AP array."""
     d: dict = {}
-    cfg = run_dir / "pills_config.yml"
+    cfg = run_dir / "run_config.yml"
     if cfg.exists():
         if (m := re.search(r"epoches:\s*(\d+)", cfg.read_text())):
             d["total"] = int(m.group(1))

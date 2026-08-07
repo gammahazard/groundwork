@@ -59,7 +59,7 @@ def build_gallery(pp=None) -> int:
  figure img{{width:100%;display:block}}
  figcaption{{padding:.5rem .7rem;font-size:.85rem;color:#9aa4b2}} figcaption b{{color:#fff;font-size:1rem}}
 </style>
-<header><h1>💊 Label review — dots per training image</h1>
+<header><h1>Label review — dots per training image</h1>
 <div class="sub">{len(tiles)} images · {total} objects total · click an image to open full size · verify every object has a dot</div></header>
 <div class="grid">{cards}</div>""", encoding="utf-8")
     return len(tiles)

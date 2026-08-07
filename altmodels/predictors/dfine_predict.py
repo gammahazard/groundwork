@@ -3,7 +3,7 @@
 One raw pass per image at a floor confidence; the harness owns the per-cell
 threshold + NMS, exactly as for the other challengers.
 
-Preprocessing MUST match trainers.dfine.TrayDataset: a SQUASHED resize to imgsz
+Preprocessing MUST match trainers.dfine.ImageDataset: a SQUASHED resize to imgsz
 and /255, with NO ImageNet normalisation (verified against the shipped image
 processor, do_normalize: False). Because the squash is linear per axis, the
 model's normalised cxcywh output maps straight back to original-image pixels —
@@ -37,7 +37,7 @@ class DFinePredictor:
         torch = self.torch
         W, H = pil.size
         # BILINEAR is LOAD-BEARING, not a default worth omitting: PIL's bare
-        # .resize() is BICUBIC, while trainers.dfine.TrayDataset trains on BILINEAR.
+        # .resize() is BICUBIC, while trainers.dfine.ImageDataset trains on BILINEAR.
         # Leaving it implicit meant every D-FINE exam ran on a different image
         # distribution than the model was trained on (mean |delta| 3.86/255), so
         # runs A and B were both scored unfairly (found 2026-07-30 — the

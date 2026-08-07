@@ -17,7 +17,7 @@ from . import collect
 
 # The full collection VOCABULARY. Kept as a plain tuple because that is what
 # its two consumers actually want: a membership test (web/api/la.py) and a set
-# of CLI choices (viz/point_editor.py). Neither ever wanted the directories.
+# of CLI choices. Neither ever wanted the directories.
 #
 # The core three (raw / needs_fix / testset) are universal: every project has
 # a training source, a fix queue and a frozen holdout. An extension can bring

@@ -195,10 +195,12 @@ def restore_stem(run: str, stem: str, force: bool = False, pp=None) -> dict:
     # (not deleted) still exists in some collection, and restoring it would put
     # the same photo on both sides of the train/test wall. Moves are undone
     # with the 🎯/↩ buttons, not with restore.
+    # THE COLLECTIONS THAT EXIST. Two more were listed here after the
+    # collections themselves were removed, so restore raised AttributeError
+    # before it could check anything — every restore failed, and the message
+    # named a missing attribute rather than the conflict this guard is for.
     everywhere = {"raw": pp.RAW_LABELS, "testset": pp.TESTSET_LABELS,
-                  "synthetic": pp.SYNTHETIC_LABELS,
-                  "needs_fix": pp.NEEDS_FIX_LABELS,
-                  "halves": pp.HALVES_LABELS}
+                  "needs_fix": pp.NEEDS_FIX_LABELS}
     for where, lbl_dir in everywhere.items():
         if (lbl_dir / f"{stem}.txt").exists() and not force:
             raise FileExistsError(

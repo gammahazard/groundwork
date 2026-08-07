@@ -2,9 +2,9 @@
 
     labelio.py          points <-> YOLO boxes for one image, per collection.
                         THE definition of that conversion: it preserves each
-                        dot's CLASS index on the round trip, which
-                        point_editor's private copy did not — it rewrote every
-                        non-zero class as class 0 on save.
+                        dot's CLASS index on the round trip. A second, private
+                        implementation once did not, and rewrote every non-zero
+                        class as class 0 on save — hence "one implementation".
     collect.py          the routing verbs. pending -> raw / testset /
                         needs_fix, and the truth-count + test-earmark sidecars.
     testset_buckets.py  per-holdout-image eval buckets (tags). An EVAL LENS
