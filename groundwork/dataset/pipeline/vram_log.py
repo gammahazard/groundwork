@@ -61,7 +61,10 @@ def observations(model: str, imgsz: int | None = None,
             continue
         if imgsz is not None and d.get("imgsz") != imgsz:
             continue
-        if batch is not None and d.get("batch") not in (None, batch):
+        # A LOGGED batch of None means auto-batch: the trainer chose, and we do
+        # not know what it chose. Treating that as "matches every batch" let one
+        # auto-batch OOM veto explicit batch sizes it never tested.
+        if batch is not None and d.get("batch") != batch:
             continue
         out.append(d)
     return out

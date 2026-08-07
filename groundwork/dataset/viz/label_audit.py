@@ -190,7 +190,12 @@ def points_for(counter, collection: str, stem: str, pp, floor: float = 0.02) -> 
     for mx, my in missing:
         near, nd = None, (tol * 2) ** 2
         for lx, ly, c in low:
-            dd = (mx - (lx + ox)) ** 2 + (my - (ly + oy)) ** 2
+            # NO CROP OFFSET HERE. _low_conf predicts on the FULL image, so its
+            # coordinates are already original-image pixels; `pts` above come
+            # from count()'s boxes, which are crop-space and do need it. Adding
+            # it to both applied the offset twice and, with autocrop on, matched
+            # every missing dot against the wrong neighbourhood.
+            dd = (mx - lx) ** 2 + (my - ly) ** 2
             if dd <= nd:
                 nd, near = dd, c
         annotated.append({"x": round(mx, 1), "y": round(my, 1), "conf": near})
