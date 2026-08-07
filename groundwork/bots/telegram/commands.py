@@ -217,7 +217,7 @@ def _model_rows() -> tuple[str, list]:
         # The deim run is chosen by score, not pinned — say so rather than
         # offering a switch that does not exist.
         cur = runtime_model.deim_weights(config.pp())
-        name = deim.parent.parent.name
+        name = cur.parent.parent.name if cur else "no scored export yet"
         lines += [f"🧠 Engine *deim* — serving *{name}*", "",
                   "DEIM serves the best-scoring export automatically; there is "
                   "no per-run pin for it. Use /engine to go back to yolo.", ""]
