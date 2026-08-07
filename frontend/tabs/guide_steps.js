@@ -74,8 +74,6 @@ const GUIDE_STEPS = [
   {
     key: "marking",
     title: "Mark what you want counted",
-    media: {src: "/static/guide/marking.gif", alt: "The same image before and after marking — one dot per object",
-            cap: "The same photograph, unmarked and marked. One click per object."},
     lede: "Open any photograph and click once on each object. That is the whole job.",
     body: `
       <ul>
@@ -116,8 +114,6 @@ const GUIDE_STEPS = [
   {
     key: "training",
     title: "Train it",
-    media: {src: "/static/guide/training.gif", alt: "Augmented training collages, several steps apart",
-            cap: "What it is actually learning from — real collages, minutes apart in one run."},
     lede: "Pick a model, a machine and a card. Combinations that cannot work are greyed out with the reason.",
     body: `
       <p>Open <span class="gWhere">Train</span> and press <b>▶ Train</b>. It then runs
@@ -190,9 +186,6 @@ const GUIDE_STEPS = [
   {
     key: "export",
     title: "Take it somewhere else",
-    media: {src: "/static/guide/export.jpg",
-            alt: "The Export tab: a run, a format, and the exports already built",
-            cap: "Pick the run and the format. What you have already built is listed underneath."},
     lede: "Serving runs the model here. Exporting gives you a file to run anywhere else.",
     body: `
       <p>Open <span class="gWhere">Export</span>, pick a run and a format, and press

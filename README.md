@@ -46,6 +46,13 @@ over ssh and rsync.
   (`read`/`train`/`full`) for scripts, scrypt passwords, throttled logins, per-project
   ownership, and an append-only audit trail.
 
+## Requirements
+
+Linux, or Windows via WSL2 / Docker Desktop. Docker is the recommended path;
+native installs need Python 3.10+. An NVIDIA GPU is only needed to *train* —
+projects, labeling and review all work without one, and GPU machines can be
+paired later.
+
 ## Quickstart
 
 ### Docker (recommended)
@@ -82,6 +89,7 @@ walkthrough — prerequisites, headless bootstrap, upgrades, WSL2 notes — is i
 - [docs/machines.md](docs/machines.md) — pairing GPU workers, what syncs when
 - [docs/bots.md](docs/bots.md) — Telegram bots
 - [docs/models.md](docs/models.md) — the model registry and the challenger stacks
+- Interactive API reference: `/docs` on your own instance, once signed in
 
 ## Philosophy
 

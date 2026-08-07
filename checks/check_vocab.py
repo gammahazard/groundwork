@@ -90,6 +90,30 @@ def main() -> int:
                     and not TAILSCALE_OK_LINE.search(line):
                 bad.append(f"{rel}:{i}: [tailscale outside docs/] "
                            f"{line.strip()[:90]}")
+    # ---- BINARY MEDIA ARE ALLOWLISTED BY NAME ----------------------------
+    # Text scanning cannot see pixels. This gate exists because the origin
+    # project's guide screenshots survived every text sweep: one showed the
+    # origin domain itself, another had the old product name in its UI copy.
+    # A new screenshot or GIF must be added HERE, deliberately, after a human
+    # has actually looked at what it shows.
+    MEDIA_OK = {
+        "frontend/favicon.svg",
+        "frontend/guide/verdict.jpg",      # ultralytics loss curves — neutral
+    }
+    MEDIA_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".ico",
+                 ".mp4", ".webm", ".avif", ".bmp"}
+    for p2 in sorted(ROOT.rglob("*")):
+        if not p2.is_file() or p2.suffix.lower() not in MEDIA_EXT:
+            continue
+        rel2 = p2.relative_to(ROOT).as_posix()
+        if rel2.startswith((".git/", "outputs/", "private/", "data/")):
+            continue
+        if rel2.startswith("frontend/fonts/"):
+            continue
+        if rel2 not in MEDIA_OK:
+            bad.append(f"{rel2}: [unreviewed media file] a human must look at "
+                       f"it, then allowlist it in check_vocab.MEDIA_OK")
+
     if bad:
         print(f"VOCAB GATE: {len(bad)} hit(s) — the repo must be origin-silent")
         for b in bad[:2000]:
