@@ -1,6 +1,21 @@
-# Groundwork
+<div align="center">
 
-**[groundwork-trainer.vercel.app](https://groundwork-trainer.vercel.app)** — the tour, in one scroll.
+<h1>Groundwork</h1>
+
+<b>Teach a computer to count anything you can photograph.</b>
+
+<p>
+  <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/License-AGPL--3.0-e0952a?style=flat-square"></a>
+  <img alt="Version 0.3.0" src="https://img.shields.io/badge/version-0.3.0-e0952a?style=flat-square">
+  <a href="https://github.com/gammahazard/groundwork/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gammahazard/groundwork/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="Docker Compose" src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white">
+  <img alt="Self-hosted, no telemetry" src="https://img.shields.io/badge/self--hosted-no%20telemetry-3fb950?style=flat-square">
+</p>
+
+<b><a href="https://groundwork-trainer.vercel.app">groundwork-trainer.vercel.app</a></b> — the tour, in one scroll.
+
+</div>
 
 Groundwork is a self-hosted trainer for object-detection models, built around one loop:
 create a project, collect images, label them in the browser, train — on this machine or
