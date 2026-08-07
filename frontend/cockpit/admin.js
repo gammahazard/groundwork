@@ -55,6 +55,7 @@ const AD_EVENTS = {
 };
 
 async function loadAdmin() {
+  window._axState?.();
   await Promise.all([_adUsers(), _adTrail()]);
 }
 
@@ -260,15 +261,19 @@ async function _adTrail() {
     {stack: "deim", accept_license: $("#axStackOk").checked});
   $("#axStackRtm").onclick = () => post("/api/setup/extras/stack",
     {stack: "rtmdet", accept_license: $("#axStackOk").checked});
-  // state line from the same facts endpoint the wizard reads
-  fetch("/api/setup/facts").then(r => r.ok ? r.json() : null).then(f => {
-    if (!f) return;
-    const bits = [];
-    if (f.la_present) bits.push("auto-labeler ✓");
-    for (const [k, v] of Object.entries(f.extras || {}))
-      if (v.state) bits.push(`${k}: ${v.state}`);
-    $("#axState").textContent = bits.join(" · ");
-  }).catch(() => {});
+  // State line from the same facts endpoint the wizard reads — fetched when
+  // the Admin tab actually loads, never at script parse: this file is parsed
+  // on the login screen too, and a pre-auth fetch is a guaranteed 401 in the
+  // console of every signed-out visitor.
+  window._axState = () => fetch("/api/setup/facts")
+    .then(r => r.ok ? r.json() : null).then(f => {
+      if (!f) return;
+      const bits = [];
+      if (f.la_present) bits.push("auto-labeler ✓");
+      for (const [k, v] of Object.entries(f.extras || {}))
+        if (v.state) bits.push(`${k}: ${v.state}`);
+      $("#axState").textContent = bits.join(" · ");
+    }).catch(() => {});
 })();
 
 window.loadAdmin = loadAdmin;

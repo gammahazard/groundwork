@@ -434,6 +434,10 @@ window.loadLab = loadLab;
 async function loadEngine(){
   const el = $("#engineCtrls");
   if (!el) return;
+  // The engine is PER-PROJECT (core.js appends ?project= to every call when
+  // one is open). With no project open there is nothing to ask about — and
+  // asking anyway 422s on a fresh instance, seen on the wizard's first load.
+  if (!PROJECT) return;
   let d;
   try { d = await api("/api/engine"); } catch (e){ return; }
   el.innerHTML = (d.options || []).map(o => {
