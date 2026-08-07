@@ -211,13 +211,11 @@ function _wireAccount() {
     try {
       const r = await fetch("/api/keys", {
         method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({name})});
+        body: JSON.stringify({name, scope: $("#keyScope")?.value || undefined})});
       const d = await r.json();
       if (!r.ok) throw new Error(d.detail || "Could not create the key.");
       $("#keyName").value = "";
       showKeyModal(d);
-      const fold = $("#keyHowFold");
-      if (fold) fold.open = true;      // the example belongs beside the key
       loadKeys();
     } catch (err) {
       msg.textContent = err.message || String(err);

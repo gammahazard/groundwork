@@ -123,11 +123,11 @@ async function loadState(){
              f.complete ? "" : " <span class='mMeta'>(partial)</span>"}</span>`
           + `<span class="sbMae" title="${
                f.complete
-                 ? `yolov8n ${o.gpu_hours}h + other models ${ch.hours}h here + ${f.remote_hours}h on the Trainer. Yolo hours are NOT added across machines: every lab run is adopted into this ledger, so they are already counted once.`
-                 : "The Trainer could not be reached, so its hours for other models are missing from this total."
+                 ? `yolov8n ${o.gpu_hours}h + other models ${ch.hours}h here + ${f.remote_hours}h on other machines. Yolo hours are NOT added across machines: every lab run is adopted into this ledger, so they are already counted once.`
+                 : "Not every machine could be reached, so some hours are missing from this total."
              }">${f.hours}h${
                f.complete && f.remote_hours
-                 ? ` <span class="mMeta">(${o.total_hours} here + ${f.remote_hours} Trainer)</span>` : ""
+                 ? ` <span class="mMeta">(${o.total_hours} here + ${f.remote_hours} elsewhere)</span>` : ""
              }</span></div>`
         : `<div class="sbRow"><span>GPU time, this machine</span><span class="sbMae">${
             hasCh ? `${o.total_hours}h <span class="mMeta">(${o.gpu_hours} + ${ch.hours})</span>`
@@ -326,7 +326,6 @@ async function renderDashboardExtras(s){
       byArch[a] = byArch[a] || {arch: a, lic: r.license || "Apache-2.0",
                                 mae: r.mae, seen: new Set()};
       byArch[a].seen.add(basename(r.run));      // distinct trainings, not exams
-      if (r.mae < byArch[a].mae) byArch[a].mae = r.mae;
       if (r.mae < byArch[a].mae) byArch[a].mae = r.mae;
     }
     rows.push(...Object.values(byArch).map(v => ({...v, n: v.seen.size})));

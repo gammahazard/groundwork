@@ -23,13 +23,8 @@
 .upReport{
   background:#20180d;border:1px solid #5a4420;border-left:3px solid var(--warn);
   border-radius:8px;padding:.6rem .8rem;margin:0 0 .9rem;font-size:.85rem}
-.upSkip{color:var(--mut);margin-top:.2rem;overflow-wrap:anywhere}
-
-/* Drop target. A dashed inset rather than a colour change, so it reads as
-   "release here" and not merely "this is selected". */
-#fix.upDrag{
-  outline:2px dashed #3987e5;outline-offset:-6px;border-radius:12px;
-  background:rgba(57,135,229,.06)}
+/* .upSkip and #fix.upDrag removed — the live rules are .upSkips (07-modals)
+   and .upDrop.over. */
 
 @media (pointer: coarse){ .upBtn{min-height:44px;padding:.6rem 1rem} }
 

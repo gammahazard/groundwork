@@ -31,12 +31,7 @@ body.lab #labBanner{border-color:#c77b1e;background:rgba(199,123,30,.10)}
 .modelRow.ghost .mName{font-style:italic;color:var(--mut)}
 @keyframes ghostPulse{0%,100%{opacity:.45}50%{opacity:.8}}
 
-/* HQ train area: the Trainer is the headline action (real button, ember =
-   the other machine's identity); local training folds away as the fallback. */
-#hqLocalTrain{margin:.45rem 0 0}
-#hqLocalTrain summary{cursor:pointer;color:var(--mut);font-size:.88rem}
-#hqLocalTrain summary:hover{color:var(--txt)}
-#hqLocalTrain .ctrls{margin-top:.55rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+/* #hqLocalTrain removed with its element (identity.js documents it). */
 
 /* .trainerBtn is GONE (2026-08-05). It opened a SECOND cockpit on the worker so
    you could press ITS Retrain; Train dispatches there directly now — model x

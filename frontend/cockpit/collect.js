@@ -163,6 +163,8 @@ function _botCardHTML(b) {
       <div><dt>feeds</dt><dd><select class="botProj" data-key="${k}">${opts}</select></dd></div>
       <div><dt>who may use it</dt><dd>${_botWhoHTML(b)}</dd></div>
       <div><dt>last activity</dt><dd>${_cAgo(b.last_seen)}</dd></div>
+      <div><dt>counts with</dt><dd>the serving model — before one exists
+        it still collects (photos land in the fix queue)</dd></div>
       <div><dt>service</dt><dd><code>${_cEsc(b.unit)}</code>${
         b.installed ? "" : ` <span class="mMeta">(not installed)</span>`}</dd></div>
       <div><dt>token</dt><dd>${b.token_set

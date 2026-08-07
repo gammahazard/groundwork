@@ -91,29 +91,62 @@ function _upPick(files) {
 async function uploadFiles(files, predict) {
   const report = $("#upReport"), err = $("#upErr"), go = $("#upGo");
   if (!files || !files.length) return;
-  const fd = new FormData();
-  for (const f of files) fd.append("files", f);
-  // FormData values are strings on the wire; FastAPI's Form(bool) reads
-  // "true"/"false", so send the word rather than a checkbox's "on".
-  fd.append("predict", predict ? "true" : "false");
   go.disabled = true;
   go.textContent = predict ? "uploading + labelling…" : "uploading…";
   err.hidden = true;
-  report.hidden = true;
+  const added = [], skipped = [];
+  let drew = 0, predictErr = "";
   try {
-    // apiOrThrow carries ?project= and turns a 4xx into a real error — a plain
-    // fetch would resolve on 422 and render "undefined".
-    const r = await apiOrThrow("/api/upload", {method: "POST", body: fd});
-    const n = r.added.length;
-    const drew = r.added.reduce((a, x) => a + (x.predicted || 0), 0);
+    if (predict) {
+      // ONE request when pre-labelling: the server loads the model once for
+      // the whole batch — a per-file loop would load it once per photo.
+      report.hidden = false;
+      report.innerHTML = `<span class="uiSlow">uploading ${files.length} `
+        + `file${files.length === 1 ? "" : "s"} — the model draws its dots `
+        + `when they have all arrived…</span>`;
+      const fd = new FormData();
+      for (const f of files) fd.append("files", f);
+      // FormData values are strings on the wire; FastAPI's Form(bool) reads
+      // "true"/"false", so send the word rather than a checkbox's "on".
+      fd.append("predict", "true");
+      const r = await apiOrThrow("/api/upload", {method: "POST", body: fd});
+      added.push(...(r.added || []));
+      skipped.push(...(r.skipped || []));
+      drew = added.reduce((a, x) => a + (x.predicted || 0), 0);
+      predictErr = r.predict_error || "";
+    } else {
+      // SEQUENTIAL, one request per file, so a big drop never looks stuck —
+      // the line below ticks and names the file in flight.
+      report.hidden = false;
+      let done = 0;
+      for (const f of files) {
+        report.innerHTML = `<span class="uiSlow">${done}/${files.length} `
+          + `uploaded — sending ${_uEsc(f.name)}…</span>`;
+        const fd = new FormData();
+        fd.append("files", f);
+        fd.append("predict", "false");
+        try {
+          const r = await apiOrThrow("/api/upload", {method: "POST", body: fd});
+          added.push(...(r.added || []));
+          skipped.push(...(r.skipped || []));
+        } catch (e) {
+          // A refused single file is a 422 (the endpoint raises when nothing
+          // in the request landed) — record it and keep going; one bad file
+          // must not strand the nineteen behind it.
+          skipped.push({name: f.name, why: String(e.message || e)});
+        }
+        done += 1;
+      }
+    }
+    const n = added.length;
     let head = `<b>${n} image${n === 1 ? "" : "s"} added to the fix queue</b>`;
-    if (r.predict && drew)
+    if (predict && drew)
       head += ` — the model drew <b>${drew}</b> object${drew === 1 ? "" : "s"} to check`;
-    if (r.predict_error)
-      head += ` <span class="short">(${_uEsc(r.predict_error)})</span>`;
+    if (predictErr)
+      head += ` <span class="short">(${_uEsc(predictErr)})</span>`;
     report.innerHTML = head
-      + (r.skipped.length
-          ? `<ul class="upSkips">` + r.skipped.map(s =>
+      + (skipped.length
+          ? `<ul class="upSkips">` + skipped.map(s =>
               `<li><b>${_uEsc(s.name)}</b> — ${_uEsc(s.why)}</li>`).join("") + `</ul>`
           : "")
       + `<div class="upActs"><button id="upToFix">Go and label them →</button></div>`;
@@ -128,7 +161,9 @@ async function uploadFiles(files, predict) {
     };
     // The badge and the grid both change; refresh whichever is on screen.
     if (window.loadState) loadState();
-    if (document.querySelector("#fix.active")) loadGrid("needs_fix", "#fixGrid");
+    // The fix pane caches its grid — invalidate so the next look reloads it
+    // (the old selector here targeted a pane id that no longer exists).
+    if (window.imagesInvalidate) imagesInvalidate("fix");
     UP_FILES = [];
     $("#upFiles").value = "";
     $("#upPicked").textContent = UP_HINT;

@@ -297,7 +297,9 @@ function _labRunHtml(a){
     if (a.loss != null) bits.push(`loss ${a.loss}`);
     if (a.eta_s) bits.push(`~${Math.max(1, Math.round(a.eta_s/60))} min left`);
     let html = `⚙️ <b>${a.run}</b>${a.remote ? ` <span class="mMeta">on 🧪 Trainer</span>` : ""}`
-      + ` is training — ${bits.join(" · ") || (a.what ?? "alt job")}`
+      + ` is training — ${bits.join(" · ")
+          || "this family prints no progress line; watching its files"
+          + (a.elapsed_s ? ` (${Math.round(a.elapsed_s / 60)} min in)` : "")}`
       + (pct != null
           ? `<div class="pbar"><div class="pbarTrack"><div class="pbarFill" style="width:${pct}%"></div></div>`
             + `<span class="mMeta">${pct}% · auto-refreshing…</span></div>`

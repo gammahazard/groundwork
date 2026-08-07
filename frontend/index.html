@@ -284,13 +284,11 @@
     <button data-tab="images">Images</button>
     <button data-tab="runs">Train</button>
     <button data-tab="results">Results</button>
+    <button data-tab="count">Try it</button>
     <button data-tab="export">Export</button>
-    <!-- EXTENSION TABS. Present in the markup but shown only for a project that
-         DECLARES the extension — applyExtensionTabs reads project.json. They are
-         not deleted here for that reason: the first project retired all three
-         (_retired_extensions, 2026-08-05) so the strip is five tabs wide, and a
-         project that enables one gets its tab back with no markup change. -->
-    <button data-tab="count" hidden>Count</button>
+    <!-- EXTENSION TABS land here when a project declares one —
+         applyExtensionTabs reads project.json. The mechanism ships with
+         zero built-ins; nothing is hidden here today. -->
     <!-- On a phone the four core tabs stay put and the EXTENSIONS fold behind
          this. Not the core ones: putting a tap in front of the thing you do
          most is the cost this strip exists to remove. Hidden on wide screens
@@ -402,13 +400,13 @@
       <div class="gwCt"><span class="v" id="stFix">–</span><span class="k">need fixing</span></div>
     </div>
 
-    <div class="gwDatum"><h2>Right now</h2><span class="n">both machines</span></div>
+    <div class="gwDatum"><h2>Right now</h2><span class="n">all machines</span></div>
     <div id="activityList" class="hint gwList"></div>
 
     <div class="gwDatum"><h2>Best per model</h2><span class="n">same holdout</span></div>
     <div id="scoreboard" class="hint gwList"></div>
 
-    <div class="gwDatum"><h2>The machine</h2><span class="n">both boxes</span></div>
+    <div class="gwDatum"><h2>The machine</h2><span class="n">every machine</span></div>
     <div id="odometer" class="hint gwList"></div>
     <div class="gwDatum"><h2>Accuracy over time</h2>
       <span class="n">every model · lower is better</span></div>
@@ -666,10 +664,17 @@
        telling you to go and edit files by hand. See web/api/bot_setup.py for the
        rails that make writing a token and a unit from here defensible. -->
   <section id="collect" class="tab">
-    <h2>Data collection</h2>
-    <p class="hint">Almost everything in every project arrived through a
-      <b>Telegram bot</b>. These are the bots of the projects you can open —
-      whether each is alive, who may use it, and how to add another.</p>
+    <div class="gwDatum"><h2>Data collection</h2>
+      <span class="n">photos in, training data out</span></div>
+    <p class="hint">The steadiest way to grow a dataset is a
+      <b>Telegram bot</b>: photos sent to it land in the project. These are
+      the bots of the projects you can open — whether each is alive, who
+      may use it, and how to add another.</p>
+    <p class="hint">A bot works from day zero. Before the project has a
+      trained model it <b>collects</b>: photos go straight to the fix queue,
+      unlabeled. Once a run is trained it <b>counts</b> — with the serving
+      engine (YOLO always; DEIM when a run of it has been exported). Other
+      model families train and compare, but do not answer the bot.</p>
 
 
     <div id="botList" class="botList"></div>
@@ -877,7 +882,7 @@
     <div class="gwDatum"><h2>API</h2>
       <span class="n">drive this cockpit from anywhere</span></div>
     <p class="apLede">Everything this interface does, it does over HTTP. The same
-      endpoints are yours: start a run on either machine, read what it scored,
+      endpoints are yours: start a run on any machine, read what it scored,
       export a model, push images in. Authenticate with an <b>API key</b> as a
       bearer token.</p>
 
@@ -1236,30 +1241,7 @@
 
 
 <!-- Manual object-crop modal -->
-<div id="cropModal" class="modal" hidden>
-  <div class="modalCard cropCard">
-    <button class="modalClose" id="cropClose" title="Close (Esc)">✕</button>
-    <div class="row"><b>Crop an object</b> — pick an image, drag a box around one object (best for capsules).</div>
-    <div class="ctrls">
-      <select id="cropTray"></select>
-      <select id="cropShape" title="Region shape — ellipse/lasso clip out a neighbour's sliver">
-        <option value="box">▭ box</option>
-        <option value="ellipse">◯ ellipse</option>
-        <option value="lasso">✎ lasso (trace)</option>
-      </select>
-      <select id="cropMode" title="How to cut the object out of the region">
-        <option value="tight">auto (color)</option>
-        <option value="grabcut">smart (capsules)</option>
-        <option value="box">whole region</option>
-      </select>
-      <span id="cropHint" class="mMeta">draw around an object…</span>
-      <span class="spacer"></span>
-      <span class="mMeta">preview</span> <img id="cropPreview" alt="">
-      <button id="cropSave" disabled>Save cutout</button>
-    </div>
-    <div id="cropWrap"><canvas id="cropCanvas"></canvas></div>
-  </div>
-</div>
+<!-- The manual crop modal lived here; cropping happens on the editor canvas now (editor_crop.js). -->
 
 <script src="/static/cockpit/core.js?v=5"></script>
 <script src="/static/tabs/setup.js?v=1"></script>

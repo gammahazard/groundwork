@@ -139,12 +139,12 @@ async def on_image(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     # RETRY THE LOAD FIRST: the moment the project's first run finishes, the
     # next photo should just work, with no restart. web/api/count.py::_get uses
     # the same rebuild-on-demand pattern.
-    if state.COUNTER is None and not _try_load():
-        return await update.message.reply_text(
-            "🧠 This project has no trained model yet, so I cannot count.\n\n"
-            "In the cockpit: upload some images, auto-label them with "
-            "LocateAnything, check them, then train a run. I will pick it up on "
-            "your next photo — no restart needed.")
+    # NO MODEL is not a refusal — it is INTAKE MODE. A brand-new project's
+    # whole problem is that it has no images yet; the bot is precisely the
+    # easiest way to fix that. So before the first trained run, photos are
+    # accepted and land straight in the fix queue, unlabeled, and the moment a
+    # run finishes the SAME bot starts counting (the retry-load below).
+    intake_only = state.COUNTER is None and not _try_load()
 
     # Note goes up BEFORE the download: a large File on a flaky Telegram night
     # can take a while (or fail) — the user must never stare at silence.
@@ -171,6 +171,23 @@ async def on_image(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     if max(img_full.size) > 2000:
         img = img_full.copy()
         img.thumbnail((2000, 2000))
+
+    if intake_only:
+        pp = config.pp()
+        stem = f"tg_{update.effective_user.id}_{update.message.message_id}"
+        img_dir, lbl_dir = pp.NEEDS_FIX_IMAGES, pp.NEEDS_FIX_LABELS
+        img_dir.mkdir(parents=True, exist_ok=True)
+        lbl_dir.mkdir(parents=True, exist_ok=True)
+        while (img_dir / f"{stem}.jpeg").exists():
+            stem += "x"
+        img_full.save(img_dir / f"{stem}.jpeg", quality=95)
+        (lbl_dir / f"{stem}.txt").write_text("", encoding="utf-8")
+        n = sum(1 for _ in img_dir.iterdir())
+        return await note.edit_text(
+            f"📥 Saved for labeling — {n} image(s) waiting in the fix queue.\n"
+            f"This project has no trained model yet, so I collect instead of "
+            f"counting. Label in the cockpit, train a run, and I start "
+            f"counting automatically on the next photo.")
 
     queued = " (queued)" if state.GPU_LOCK.locked() else ""
     await note.edit_text(f"⏳ Counting…{queued}")

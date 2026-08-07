@@ -204,7 +204,7 @@ function showTab(name){
 }
 
 /* ---------- count ---------- */
-$("#countForm").onsubmit = async e => {
+if ($("#countForm")) $("#countForm").onsubmit = async e => {
   e.preventDefault();
   const f = $("#countFile").files[0]; if (!f) return;
   $("#countResult").innerHTML = "⏳ counting…";

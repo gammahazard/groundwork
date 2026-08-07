@@ -89,7 +89,7 @@ button:disabled{opacity:.5;cursor:default}
    completely alone — deliberately, because this app's whole job is looking
    closely at photographs and taking that away would be worse than the bug. */
 button, .card, .pjCard, .botCard, nav button, .upDrop, summary, label.upBtn,
-.trainCard, .sbRow, .ovProject { touch-action: manipulation; }
+.trainCard, .sbRow { touch-action: manipulation; }
 
 /* The notch and the home indicator. viewport-fit=cover (index.html) lets the
    page use the full screen, which also means content can sit UNDER them —

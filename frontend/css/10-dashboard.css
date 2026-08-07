@@ -23,7 +23,6 @@ body.lab .dashCard.hero{background:linear-gradient(180deg,#241c11,#1d150c)}
 .servedMeta{color:var(--mut);font-size:.86rem;margin-top:.3rem}
 .servedMeta b{color:var(--txt)}
 .dot{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:var(--ok);margin-right:.5rem;box-shadow:0 0 6px var(--ok)}
-.dashGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1.2rem}
 .actRow{padding:.4rem 0;border-bottom:1px solid var(--edge)}
 .actRow:last-child{border-bottom:0}
 .sbRow{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--edge)}
@@ -55,17 +54,7 @@ body.lab .dashCard.hero{background:linear-gradient(180deg,#241c11,#1d150c)}
    carry a top border, because it was a divider between the two halves of one
    page; it is the first line of its own tab now, so the divider went with the
    split. */
-.ovTitle{
-  margin:.2rem 0 .7rem;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--mut);font-weight:700}
-/* Six tiles, so allow narrower ones than the four-tile project row. */
-.ovTiles{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
-.ovTiles .tile span{font-size:1.6rem}
-
-/* A summary you cannot act on is a dead end — these rows open the project. */
-.ovProject{cursor:pointer;border-radius:7px;margin:0 -.35rem;padding:.1rem .35rem}
-.ovProject:hover{background:#1b2536}
-.ovProject:focus-visible{outline:2px solid #3987e5;outline-offset:1px}
+/* .ovTitle/.ovTiles/.ovProject removed — overview.js renders .gwCt/.gwNote now. */
 
 /* "Still asking" is a THIRD state, distinct from both a live row and "all quiet"
  * (2026-08-02). It has to be legible as provisional without relying on colour —

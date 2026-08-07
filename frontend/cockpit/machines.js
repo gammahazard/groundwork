@@ -182,7 +182,17 @@ async function _remove(key) {
   if (card) {
     try {   // the card renders only on a worker — ask the machine itself
       const me = await fetch("/api/machine/self").then(r => r.ok ? r.json() : null);
-      if (me && me.role === "worker") card.hidden = false;
+      if (me && me.role === "worker") {
+        card.hidden = false;
+        // Prefill the reachable URL with how THIS BROWSER reached the box —
+        // the one address guaranteed to work from the human's side of the
+        // network. Self-IP guesses pick docker/VPN interfaces on multi-homed
+        // machines; the field stays editable for the cases where the HQ
+        // reaches it differently.
+        const inp = $("#mintPairUrl");
+        if (inp && !inp.value)
+          inp.value = location.origin;
+      }
     } catch (e) { /* signed-out or unreachable: stay hidden */ }
   }
   btn.onclick = async () => {

@@ -19,9 +19,6 @@ function applyMachineTheme(isLab){
   document.body.classList.add("lab");   // ember theme (see cockpit.css tail)
   $("#appTitle").textContent = "🧪 Groundwork Trainer";
   document.title = "Groundwork Trainer";
-  // Trainer-only batch knob (big cards); default 8. Home never shows it.
-  const bsel = $("#retrainBatch");
-  if (bsel && bsel.hidden){ bsel.hidden = false; bsel.value = "8"; }
   _buildLabChrome();
 }
 
@@ -43,7 +40,7 @@ function _buildLabChrome(){
     // delivered can be verified by eye right here.
     // "history" and "rtmruns" are gone (merged into "runs"); harmless to ask
     // for, kept so a rollback to an older index.html still hides them.
-    for (const t of ["count", "history", "rtmruns"]){
+    for (const t of ["count", "history", "rtmruns"]){   // worker hides Try it
       const btn = document.querySelector(`nav button[data-tab="${t}"]`);
       if (btn) btn.hidden = true;
     }
