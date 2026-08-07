@@ -108,8 +108,9 @@ def change_username(body: UsernameChange, request: Request,
     IT MOVES PROJECT OWNERSHIP TOO. `Project.owner` stores a username, so
     users.rename rewrites every manifest this account owns in the same call —
     without that you would rename yourself and lose access to your own work,
-    with no route back through the UI. It follows live sessions as well, so the
-    rename does not eject the browser that asked for it.
+    with no route back through the UI. Sessions and API keys follow inside the
+    same call, so the rename does not eject the browser that asked for it —
+    this route no longer does that itself, because the CLI needs it too.
     """
     _refuse_key_auth(request)
     if not users.check(user, body.password):
@@ -118,8 +119,6 @@ def change_username(body: UsernameChange, request: Request,
         new = users.rename(user, body.new_username)
     except users.UserError as e:
         raise HTTPException(409, str(e)) from None
-    sessions.rename_user(user, new)
-    keys.rename_user(user, new)
     audit.record(audit.USERNAME_CHANGED, actor=new, target=user, via="session",
                  ip=_ip(request), detail=f"{user} -> {new}")
     return {"ok": True, "user": users.record(new)}

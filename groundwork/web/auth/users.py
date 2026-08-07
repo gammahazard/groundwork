@@ -294,6 +294,13 @@ def rename(old: str, new: str) -> str:
     its owner, renaming yourself would lock you out of your own work with no way
     back through the UI. Done in the same call because a half-applied rename is
     worse than either state.
+
+    SESSIONS AND API KEYS MOVE HERE TOO, for the same reason and in the same
+    call. Both store a username; leaving them behind ejects the browser that
+    asked and orphans every key the account minted. The HTTP route used to do
+    this itself, so the CLI — the path an admin uses to fix a locked-out
+    account — produced exactly the half-applied state this docstring warns
+    about. One caller cannot be trusted to remember; the choke point can.
     """
     old = (old or "").strip().lower()
     new = _check_name(new)
@@ -306,8 +313,13 @@ def rename(old: str, new: str) -> str:
         raise UserError(f"{new!r} already exists — usernames are unique")
     users[new] = users.pop(old)
     _write(users)
-    # Lazy import: `project` reaches the dataset layer, and this module is on the
-    # login path where a heavy import chain is a cost paid per process start.
+    # Lazy imports throughout: `project` reaches the dataset layer and this
+    # module is on the login path, where a heavy import chain is a cost paid
+    # per process start.
+    from . import keys as keys_mod
+    from . import sessions as sessions_mod
+    sessions_mod.rename_user(old, new)
+    keys_mod.rename_user(old, new)
     from ... import project as project_mod
     moved = []
     for slug in project_mod.slugs():
