@@ -55,7 +55,7 @@ bots = [
 # transformers 5.x breaks the model's trust_remote_code path, and the rest are
 # what that remote code imports.
 la = [
-    "transformers==4.57.1",
+    "transformers==5.14.1",
     "bitsandbytes==0.50.0",
     "accelerate==1.14.0",
     "peft==0.20.0",
