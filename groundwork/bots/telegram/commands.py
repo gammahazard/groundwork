@@ -42,7 +42,7 @@ async def status(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         f"🧠 serving: {state.model_desc()}\n"
         f"VRAM reserved: {used:.2f} GB\n"
-        f"collected → pending: {c['pending']} · to-fix: {c['needs_fix']} · halves: {c['halves']}")
+        f"collected → pending: {c['pending']} · to-fix: {c['needs_fix']}")
 
 
 async def stats(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
@@ -138,7 +138,9 @@ def _engine_rows() -> tuple[str, list]:
     deim = runtime_model.deim_weights(config.pp())
     lines = [f"🔧 Counting with: *{cur}*", ""]
     rows = []
-    lines.append("• *yolo* — champion, holdout MAE 0.0, AGPL-3.0")
+    best = runtime_model.yolo_choices(pp=config.pp(), limit=1)
+    best_mae = f", holdout MAE {best[0]['mae']}" if best and best[0].get("mae") is not None else ""
+    lines.append(f"• *yolo* — champion{best_mae}, AGPL-3.0")
     rows.append([InlineKeyboardButton(("● " if cur == "yolo" else "") + "YOLOv8n",
                                       callback_data="eng:yolo")])
     if deim is not None:
@@ -215,13 +217,13 @@ def _model_rows() -> tuple[str, list]:
         # The deim run is chosen by score, not pinned — say so rather than
         # offering a switch that does not exist.
         cur = runtime_model.deim_weights(config.pp())
-        name = cur.parent.parent.name if cur else "none"
+        name = deim.parent.parent.name
         lines += [f"🧠 Engine *deim* — serving *{name}*", "",
                   "DEIM serves the best-scoring export automatically; there is "
                   "no per-run pin for it. Use /engine to go back to yolo.", ""]
         for c in runtime_model.deim_choices(config.pp()):
             mark = "● " if cur and c["weights"] == str(cur) else "   "
-            lines.append(f"{mark}`{c['name']}` — MAE {c['mae']} on {c['n_trays']} images")
+            lines.append(f"{mark}`{c['name']}` — MAE {c['mae']} on {c['n_images']} images")
         return "\n".join(lines), rows
 
     active = runtime_model.get_active(config.pp())
@@ -239,13 +241,13 @@ def _model_rows() -> tuple[str, list]:
     for c in choices:
         on = c["name"] == pinned
         lines.append(f"{'● ' if on else '   '}`{c['name']}` — MAE {c['mae']} "
-                     f"on {c['n_trays']} images")
+                     f"on {c['n_images']} images")
         # MAE *and* image count on the button: eight runs all reading "(0.0)" is
         # not a choice. The exam SIZE is the differentiator now — 0.0 on 68 images
         # is a stronger result than 0.0 on 62, and the holdout has grown four
         # times.
         rows.append([InlineKeyboardButton(
-            ("● " if on else "") + f"{c['name']}  {c['mae']} / {c['n_trays']} images",
+            ("● " if on else "") + f"{c['name']}  {c['mae']} / {c['n_images']} images",
             callback_data=f"mdl:{c['name']}")])
     rows.append([InlineKeyboardButton("↩ unpin (serve newest)", callback_data="mdl:*")])
     lines += ["", "Tap to switch — takes effect immediately, no /restart."]
