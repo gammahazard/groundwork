@@ -28,7 +28,7 @@ and from nowhere else. See users.py for the reasoning and for the one decision
 the owner reversed.
 
 THE THREAT MODEL HAS NOT CHANGED. This machine is network-only and stays that
-way — CLAUDE.md's rule about never funnelling or port-forwarding it is not
+way — the rule about never funnelling or port-forwarding it is not
 softened by there being a password now. Auth is defence in depth against a
 device on the LAN, not a licence to expose the box. There is no TLS on this
 path, so the session cookie is not marked Secure; over the network that is the

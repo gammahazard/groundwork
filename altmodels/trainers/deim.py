@@ -287,7 +287,7 @@ def main() -> None:
         # DEIM run holds TWO live contexts on one paravirtualised card. No other
         # family does: rtmdet and rfdetr make the same call, but then train in
         # that same process. Opt-in while it is unproven; see deim_entry.py for
-        # the other half and CLAUDE.md for why a spare context on /dev/dxg is
+        # the other half, and docs/machines.md for why a spare context on /dev/dxg is
         # worth deleting.
         if os.environ.get("GW_DEIM_CHILD_GUARD") == "1":
             print("[train_deim] launcher stays CUDA-free — VRAM guard and "

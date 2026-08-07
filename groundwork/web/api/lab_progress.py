@@ -16,7 +16,7 @@ D-FINE's curve is a val LOSS, lower better, unlike every other family's val mAP.
 It is reported as `val_loss` precisely so the UI can never label it a score.
 
 IT TAKES THE ALT DIRS RATHER THAN FINDING THEM. local_active(alt_dirs) is
-answering a MACHINE question — "is a card busy right now" — and CLAUDE.md records
+answering a MACHINE question — "is a card busy right now" — and the record shows
 that getting the machine-vs-project axis backwards fails in both directions
 without looking like a bug. Passing the dirs in keeps that decision at the call
 site, where lab_ops._every_alt() names it out loud, instead of burying it in a
@@ -24,7 +24,7 @@ module that would otherwise have no reason to know what a project is.
 
 NOTHING HERE MAY SHELL OUT. It is read by /api/lab/status, which the Lab tab
 polls; this repo's most expensive service bug is an unbounded subprocess on a
-polled endpoint (see safe_proc.py and the /dev/dxg notes in CLAUDE.md). Enforced
+polled endpoint (see safe_proc.py and docs/machines.md on /dev/dxg). Enforced
 by scratch/check_service_subprocess.py and check_no_subprocess_on_poll.py.
 """
 from __future__ import annotations

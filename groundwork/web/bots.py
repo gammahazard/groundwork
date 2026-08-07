@@ -18,7 +18,7 @@ is the bot's own log mtime — a bot whose unit is "active" but whose log has no
 moved in a day is polling Telegram fine and receiving nothing, which is a real
 and otherwise-silent failure of a data pipeline.
 
-On calling systemctl at all: CLAUDE.md's hard rule is about `nvidia-smi`, which
+On calling systemctl at all: the hard rule is about `nvidia-smi`, which
 under WSL2 goes through the paravirtualised /dev/dxg and can wedge in
 uninterruptible D-state. `systemctl --user` talks to the user's own systemd over
 a unix socket, cannot touch the GPU, and is already used this way by

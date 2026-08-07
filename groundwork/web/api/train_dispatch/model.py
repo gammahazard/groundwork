@@ -36,7 +36,7 @@ class TrainReq(BaseModel):
     run_name: str = ""                  # challenger only
     split_seed: int = 0                 # yolo only: train/val membership seed
     # DELIBERATE CONCURRENCY, BY NAME. Two GPU jobs at once has failed 3 of 4
-    # trials on the worker (CLAUDE.md) — so it is refused unless someone asks for it
+    # trials on the worker — so it is refused unless someone asks for it
     # in the request. It is not a warning and not a default: an experiment worth
     # running is worth typing.
     allow_concurrent: bool = False

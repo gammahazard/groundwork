@@ -39,7 +39,7 @@ WHAT IT TREATS AS "FINISHED", and why that is not the trap it looks like
 That distinction is the single most expensive lesson in this repo. night_queue
 decided a run had finished when its `gpu_holder.json` disappeared — which is
 equally what a CRASH looks like — so it logged "finished (card released)",
-skipped scoring, and moved on, hiding a crash for an hour. CLAUDE.md records the
+skipped scoring, and moved on, hiding a crash for an hour. That is the
 rule it cost: **absence of a crumb is not completion; meta.json is.**
 
 It is a safe marker because every trainer writes it LAST, after the training loop

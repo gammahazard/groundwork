@@ -27,7 +27,7 @@ caller a bot exists in a project they cannot see.
 ALWAYS THROUGH safe_proc. systemctl talks to the user's own systemd over a unix
 socket and cannot touch the GPU, so this is not the /dev/dxg trap — but
 `subprocess.run(timeout=)` does not bound a wedged child in any case, and this
-is reached from a polled panel. See CLAUDE.md.
+is reached from a polled panel. See CONTRIBUTING.md's subprocess rule.
 """
 from __future__ import annotations
 

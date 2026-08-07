@@ -70,7 +70,7 @@ def start(kill_mib: int | None = None, label: str = "vram-guard",
     have to create a CUDA context purely to call get_device_properties() and
     compute a number the training process could work out for itself. On WSL2 a
     spare CUDA context is not free: it is a second live context on a
-    paravirtualised card (see CLAUDE.md on /dev/dxg).
+    paravirtualised card (the /dev/dxg path — see docs/machines.md).
     """
     def poll() -> None:
         strikes = 0

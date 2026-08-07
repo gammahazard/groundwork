@@ -12,7 +12,7 @@ READING CARDS TOUCHES THE DRIVER, SO IT IS GATED
 =============================================================================
 
 `torch.cuda.get_device_properties` crosses the paravirtualised /dev/dxg under
-WSL2, exactly like nvidia-smi. CLAUDE.md is unambiguous about what that costs: a
+WSL2, exactly like nvidia-smi, and the cost of that is measured and known: a
 thread blocked there sits in uninterruptible D-state and CANNOT be killed — not
 by SIGKILL, not by systemd — and it has taken this fleet down twice (36 stuck
 processes, load 50, ssh timing out; and 149 of them, load average 171).
@@ -77,7 +77,7 @@ def _training_now() -> str | None:
     """What is using a GPU on this box, or None.
 
     SCANS /proc FOR THE INTERPRETER PLUS THE MODULE — never `pgrep -f`, which
-    matches its own command line. CLAUDE.md records that exact footgun costing 35
+    matches its own command line. That exact footgun has cost 35
     minutes: a `while pgrep -f "count_eval..."` loop waited on ITSELF forever, and
     the progress checks then reported the deadlocked wrapper as "still running".
     """

@@ -14,14 +14,15 @@ frontend's fetch wrapper appends on every call, so no handler ever plumbs it
 by hand while the
 backend becomes capable. Revisit the path form later if it earns itself.
 
-WHY IT DEFAULTS RATHER THAN REQUIRING. Same reason `--project` defaults on the
-stage CLIs: a missing project must resolve to the one that has always been
-there, not 422. There is exactly one project today.
+WHY IT IS REQUIRED. There is no default project — an install starts empty and
+a name is the only thing that says which dataset a request is about. A missing
+`?project=` is a 422, deliberately: the alternative is a guess, and the guess
+is right exactly until someone makes a second project.
 
 The failure mode this guards against is the one this repo keeps paying for —
 silently operating on the wrong data. An unknown slug is a 404 with the slug in
 it, never a silent fall-back to the default: a typo'd project that quietly
-returns the object counter's 160 images is how you would edit the wrong dataset.
+returns another project's images is how you edit the wrong dataset.
 """
 from __future__ import annotations
 

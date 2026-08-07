@@ -177,7 +177,7 @@ async def lab_img(path: str):
     # urllib.urlopen BLOCKS, and FastAPI runs every `def` endpoint in anyio's
     # 40-thread pool — so a browser loading a grid of training pictures while the
     # worker is busy (which is exactly when it is slowest to answer) parked one
-    # worker per image, for up to the timeout. That is the shape CLAUDE.md
+    # worker per image, for up to the timeout. That is the shape the record
     # records as costing a cockpit that serves nothing sync while async routes
     # still answer in 0.2s, and scratch/check_polled_endpoints.py exists to
     # refuse it. Awaiting yields the loop instead of holding a thread.

@@ -212,7 +212,7 @@ def main() -> None:
     ap.add_argument("--threshold", type=int, default=_DEFAULT_THRESHOLD)
     ap.add_argument("--top", type=int, default=5, help="also show the N closest pairs")
     # Every stage that can run as a subprocess names its project and PRINTS it
-    # before doing work (CLAUDE.md). A leak check that silently examined the
+    # before doing work. A leak check that silently examined the
     # wrong project is the worst thing here to be quietly wrong about.
     from ... import project as project_mod
     project_mod.add_argument(ap)

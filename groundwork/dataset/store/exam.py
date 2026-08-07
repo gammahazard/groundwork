@@ -9,7 +9,7 @@ WHY THIS HAS TO EXIST BEFORE THE NEXT IMAGE ARRIVES.
 Every MAE in this repo is denominated in an exam nobody wrote down. The holdout
 can grow release over release, and each time it grows, every
 number measured before it silently stopped being comparable to every number
-measured after. That is not hypothetical — CLAUDE.md records the cost twice:
+measured after. That is not hypothetical — it has cost two runs:
 
   * the 0.0154-vs-0.0 spread that looked like a model difference was partly the
     exam going 65 -> 68 underneath the runs;

@@ -84,7 +84,7 @@ def _batch_for(m, req) -> int:
     the memory, on the family with the largest footprint on this fleet (17.2 GiB
     measured, and stochastic to boot). An under-estimate is the bad direction:
     it lets through the run that then spills to host RAM over PCIe and trains
-    three times slower without erroring, which is the exact failure CLAUDE.md
+    three times slower without erroring, which is the exact failure the record
     records costing four hours.
 
     An explicit batch always wins; otherwise yolo halves at >960 and everyone
