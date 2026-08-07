@@ -213,7 +213,7 @@ def detail(run: str, p=Depends(current_project)):
         # live one is 8s-stale at worst.
         from .. import lab_proxy
         wk = lab_proxy.first_worker_key()
-        rj, _age = lab_proxy.get(wk, f"/api/lab/runs/{run}/detail") \
+        rj, _age = lab_proxy.get(wk, f"/api/lab/runs/{run}/detail", p.slug) \
             if wk else (None, 0.0)
         out["curve"] = (rj or {}).get("curve") or []
     # curves are val mAP (up = good) everywhere except D-FINE, which logs a

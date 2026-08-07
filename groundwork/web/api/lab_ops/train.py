@@ -268,6 +268,16 @@ def train(req: TrainReq, p=Depends(current_project)):
         raise HTTPException(400, f"no trainer wired for arch {req.arch!r}")
     if not model.venv_present:
         raise HTTPException(400, f"{model.venv} missing — see {model.trainer_module}")
+    # BEFORE the card, the sync and the convert. A family whose venv exists but
+    # cannot import its trainer's dependencies used to fail at the trainer's
+    # first import line — after all of that work, with the traceback buried in
+    # lab.log and the run directory left behind looking like a training failure.
+    missing = model.missing_deps()
+    if missing:
+        extra = f' — install it with: pip install -e ".[{model.requires_extra}]"' \
+            if model.requires_extra else ""
+        raise HTTPException(400, f"{model.label} needs {', '.join(missing)}, which "
+                                 f"{model.venv} cannot import{extra}")
     try:
         card, card_note = machines_mod.pick_card(
             "here", venv=model.venv, need_gb=model.peak_vram_gb,

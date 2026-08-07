@@ -15,7 +15,7 @@ predictor; a family the registry cannot vouch for is refused loudly
 | family | license | environment | default size | default epochs | status |
 |---|---|---|---|---|---|
 | `yolov8n` | AGPL-3.0 | `.venv` (main) | 1280 (960/1280) | 250 | **the default** — trains via the cockpit's own retrain pipeline |
-| `dfine-small` | Apache-2.0 | `.venv` (main) | 1280 (960/1280/1920) | 120 | **built-in challenger** (HF `transformers`) |
+| `dfine-small` | Apache-2.0 | `.venv` (main) + `[dfine]` extra | 1280 (960/1280/1920) | 120 | **built-in challenger** — needs `pip install -e ".[dfine]"` (HF `transformers`); the cockpit refuses the launch and says so if it is missing |
 | `deimv2-n` | Apache-2.0 | `.venv-deim` (stack) | 1280 (960/1280/1920) | 60 | challenger |
 | `deimv2-n-tv28` | Apache-2.0 | `.venv-deim13` (stack) | 1280 (960/1280/1920) | 60 | the same model on a newer torch — a **separate entry**, because runs across a major torchvision version are not comparable, and its own run prefix means the ledger can never quietly compare them |
 | `rtmdet-tiny` | Apache-2.0 | `.venv-mmdet` (stack) | 1280 (1280/1920) | 300 | deprecated |

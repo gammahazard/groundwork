@@ -54,7 +54,7 @@ def status(p=Depends(current_project)):
         # poll on a cold network path and dragged the whole HQ cockpit down.
         from ... import lab_proxy
         wk = lab_proxy.first_worker_key()
-        rj, age = lab_proxy.get(wk, "/api/lab/status") if wk else (None, 0.0)
+        rj, age = lab_proxy.get(wk, "/api/lab/status", p.slug) if wk else (None, 0.0)
         # Prefer the remote's LIST; fall back to its single `active` so an HQ
         # talking to a worker that predates this still shows the one run it knows.
         remote = (rj or {}).get("actives") or (

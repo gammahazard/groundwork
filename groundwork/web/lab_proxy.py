@@ -66,8 +66,22 @@ def _refresh(key: str, path: str) -> None:
         _inflight.discard(ck)
 
 
-def get(key: str, path: str) -> tuple[dict | None, float]:
-    """(payload, age_seconds) for machine `key`. Never blocks; may be stale."""
+def get(key: str, path: str, slug: str | None = None) -> tuple[dict | None, float]:
+    """(payload, age_seconds) for machine `key`. Never blocks; may be stale.
+
+    `slug` appends `?project=` — REQUIRED by every project-scoped route since
+    the default project was removed, and four of the six call sites here did
+    not send it. Each of those fetches 422'd forever, silently: this module
+    swallows failures on purpose (an unreachable worker is not an error), so
+    the challenger curve, log, previews and remote status simply stayed blank
+    with nothing on screen or in a log to say why. Measured against a live
+    worker: the four bare paths 422, the same paths with ?project= answer 200.
+
+    It is a parameter rather than the caller's business because the caller
+    that forgets is exactly the bug this had.
+    """
+    if slug and "project=" not in path:
+        path += ("&" if "?" in path else "?") + f"project={slug}"
     ck = (key, path)
     with _lock:
         entry = _cache.get(ck)

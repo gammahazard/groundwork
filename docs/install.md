@@ -28,7 +28,8 @@ What it does, in order:
    GPU). This matters: a torch build carries a fixed set of compiled kernels, and a wheel
    without your card's architecture *imports fine and fails at first use*.
 3. Creates `.venv` and installs torch and torchvision FIRST, from that index.
-4. Installs Groundwork with its `[train,bots]` extras. The order is what protects
+4. Installs Groundwork with its `[train,bots]` extras, plus `[dfine]` for the
+   built-in challenger (`GW_SKIP_DFINE=1` to skip it). The order is what protects
    step 2: with torch already satisfied, the unpinned `torch` those extras carry
    resolves to the build you just chose, so nothing installed afterwards
    (ultralytics included) can swap in a generic one.

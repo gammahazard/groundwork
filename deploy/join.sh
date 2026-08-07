@@ -43,5 +43,8 @@ say "installing torch ($TORCH_CHANNEL — large download on first run)"
     --index-url "https://download.pytorch.org/whl/$TORCH_CHANNEL"
 say "installing groundwork"
 .venv/bin/pip install -q -e ".[train,bots]"
+# D-FINE, the built-in challenger — the cockpit offers it, so a worker that
+# cannot import transformers would refuse every D-FINE dispatch.
+.venv/bin/pip install -q -e ".[dfine]"
 
 exec .venv/bin/python -m groundwork.web.join_worker --hub "$HUB" --token "$TOKEN"

@@ -79,6 +79,12 @@ say "installing torch + torchvision from the $TORCH_CHANNEL wheel index (large d
 
 say "installing groundwork with the [train,bots] extras"
 "$VENV/bin/pip" install -e ".[train,bots]"
+# The built-in challenger. Small (transformers only), and without it D-FINE is
+# offered by the cockpit and cannot start — GW_SKIP_DFINE=1 to leave it out.
+if [ -z "${GW_SKIP_DFINE:-}" ]; then
+    say "installing the [dfine] extra (the built-in challenger)"
+    "$VENV/bin/pip" install -e ".[dfine]"
+fi
 
 # --- hand over ---------------------------------------------------------------
 say "python setup complete — handing over to groundwork.install"

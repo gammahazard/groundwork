@@ -45,6 +45,15 @@ train = [
     "scipy",
 ]
 
+# D-FINE, the built-in challenger. It is the one alternative architecture that
+# trains in the MAIN venv rather than its own stack — but it loads through
+# transformers, which nothing in [train] installs, so it failed at
+# `from transformers import DFineForObjectDetection` on every stock install.
+# Measured on a real worker: with this installed, a 4-epoch run trains in 74s.
+dfine = [
+    "transformers==5.14.1",
+]
+
 # Telegram capture bots.
 bots = [
     "python-telegram-bot==22.8",

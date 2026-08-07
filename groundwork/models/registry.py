@@ -143,6 +143,14 @@ class Model:
     # True, so a False family would train on a shared tree nothing wrote.
     isolated_dataset: bool = True
 
+    # Import names this family's trainer needs BEYOND its venv existing, and
+    # the extra that installs them. Checked before a launch rather than
+    # discovered by a traceback three stages in. Empty for families with their
+    # own stack: there a missing package means the stack was built wrong, which
+    # venv_present already speaks to.
+    requires: tuple[str, ...] = ()
+    requires_extra: str = ""
+
     @property
     def python(self) -> Path:
         """The interpreter for this family's venv.
@@ -187,6 +195,29 @@ class Model:
     @property
     def venv_present(self) -> bool:
         return self.python.exists()
+
+    def missing_deps(self) -> list[str]:
+        """Packages this family needs that its interpreter cannot import.
+
+        A venv EXISTING is not a venv that can train. D-FINE proved it: it runs
+        in the main venv, so venv_present was True, and it died at
+        `from transformers import DFineForObjectDetection` — after the launcher
+        had synced a dataset, converted a COCO tree and taken a card. One
+        subprocess against a list that is almost always empty, never on a
+        polled path.
+        """
+        if not self.requires or not self.venv_present:
+            return []
+        import subprocess
+        code = ("import importlib.util as u,sys;"
+                "print(' '.join(m for m in sys.argv[1:] "
+                "if u.find_spec(m) is None))")
+        try:
+            r = subprocess.run([str(self.python), "-c", code, *self.requires],
+                               capture_output=True, text=True, timeout=60)
+        except (OSError, subprocess.SubprocessError):
+            return []          # could not ask — never block a launch on that
+        return (r.stdout or "").split()
 
 
 # Order here is presentation order only — `for_run` does not depend on it.
@@ -271,6 +302,9 @@ MODELS: tuple[Model, ...] = (
         # produced 6 runs from the CLI; it was simply never named here, so the
         # cockpit could not start one. Nothing new was written.
         trainer_module="altmodels.trainers.dfine",
+        # It runs in the MAIN venv, which is the point of it — but it loads
+        # through transformers, which [train] does not install.
+        requires=("transformers",), requires_extra="dfine",
         default_epochs=120, size_flag="--size", sizes=(960, 1280, 1920),
         # MEASURED 2026-08-03 (altmodels.gpu.peak, added because this family and
         # rfdetr printed no memory figure at all — eight completed runs left no

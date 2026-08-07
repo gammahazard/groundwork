@@ -26,6 +26,38 @@ PACKAGES = ("groundwork", "altmodels")
 bad: list[str] = []
 checked = 0
 
+def _bound_names(init_path) -> set:
+    """Names an __init__ actually BINDS — imports, assignments, defs, classes.
+
+    This was a substring test against the file's text, which is why it missed a
+    live crash: `from ...lab_ops import score` passed because the characters
+    "score" appear inside `_score_blocked`. autoscore called that name in-process
+    on every finished challenger run, so the timer whose whole job is "every run
+    comes back scored" raised ImportError instead, and had since the package was
+    split. A name test has to bind names.
+    """
+    try:
+        tree = ast.parse(init_path.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError):
+        return set()
+    out = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            out.update(a.asname or a.name for a in node.names)
+        elif isinstance(node, ast.Import):
+            out.update(a.asname or a.name.split(".")[0] for a in node.names)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            out.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name):
+                    out.add(t.id)
+                    if t.id == "__all__" and isinstance(node.value, (ast.List, ast.Tuple)):
+                        out.update(e.value for e in node.value.elts
+                                   if isinstance(e, ast.Constant) and isinstance(e.value, str))
+    return out
+
+
 def _exists(mod_parts: list[str]) -> bool:
     base = ROOT.joinpath(*mod_parts)
     return (base.with_suffix(".py")).exists() or (base / "__init__.py").exists()
@@ -73,10 +105,10 @@ for pkg in PACKAGES:
                 # runtime_model from the wrong depth).
                 pkg_init = ROOT.joinpath(*target) / "__init__.py"
                 if pkg_init.exists():
-                    init_src = pkg_init.read_text(encoding="utf-8")
+                    exported = _bound_names(pkg_init)
                     for al in node.names:
                         nm = al.name
-                        if nm == "*" or _exists(target + [nm]) or nm in init_src:
+                        if nm == "*" or _exists(target + [nm]) or nm in exported:
                             continue
                         bad.append(f"{rel}:{node.lineno}: {nm!r} is neither a "
                                    f"submodule of {'.'.join(target)!r} nor in "

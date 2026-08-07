@@ -90,7 +90,7 @@ def vis(run: str, n: int = 12, p=Depends(current_project)):
         # busy training — the only time this view is ever used.
         from ... import lab_proxy
         wk = lab_proxy.first_worker_key()
-        rj, _age = lab_proxy.get(wk, f"/api/lab/vis?run={run}&n={n}") \
+        rj, _age = lab_proxy.get(wk, f"/api/lab/vis?run={run}&n={n}", p.slug) \
             if wk else (None, 0.0)
         if not rj:
             # NOT "draws nothing" — a cold proxy cache is "I have not asked yet".
@@ -224,7 +224,7 @@ def log(run: str, n: int = 40, p=Depends(current_project)):
         # Cached + refreshed off-thread, it answers instantly and says how stale.
         from ... import lab_proxy
         wk = lab_proxy.first_worker_key()
-        d, age = lab_proxy.get(wk, f"/api/lab/log?run={run}&n={n}") \
+        d, age = lab_proxy.get(wk, f"/api/lab/log?run={run}&n={n}", p.slug) \
             if wk else (None, 0.0)
         return {**(d or {"tail": ""}), "age_s": age, "remote": True}
     if not cands:
