@@ -49,10 +49,15 @@ def list_bots(p=Depends(current_project)):
     land in this one.
     """
     rows = bots_mod.status(p.slug)
+    # WHICH process model runs bots here — the card offers "Install as a
+    # service" under systemd and a plain Start under the supervisor, and
+    # guessing client-side had it showing an install step that does not exist.
+    from .. import botsup
+    process_model = botsup.mode()
     # A bot behind an extension the project does not enable is not "missing",
     # it is not applicable — drop it rather than showing a dead card.
     rows = [b for b in rows if not b["extension"] or p.has(b["extension"])]
-    return {"project": p.slug, "bots": rows, "steps": setup_steps(p.slug)}
+    return {"project": p.slug, "process_model": process_model, "bots": rows, "steps": setup_steps(p.slug)}
 
 
 class NewBot(BaseModel):

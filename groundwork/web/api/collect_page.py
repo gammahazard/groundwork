@@ -32,6 +32,11 @@ from .deps import current_user, readable_by, why_readable
 router = APIRouter()
 
 
+def _process_model() -> str:
+    from .. import botsup
+    return botsup.mode()
+
+
 @router.get("/api/collect")
 def collect_overview(user: str | None = Depends(current_user)):
     """Every bot in a project this account may open, plus what is installable."""
@@ -70,7 +75,8 @@ def collect_overview(user: str | None = Depends(current_user)):
             if not b.get("extension")
             or (b["project"] in enabled and enabled[b["project"]].has(b["extension"]))]
 
-    return {
+    return {"process_model": _process_model(),
+            
         "projects": projects,
         "bots": rows,
         # The legacy machine-wide id is an ADMIN fact now — it governs only the

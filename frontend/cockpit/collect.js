@@ -81,8 +81,17 @@ function _botHealth(b) {
    * list deliberately does NOT mean "whoever owns the machine". */
   if (!(b.allowed_ids || []).length)
     return {cls: "warn", dot: "●", word: "nobody may use it yet — add your id"};
+  if (b.state === "active")
+    return stale
+      ? {cls: "warn", dot: "●", word: "running, but nothing received in days"}
+      : {cls: "ok", dot: "●", word: "running"};
+  if (b.state === "backoff")
+    return {cls: "bad", dot: "●",
+            word: "crashing on start — Probe the token, then check the log"};
   if (!b.installed)
-    return {cls: "warn", dot: "●", word: "ready to install"};
+    return {cls: "warn", dot: "●",
+            word: COLLECT && COLLECT.process_model === "supervisor"
+              ? "not running yet" : "ready to install"};
   if (b.state !== "active")
     return {cls: "bad", dot: "●", word: b.state === "unknown"
               ? "can't tell — systemd did not answer" : `not running (${b.state})`};
@@ -115,7 +124,9 @@ function _botNext(b) {
         <button type="submit">Let them in</button>
       </form>`;
   if (!b.installed && b.role)
-    return `<button class="botInstall" data-key="${k}">Install as a service →</button>`;
+    return (COLLECT && COLLECT.process_model === "supervisor")
+      ? `<button class="botSvc" data-key="${k}" data-act="start">Start ▸</button>`
+      : `<button class="botInstall" data-key="${k}">Install as a service →</button>`;
   if (!b.installed && !b.role)
     return `<p class="hint">Registered before roles existed, so there is no
       service to install. Re-register it choosing what it does.</p>`;
@@ -174,6 +185,8 @@ function _botCardHTML(b) {
         : `<span class="short"><code>${_cEsc(b.token_env)}</code> empty</span>`}</dd></div>
     </dl>
     <div class="botActs">${_botNext(b)}</div>
+    <div class="botFoot"><button type="button" class="botRemove mMeta"
+        data-key="${_cEsc(b.key)}">remove this bot</button></div>
     <div class="botProbeOut" id="botProbe-${k}"></div>
   </article>`;
 }
@@ -217,6 +230,7 @@ async function loadCollect() {
       host.querySelectorAll(".botInstall").forEach(b => b.onclick = () => _install(b));
       host.querySelectorAll(".botSvc").forEach(b => b.onclick = () => _service(b));
       host.querySelectorAll(".botProj").forEach(s => s.onchange = () => _moveProject(s));
+      host.querySelectorAll(".botRemove").forEach(b => b.onclick = () => _removeBot(b));
       revealAll(host, 50, 6);
     },
   });
@@ -323,6 +337,29 @@ async function _install(btn) {
   } catch (ex) {
     _say(key, "short", `✗ ${_cEsc(ex.message || ex)}`);
     btn.disabled = false; btn.textContent = "Install as a service →";
+  }
+}
+
+async function _removeBot(btn) {
+  const key = btn.dataset.key;
+  if (!confirm("Remove this bot?\n\nThe service is stopped and the entry is "
+             + "forgotten; the role frees up so it can be set up again from "
+             + "scratch. The token stays in .env until overwritten."))
+    return;
+  btn.disabled = true;
+  try {
+    // Stop first — the backend's delete is entry-only by design, and a
+    // process left polling for a forgotten bot is exactly the gap it warns
+    // about in its own response.
+    await apiOrThrow(`/api/bots/${encodeURIComponent(key)}/service` + _cQ(key),
+      {method: "POST", headers: {"Content-Type": "application/json"},
+       body: JSON.stringify({action: "stop"})}).catch(() => {});
+    await apiOrThrow(`/api/bots/${encodeURIComponent(key)}` + _cQ(key),
+                     {method: "DELETE"});
+    loadCollect();
+  } catch (ex) {
+    _say(key, "bad", ex.message || String(ex));
+    btn.disabled = false;
   }
 }
 
