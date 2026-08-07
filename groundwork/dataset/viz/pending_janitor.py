@@ -121,7 +121,7 @@ def main() -> None:
     args = ap.parse_args()
     proj = load(args.project)
     pp = paths.for_project(proj)
-    # This is the the janitor job systemd unit. It only ever touches pending/ — never
+    # This is the janitor job's systemd unit. It only ever touches pending/ — never
     # raw/, never the holdout — but it DELETES, so it says which tree first.
     print(f"[pending-janitor] project {proj.slug} ({proj.name}) | "
           f"{proj.dataset_root}")
