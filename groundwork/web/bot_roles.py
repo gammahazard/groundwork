@@ -60,7 +60,15 @@ class Role:
 
     @property
     def exec_start(self) -> str:
-        return f"{ROOT / '.venv' / 'bin' / 'python'} -m {self.module}"
+        # The conventional venv when it exists; otherwise the interpreter this
+        # service runs on (pip installs, Docker) — a unit pointing at a python
+        # that is not there fails on start with the least helpful error systemd
+        # can produce.
+        py = ROOT / ".venv" / "bin" / "python"
+        if not py.exists():
+            import sys
+            py = sys.executable
+        return f"{py} -m {self.module}"
 
 
 ROLES: dict[str, Role] = {

@@ -26,7 +26,11 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# NO sys.path games here. The old layout inserted a parent directory so its
+# helper module could be found; after the move that same insert put THIS
+# package's parent first on the path — and this package is named `telegram`,
+# so `from telegram import Update` imported *us* instead of the library, on
+# every start, with a crash-loop as the only symptom.
 
 from telegram import Update
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,

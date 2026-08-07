@@ -291,9 +291,9 @@ def make_counter(pp, **kw):
     training data.
     """
     if get_engine(pp) == "deim":
-        from ..deim_counter import DeimCounter
+        from .deim_counter import DeimCounter
         return DeimCounter(pp=pp, **kw)
-    from ..yolo_counter import YoloCounter
+    from .yolo_counter import YoloCounter
     return YoloCounter(pp=pp, **kw)
 
 

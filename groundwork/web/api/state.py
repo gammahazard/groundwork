@@ -39,7 +39,7 @@ def state(pp: ProjectPaths = Depends(project_paths)) -> dict:
     engine = runtime_model.get_engine(pp)
     run_dir = served_w.parent.parent if served_w else None
     if engine == "deim":
-        from ...deim_counter import DEIM_CONF, DEIM_IOU   # local: keeps /api/state light
+        from ...serve.deim_counter import DEIM_CONF, DEIM_IOU   # local: keeps /api/state light
         dw = runtime_model.deim_weights(pp)
         # <alt>/<run>/train/detector.torchscript.pt -> <alt>/<run>
         run_dir = dw.parent.parent if dw else None

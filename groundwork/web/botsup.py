@@ -72,10 +72,19 @@ def _runner(p, bot: dict, role) -> None:
     while unit not in _stop:
         env = dict(os.environ)
         env.update(bot_units.environment(p, bot))
+        # The child's stdout/stderr go to ITS OWN LOG, appended — the
+        # supervisor's equivalent of journalctl. DEVNULL here once cost a
+        # crash-loop diagnosis: state said "backoff" and nothing anywhere said
+        # why.
+        log_path = OUTPUTS_DIR / env.get("GW_BOT_LOG", f"{unit}.log")
+        try:
+            log_f = open(log_path, "ab", buffering=0)
+        except OSError:
+            log_f = subprocess.DEVNULL
         try:
             child = subprocess.Popen(
                 [interp, "-m", role.module], cwd=str(ROOT), env=env,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                stdout=log_f, stderr=log_f)
         except Exception as e:  # noqa: BLE001
             with _lock:
                 _state[unit] = f"failed ({type(e).__name__})"

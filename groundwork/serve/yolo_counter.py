@@ -98,7 +98,7 @@ class YoloCounter:
                  imgsz: int = DEFAULT_IMGSZ, max_det: int = DEFAULT_MAX_DET,
                  verbose: bool = True):
         from ultralytics import YOLO   # lazy: only the runtime that counts needs it
-        from .. import runtime_model
+        from . import runtime_model
         if weights:
             self.weights = Path(weights)
         else:                                   # pinned run, else newest — at its own imgsz

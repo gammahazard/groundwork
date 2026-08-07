@@ -69,7 +69,7 @@ class DeimCounter(YoloCounter):
 
         w = Path(weights) if weights else None
         if w is None:
-            from .. import runtime_model
+            from . import runtime_model
             # THIS project's exports (ProjectPaths.ALT_DIR), not the machine's.
             w = runtime_model.deim_weights(pp)
         if w is None or not w.exists():
