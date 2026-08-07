@@ -19,7 +19,13 @@ from contextlib import contextmanager
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-OUTPUTS = REPO / "outputs"
+# THE SAME TREE THE COCKPIT READS. The GPU admission lock and the crumbs it
+# is checked against (retrain_state.json, la_state.json, gpu_holder.json) are
+# written by the web tier under GW_DATA_DIR; resolving them off the code root
+# put the lock and the thing it guards in different directories, which is a
+# lock that admits everybody. groundwork.config is not importable from every
+# challenger venv, so the seam is read the way config.py itself reads it.
+OUTPUTS = Path(os.environ.get("GW_DATA_DIR") or REPO) / "outputs"
 
 
 def _lockfile() -> Path:

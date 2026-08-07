@@ -46,13 +46,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 
 from .. import paths, sidecar
 
-# In the REPO, not outputs/. See the module docstring: outputs/ is gitignored,
-# and this is the one artifact whose whole job is to outlive the machine.
-EXAM_DIR = Path(__file__).resolve().parents[3] / "exams"
+# Beside the code by default — outputs/ is gitignored and this is the one
+# artifact whose whole job is to outlive the machine, so it wants to be
+# committable. GW_DATA_DIR overrides it, because a Docker install's code tree
+# is a read-only image and freeze() would simply fail there.
+_CODE_ROOT = Path(__file__).resolve().parents[3]
+EXAM_DIR = Path(os.environ.get("GW_DATA_DIR") or _CODE_ROOT) / "exams"
 
 
 def _path(slug: str, name: str) -> Path:

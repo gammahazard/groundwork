@@ -67,7 +67,7 @@ def _rel(p: Path) -> str:
         from ..config import DATA_DIR
         return p.relative_to(DATA_DIR).as_posix()
     except ValueError:
-        raise SystemExit(f"{p} is outside {ROOT} — this mirror only carries "
+        raise SystemExit(f"{p} is outside {DATA_DIR} — this mirror only carries "
                          f"datasets that live under the install root") from None
 
 

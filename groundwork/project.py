@@ -54,7 +54,7 @@ import time  # noqa: F401 — creation stamps travel through the API layer
 from dataclasses import dataclass, field, replace  # noqa: F401
 from pathlib import Path
 
-from .config import OUTPUTS_DIR, ROOT
+from .config import DATA_DIR, OUTPUTS_DIR, ROOT  # noqa: F401 — ROOT kept for callers
 from .dataset import sidecar
 
 PROJECTS_DIR = OUTPUTS_DIR / "projects"
@@ -106,7 +106,10 @@ def _from_dict(d: dict) -> Project:
     root = Path(d["dataset_root"])
     return Project(
         slug=d["slug"], name=d.get("name") or d["slug"],
-        dataset_root=root if root.is_absolute() else ROOT / root,
+        # AGAINST DATA_DIR, because that is what to_dict wrote it relative
+        # to. Resolving against ROOT sent a GW_DATA_DIR install looking for
+        # its dataset inside the (read-only, in Docker) code tree.
+        dataset_root=root if root.is_absolute() else DATA_DIR / root,
         classes=tuple(d.get("classes") or ("object",)),
         buckets=tuple(d.get("buckets") or ()),
         owner=d.get("owner"), labelling=d.get("labelling", "dots"),

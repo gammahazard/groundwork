@@ -28,7 +28,8 @@ from pydantic import BaseModel
 
 from ... import retrain_job
 from .. import lab_progress
-from ..lab import REPO, _NAME
+from ..lab import REPO, _NAME  # noqa: F401 — REPO is the CODE root
+from ....config import OUTPUTS_DIR
 from ..deps import current_project
 from ....dataset import paths
 from ....dataset.pipeline import split as split_mod
@@ -55,7 +56,7 @@ def _vis_local(d: pathlib.Path, n: int):
         hits = sorted(d.glob(pattern), key=lambda x: x.stat().st_mtime,
                       reverse=True)[:n]
         if hits:
-            return ["/outputs/" + str(h.relative_to(REPO / "outputs"))
+            return ["/outputs/" + str(h.relative_to(OUTPUTS_DIR))
                     for h in hits], what
     return [], None
 
@@ -122,12 +123,12 @@ def _proxy_ok_prefixes() -> tuple[str, ...]:
     project's own layout (its alt/ and runs/ trees), never a hardcoded list.
     The old two-literal tuple was one project's legacy layout, so the image
     proxy 403'd every other project's runs even on a correctly-paired fleet."""
-    from ....config import ROOT
+    from ....config import OUTPUTS_DIR
     out = []
     for pp in paths.every_project():
         for d in (pp.ALT_DIR, pp.RUNS_DIR):
             try:
-                out.append("/outputs/" + d.relative_to(ROOT / "outputs").as_posix() + "/")
+                out.append("/outputs/" + d.relative_to(OUTPUTS_DIR).as_posix() + "/")
             except ValueError:
                 continue
     return tuple(out) or ("/outputs/__none__/",)

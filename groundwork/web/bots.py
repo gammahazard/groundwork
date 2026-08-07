@@ -85,7 +85,11 @@ def _token(name: str) -> str:
         return v
     try:
         from dotenv import dotenv_values
-        return (dotenv_values(ROOT / ".env").get(name) or "").strip()
+        # ENV_PATH, not ROOT/.env: with GW_DATA_DIR set the cockpit WRITES the
+        # file under the data dir, so reading the repo copy reported
+        # token_set:false for bots that were running fine.
+        from ..config import ENV_PATH
+        return (dotenv_values(ENV_PATH).get(name) or "").strip()
     except Exception:  # noqa: BLE001
         return ""
 

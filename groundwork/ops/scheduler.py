@@ -26,6 +26,7 @@ machine that does not exist.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -104,9 +105,15 @@ def _stamp(name: str, **fields) -> None:
     d.setdefault(name, {})
     d[name].update(fields, at=time.time())
     STATUS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    tmp = STATUS_PATH.with_suffix(".tmp")
-    tmp.write_text(json.dumps(d, indent=1), encoding="utf-8")
-    tmp.replace(STATUS_PATH)
+    # PER-JOB temp name. A fixed ".tmp" is the shared-scratch-file trap
+    # dataset/sidecar.py exists to prevent: two jobs stamping at the same
+    # second write the same path and one truncates the other mid-write.
+    tmp = STATUS_PATH.with_suffix(f".{name}.{os.getpid()}.tmp")
+    try:
+        tmp.write_text(json.dumps(d, indent=1), encoding="utf-8")
+        tmp.replace(STATUS_PATH)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def job_status(name: str) -> dict:

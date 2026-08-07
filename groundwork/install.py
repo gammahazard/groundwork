@@ -92,8 +92,13 @@ def install(role: str | None = None, units_only: bool = False) -> int:
         every = job.every_s
         # One directive per placeholder — _render refuses newlines in values,
         # and that refusal is load-bearing (see the timer template's comment).
-        s1, s2 = ((f"OnUnitActiveSec={every}s", "OnBootSec=120s")
-                  if every < 86400 else ("OnCalendar=daily", "Persistent=true"))
+        # OnUnitActiveSec for ANY interval — the old `>= a day means daily`
+        # branch silently turned the 30-hour backup into a 24-hour one, so the
+        # rendered timers and the Docker scheduler disagreed about the schedule
+        # the job table states. Persistent catches up a long interval missed
+        # while the machine was off.
+        s1, s2 = (f"OnUnitActiveSec={every}s",
+                  "OnBootSec=120s" if every < 86400 else "Persistent=true")
         tim = _render(job_t, {**subs, "JOB": name,
                               "SCHEDULE_1": s1, "SCHEDULE_2": s2})
         if _write_if_changed(USER_UNITS / f"{name}.service", svc):
