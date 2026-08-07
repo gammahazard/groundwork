@@ -29,16 +29,7 @@ import shutil
 import signal
 import time
 from pathlib import Path
-
-
-def _alive(pid) -> bool:
-    if not pid:
-        return False
-    try:
-        os.kill(int(pid), 0)
-        return True
-    except OSError:
-        return False
+from ..procs import alive as _alive
 
 
 def kill_group(pid) -> tuple[bool, str]:

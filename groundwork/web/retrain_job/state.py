@@ -19,6 +19,7 @@ from ...serve.yolo_counter import find_latest_weights
 from ...dataset import paths
 from ...dataset.pipeline import training_history
 from .. import gpu_facts, run_stats
+from ...procs import alive as _alive
 
 
 LOG = OUTPUTS_DIR / "retrain.log"
@@ -84,16 +85,6 @@ def gpu_lock(card: int | None = None):
             yield
         finally:
             fcntl.flock(f, fcntl.LOCK_UN)
-
-
-def _alive(pid) -> bool:
-    if not pid:
-        return False
-    try:
-        os.kill(int(pid), 0)
-        return True
-    except OSError:
-        return False
 
 
 def _read() -> dict:

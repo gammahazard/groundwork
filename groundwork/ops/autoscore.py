@@ -97,6 +97,7 @@ from pathlib import Path
 from fastapi import HTTPException
 
 from ..dataset import paths
+from ..procs import alive as _alive
 
 # The cockpit on THIS machine. Going through HTTP rather than importing the
 # endpoint is deliberate: /api/lab/score already refuses an unrecognised arch, an
@@ -108,15 +109,6 @@ LOCAL = os.environ.get("GW_SELF_URL", "http://127.0.0.1:8000")
 # A run whose MAE would be a lie on a chart built to rank real ones.
 SKIP_SUFFIXES = ("-smoke",)
 SKIP_NAMES = {"datasets", "pretrain", "parity"}
-
-
-def _alive(pid) -> bool:
-    """Is this pid still around? Any doubt counts as YES — see the header."""
-    try:
-        os.kill(int(pid), 0)
-        return True
-    except (OSError, TypeError, ValueError):
-        return False
 
 
 def _busy(alt_dirs) -> str | None:
@@ -324,14 +316,6 @@ def _await(r: dict, pid, alt_dir) -> None:
           f"next tick — if this repeats, that is the bug.", file=sys.stderr)
     print(f"  its output: {tail or '(it wrote nothing at all — the child died '
           f'before Python produced a line)'}", file=sys.stderr)
-
-
-def _alive(pid) -> bool:
-    try:
-        os.kill(int(pid), 0)
-        return True
-    except (OSError, TypeError, ValueError):
-        return False
 
 
 if __name__ == "__main__":

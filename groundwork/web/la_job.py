@@ -21,6 +21,7 @@ import time
 
 from ..config import OUTPUTS_DIR
 from . import retrain_job
+from ..procs import alive as _alive
 
 LOG = OUTPUTS_DIR / "la.log"
 STATE = OUTPUTS_DIR / "la_state.json"
@@ -49,16 +50,6 @@ def _write(d: dict) -> None:
     # pid-scoped tmp, since a shared tmp name is not atomic between processes.
     from ..dataset import sidecar
     sidecar.write_json(STATE, d)
-
-
-def _alive(pid) -> bool:
-    if not pid:
-        return False
-    try:
-        os.kill(int(pid), 0)
-        return True
-    except OSError:
-        return False
 
 
 def status() -> dict:

@@ -85,14 +85,9 @@ def _card_env(card: int) -> dict:
     return {**GPU_BASE_ENV, "CUDA_VISIBLE_DEVICES": str(int(card))}
 
 
-def _pid_alive(pid) -> bool:
-    try:
-        os.kill(int(pid), 0)
-    except (TypeError, ValueError, ProcessLookupError):
-        return False
-    except PermissionError:
-        return True         # exists, just not ours — alive is the true answer
-    return True
+# This module's version was the correct one; it now lives in groundwork/procs
+# so every caller shares it instead of five near-copies disagreeing.
+from ....procs import alive as _pid_alive          # noqa: E402
 
 
 def held_cards() -> set[int]:

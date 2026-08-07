@@ -35,6 +35,7 @@ import os
 import re
 import time
 from pathlib import Path
+from ...procs import alive as _alive
 
 
 def _mm_scalars(run_dir: Path):
@@ -177,14 +178,6 @@ def _deim_first_epoch(run_dir: Path) -> dict:
     # them 1-based — the two sources must not disagree by one.
     return {"epoch": int(last.group(1)) + 1,
             "batch": int(last.group(2)), "batches": int(last.group(3))}
-
-
-def _alive(pid) -> bool:
-    try:
-        os.kill(int(pid), 0)
-        return True
-    except (TypeError, ValueError, ProcessLookupError, PermissionError):
-        return False
 
 
 def _dfine_progress(run_dir: Path) -> dict:
