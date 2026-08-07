@@ -43,6 +43,18 @@ COPY docker/entrypoint.sh ./docker/entrypoint.sh
 # "torch" inside [train] resolves to it — nothing here can pull a generic build.
 RUN pip install --no-cache-dir -e ".[train,bots]"
 
+# HEADLESS OpenCV. ultralytics depends on opencv-python, whose wheel links
+# against X11/Qt shared libraries (libxcb, libGL) that a slim image does not
+# carry — so `import cv2` dies with `libxcb.so.1: cannot open shared object
+# file` and EVERY training run fails at its first import. This surfaces ONLY in
+# a container (a native install has the desktop libs) and only under load, so it
+# is invisible until a real run. opencv-python-headless is the same cv2 with no
+# GUI deps; the swap is last so nothing reinstalls the GUI build over it. (pip
+# check will note ultralytics still names opencv-python — cosmetic; cv2 resolves
+# to the headless distribution at runtime, verified by importing both.)
+RUN pip uninstall -y opencv-python opencv-python-headless >/dev/null 2>&1 || true; \
+    pip install --no-cache-dir opencv-python-headless
+
 # /data is the only writable place (a host bind mount — see docker-compose.yml).
 # HOME lives inside it so pip/model caches survive a container recreate and an
 # arbitrary `user:` uid has a home at all. GW_TRAINER=spool because the app
@@ -52,7 +64,12 @@ RUN pip install --no-cache-dir -e ".[train,bots]"
 ENV GW_DATA_DIR=/data \
     GW_TRAINER=spool \
     GW_PROCESS_MODEL=supervisor \
-    HOME=/data/home
+    HOME=/data/home \
+    YOLO_CONFIG_DIR=/data/home/.config/Ultralytics
+# ^ ultralytics writes a settings file on first import and warns (every run) if
+#   its config dir is unwritable, falling back to /tmp so it never persists.
+#   Pinning it under HOME (which is on the writable /data volume) silences the
+#   warning and keeps the setting.
 
 # 1777 on the venvs mountpoint seeds the named volume world-writable on first
 # use, so a container running as the HOST uid (not root) can create venvs in it.

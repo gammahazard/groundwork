@@ -29,6 +29,7 @@ from ... import retrain_job
 from ... import machines as machines_mod
 from .. import lab_progress
 from ..lab import REPO, _NAME
+from ....config import DATA_DIR
 from ..deps import current_project
 from ....dataset import paths
 from ....dataset.pipeline import split as split_mod
@@ -49,7 +50,10 @@ def _launch(cmd: list[str], log_f: Path, env: dict | None = None,
     def _raise_nofile():                    # a measured fd-limit lesson
         resource.setrlimit(resource.RLIMIT_NOFILE, (65535, 65535))
     from ...spawn import spawn_detached
-    pid = spawn_detached(name, cmd, log_f, env=env, cwd=REPO,
+    # DATA_DIR (writable), not REPO (/app, read-only under Docker) — a
+    # challenger that fetches a base checkpoint writes it beside the cwd. No-op
+    # on native where DATA_DIR == REPO.
+    pid = spawn_detached(name, cmd, log_f, env=env, cwd=DATA_DIR,
                          preexec_fn=_raise_nofile)
     return pid or 0
 

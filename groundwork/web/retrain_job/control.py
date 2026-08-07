@@ -20,7 +20,7 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
-from ...config import OUTPUTS_DIR, ROOT
+from ...config import DATA_DIR, OUTPUTS_DIR, ROOT  # noqa: F401
 from ...serve.yolo_counter import find_latest_weights
 from ...dataset import paths
 from ...dataset.pipeline import training_history
@@ -61,7 +61,12 @@ def _launch_pipeline(sizes: list[int], val_frac: float,
         env["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         env["CUDA_VISIBLE_DEVICES"] = str(int(card))
     from ..spawn import spawn_detached
-    pid = spawn_detached("retrain", cmd, WORKER_LOG, env=env, cwd=ROOT)
+    # cwd IS THE WRITABLE DATA ROOT, not the code tree. ultralytics saves the
+    # base weights (yolov8n.pt) next to the cwd for a bare model name; under
+    # Docker the code tree (/app) is read-only to the runtime user, so that
+    # download failed with a curl WRITE error and every run died at model load.
+    # DATA_DIR == ROOT on a native install, so this is a no-op there.
+    pid = spawn_detached("retrain", cmd, WORKER_LOG, env=env, cwd=DATA_DIR)
     if pid is not None:
         # Reap it when it exits so a finished retrain doesn't sit as a zombie
         # for as long as the web service lives. (Spool mode has no child here —
