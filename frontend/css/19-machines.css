@@ -1,0 +1,142 @@
+/* 19-machines.css — where runs execute.
+ *
+ * NO CARDS, same as the rest of the ported pages: a machine is a ruled block
+ * with its facts in mono, not a panel with a shadow. The hierarchy is the type
+ * scale (00-tokens), and the boxes were what made the old cockpit read as a
+ * template.
+ *
+ * EVERY FIGURE IS MONO. sm_120, 16 GB, card 0 — these are the numbers that
+ * decide whether a model can run, and they are meant to be compared down a
+ * column between machines.
+ */
+
+.mBox{
+  border-top:1px solid var(--gw-rule);
+  padding:var(--gw-s3) 0 var(--gw-s4);
+  position:relative}
+/* The survey tick, quietly — the same mark as everywhere else, scaled down to
+   say "this is one measured thing" without competing with the section rule. */
+.mBox::before{
+  content:"";position:absolute;top:-1px;left:0;width:20px;height:2px;
+  background:var(--gw-rule-2)}
+.mBox:hover::before{background:var(--gw-act)}
+
+.mHead{display:flex;align-items:baseline;gap:var(--gw-s2);flex-wrap:wrap}
+.mName{font:600 var(--gw-t-lg)/1.2 var(--gw-sans);color:var(--gw-ink)}
+.mTag{
+  font:600 .58rem/1 var(--gw-cond);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--gw-ink-3);border:1px solid var(--gw-rule-2);
+  border-radius:3px;padding:.2rem .4rem}
+/* "not a training target" is a STATE, so it gets a shape change (dashed) as
+   well as a colour — the standing rule here, and the reason is that the owner
+   is colour-blind. */
+.mTag.mTagOff{border-style:dashed;color:var(--gw-warn)}
+.mSpacer{flex:1}
+.mActs{display:flex;gap:var(--gw-s2)}
+.mActs button{
+  min-height:38px;font:400 .78rem/1 var(--gw-sans);
+  background:transparent;color:var(--gw-ink-2);
+  border:1px solid var(--gw-rule-2);border-radius:var(--gw-r-sm);
+  padding:.35rem .7rem;cursor:pointer}
+.mActs button:hover:not(:disabled){color:var(--gw-ink);border-color:var(--gw-act)}
+.mActs button:disabled{opacity:.5;cursor:default}
+.mActs .mKill:hover{color:var(--gw-bad);border-color:var(--gw-bad)}
+
+.mMeta{
+  font:400 var(--gw-t-xs)/1.7 var(--gw-mono);color:var(--gw-ink-3);
+  margin-top:var(--gw-s1);word-break:break-all}
+
+/* ---- the cards ----------------------------------------------------------
+   A ruled list, not tiles: two GPUs is a comparison, and a comparison wants
+   its figures in a column. */
+.mCards{margin-top:var(--gw-s3)}
+.mCard{
+  display:flex;align-items:baseline;gap:var(--gw-s3);flex-wrap:wrap;
+  padding:.4rem 0;border-bottom:1px solid var(--gw-rule)}
+.mCard:last-child{border-bottom:0}
+.mCardIx{
+  font:600 .6rem/1 var(--gw-cond);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--gw-ink-3);min-width:3.6rem}
+.mCardName{font:400 var(--gw-t-sm) var(--gw-sans);color:var(--gw-ink)}
+.mCardSpec{
+  margin-left:auto;font:400 var(--gw-t-sm) var(--gw-mono);
+  color:var(--gw-ink-2);font-variant-numeric:tabular-nums}
+
+.mNoCards{margin:var(--gw-s2) 0 0}
+.mMsg{font:400 var(--gw-t-sm)/1.6 var(--gw-mono);color:var(--gw-ink-2);
+      margin-top:var(--gw-s2)}
+.mMsg.bad{color:var(--gw-bad)}
+
+@media(max-width:520px){
+  .mCardSpec{margin-left:0;width:100%}
+  .mActs{width:100%;margin-top:var(--gw-s2)}
+  .mActs button{flex:1}
+}
+
+/* ---- export ------------------------------------------------------------
+   A control row and a note, no panel — the ledger above it is already the
+   surface, and boxing this would make a small action look like a section. */
+.xPanel{margin-top:var(--gw-s2)}
+.xControls{display:flex;flex-wrap:wrap;gap:var(--gw-s3);align-items:end}
+.xControls label{display:flex;flex-direction:column;gap:var(--gw-s1);
+  font:600 .62rem/1 var(--gw-cond);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gw-ink-3)}
+.xControls select{min-height:40px;font:400 var(--gw-t-sm)/1 var(--gw-mono);
+  background:var(--gw-sunk);color:var(--gw-ink);
+  border:1px solid var(--gw-rule-2);border-radius:var(--gw-r-sm);padding:.4rem .5rem}
+#xGo{min-height:40px;font:600 var(--gw-t-sm)/1 var(--gw-sans);
+  color:var(--gw-act-ink);background:var(--gw-act);border:0;
+  border-radius:var(--gw-r-sm);padding:0 1.1rem;cursor:pointer}
+#xGo:hover:not(:disabled){background:var(--gw-act-hi)}
+#xGo:disabled{opacity:.55;cursor:default}
+.xSize{font:400 var(--gw-t-xs) var(--gw-mono);color:var(--gw-ink-3);
+       padding-bottom:.7rem}
+
+/* The caveat is amber-ruled and in words — never a colour on its own, and never
+   hidden behind a tooltip, because it is the thing you need before you press. */
+.xNote{margin-top:var(--gw-s3);border-left:3px solid var(--gw-rule-2);
+       padding:.4rem 0 .4rem .75rem}
+.xNote .xWhat{display:block;font:400 var(--gw-t-sm)/1.6 var(--gw-sans);
+              color:var(--gw-ink-2)}
+.xNote:has(.xCaveat){border-left-color:var(--gw-act)}
+.xNote .xCaveat{display:block;margin-top:var(--gw-s2);
+  font:400 var(--gw-t-sm)/1.6 var(--gw-sans);color:var(--gw-ink)}
+
+.xStatus{margin-top:var(--gw-s3);font:400 var(--gw-t-sm)/1.6 var(--gw-mono)}
+.xStatus .xRun{color:var(--gw-ink-2)}
+.xStatus .xOk{color:var(--gw-good)}
+.xStatus .xErr{color:var(--gw-bad)}
+
+#xArtifacts{margin-top:var(--gw-s3)}
+.xRow{display:flex;gap:var(--gw-s3);align-items:baseline;padding:.4rem 0;
+      border-bottom:1px solid var(--gw-rule)}
+.xRow:last-child{border-bottom:0}
+.xName{font:400 var(--gw-t-sm) var(--gw-mono);color:var(--gw-act);
+       text-decoration:none;word-break:break-all}
+.xName:hover{text-decoration:underline}
+.xSize{margin-left:auto;color:var(--gw-ink-3)}
+
+/* Running state: the app's own spinner beside the message, so a five-minute
+   CoreML build does not read as a dead button. .uiSlow (14-ui.css) brings the
+   ring and the reduced-motion opt-out; this only makes the row lay out. */
+.xStatus .xRun.uiSlow{display:inline-flex;align-items:center;gap:.55rem}
+.xStatus .xHint{color:var(--gw-ink-3)}
+
+/* THE CONTROLS MUST NOT WIDEN THE PAGE. A native <select> sizes to its widest
+   option and cannot wrap, so the card picker — the longest string in the app —
+   pushed the layout sideways as soon as TensorRT was chosen. Cap it and let the
+   row wrap instead; the full text lives in each option's title. */
+.xControls{flex-wrap:wrap}
+.xControls #xCard{max-width:min(22rem,60vw);text-overflow:ellipsis}
+.xControls label{min-width:0}
+
+/* Format badge, sitting just left of the size. Small and quiet on purpose — it
+   is a label on a row you are scanning, not a call to action, so it reads as
+   metadata rather than competing with the filename. */
+.xRow .xFmt{
+  margin-left:auto;flex:none;
+  font:400 var(--gw-t-xs)/1 var(--gw-mono);color:var(--gw-ink-3);
+  border:1px solid var(--gw-rule);border-radius:2px;
+  padding:.2rem .38rem;white-space:nowrap}
+/* The size was pushed right by margin-left:auto; the badge owns that now. */
+.xRow .xSize{margin-left:var(--gw-s2)}

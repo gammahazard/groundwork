@@ -1,0 +1,474 @@
+/* 00-tokens.css — the design system's vocabulary. LOADED FIRST, before 01-base.
+ *
+ * WHY THIS FILE EXISTS. The old :root was eight colours and nothing else: no
+ * type scale, no spacing scale, no radius scale, and ONE surface value doing
+ * every job. So a hero, a tile and a table row were all `--panel` inside a 1px
+ * `--edge` at 12px radius — which is why nothing could be more important than
+ * anything else except by being bigger, and why the whole cockpit read as a
+ * template. Hierarchy needs more than one step to express.
+ *
+ * THE DIRECTION, in one line: this product's character is honesty about
+ * measurement — it already tells you when runs fell off a chart, when a total
+ * is partial, when an exam has saturated — so the surface should read as an
+ * INSTRUMENT. A surveyed datum line as the structural mark, every number in
+ * mono so figures align down a column, one action colour that is a marking
+ * rather than an alarm.
+ *
+ * SELF-HOSTED TYPE, NOT A CDN. This is a LAN cockpit that need not have a route
+ * to the internet — a workspace, a factory floor. A webfont that
+ * half-loads is worse than one that always does. IBM Plex, 104 KB for five
+ * faces, drawn for a technology company's technical documentation, which is
+ * exactly what these screens are.
+ *
+ * MIGRATION. 01-base.css re-points the OLD variable names (--bg, --panel,
+ * --edge, --acc …) at these — see the compatibility block there. That is
+ * deliberate and temporary: every existing rule in 01-12 keeps working and
+ * re-skins itself, so the system lands in one commit without editing twelve
+ * stylesheets, and pages can then be ported one at a time. Each old name is
+ * retired as its last consumer is rewritten.
+ */
+
+/* ---- type ---------------------------------------------------------------- */
+@font-face{font-family:Plex;font-weight:400;font-display:swap;
+  src:url(../fonts/ibm-plex-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:Plex;font-weight:600;font-display:swap;
+  src:url(../fonts/ibm-plex-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:PlexCond;font-weight:600;font-display:swap;
+  src:url(../fonts/ibm-plex-sans-condensed-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:PlexMono;font-weight:400;font-display:swap;
+  src:url(../fonts/ibm-plex-mono-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:PlexMono;font-weight:600;font-display:swap;
+  src:url(../fonts/ibm-plex-mono-latin-600-normal.woff2) format('woff2')}
+
+:root{
+  /* ---- surfaces: four steps, not one ------------------------------------
+     void  the page behind everything      base  ordinary content
+     sunk  wells, chart beds, terminals    rise  the one thing that matters here */
+  --gw-void:#090d14;
+  --gw-sunk:#0d1320;
+  --gw-base:#141b28;
+  --gw-rise:#1b2433;
+
+  --gw-rule:#222c42;      /* hairline */
+  --gw-rule-2:#33405c;    /* hairline, emphasised — a real edge */
+
+  --gw-ink:#eaeff7;       /* the number */
+  --gw-ink-2:#93a1b8;     /* the label */
+  --gw-ink-3:#5d6b83;     /* the quietest thing still legible on --gw-base */
+
+  /* ---- meaning ----------------------------------------------------------
+     ACTION IS AMBER, and that is a bug fix rather than a preference. --acc was
+     #e33 and painted the PRIMARY action (#edSave, #genBtn, every form button)
+     while Cancel was also red: the thing that saves and the thing that destroys
+     were the same colour. Amber is an instrument marking; red now means only
+     "this removes data". */
+  --gw-act:#f0a92b;
+  --gw-act-hi:#ffbe4d;
+  --gw-act-ink:#1f1402;   /* text ON amber — dark, because white fails on it */
+
+  --gw-good:#3ddc84;
+  --gw-bad:#ff6b5e;
+  --gw-warn:#e0a83e;
+  --gw-data:#5aa9ff;      /* plotted series */
+
+  /* ---- type roles -------------------------------------------------------
+     Three roles, ONE family. Numbers go to mono everywhere: figures are this
+     product's subject matter and they should align in a column, not drift. */
+  --gw-sans:Plex,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --gw-cond:PlexCond,var(--gw-sans);
+  --gw-mono:PlexMono,ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  /* A real scale, so sizes are chosen from a set rather than invented per rule. */
+  --gw-t-xs:.68rem; --gw-t-sm:.8rem; --gw-t-md:.9rem; --gw-t-base:.95rem;
+  --gw-t-lg:1.1rem; --gw-t-xl:1.5rem; --gw-t-2xl:1.9rem;
+  /* the readout — an instrument's primary value, sized to the viewport */
+  --gw-t-read:clamp(2.4rem,6.5vw,4rem);
+
+  /* ---- space and shape --------------------------------------------------- */
+  --gw-s1:.25rem; --gw-s2:.5rem; --gw-s3:.85rem; --gw-s4:1.25rem;
+  --gw-s5:2rem;   --gw-s6:3rem;
+  --gw-r-sm:6px; --gw-r:10px; --gw-r-lg:14px;
+
+  --gw-t-fast:.13s cubic-bezier(.4,0,.2,1);
+  --gw-t-med:.2s cubic-bezier(.4,0,.2,1);
+}
+
+/* NOTE: the old-name compatibility block lives in 01-base.css, NOT here.
+   01-base declares its own :root and loads after this file, so a remap here
+   would be overridden by the very literals it exists to replace — same
+   specificity, later wins. It belongs where the old names are declared. */
+
+/* ---- the datum: the one structural mark ---------------------------------
+   A ruled baseline with a survey tick at its origin. It is the product's own
+   idea — ground truth, a measured baseline — used as structure rather than
+   ornament, and it is the same mark at every scale. Applied progressively as
+   pages are ported. */
+.gwDatum{
+  display:flex;align-items:baseline;gap:var(--gw-s2);
+  margin:var(--gw-s5) 0 var(--gw-s3);
+  border-top:1px solid var(--gw-rule);padding-top:.65rem;position:relative}
+.gwDatum::before{
+  content:"";position:absolute;top:-1px;left:0;width:32px;height:3px;
+  background:var(--gw-act)}
+.gwDatum h2,.gwDatum h3{
+  margin:0;font:600 .7rem/1 var(--gw-cond);letter-spacing:.17em;
+  text-transform:uppercase;color:var(--gw-ink-2)}
+.gwDatum .n{margin-left:auto;font:400 var(--gw-t-xs) var(--gw-mono);
+            color:var(--gw-ink-3)}
+
+/* Numbers, wherever they appear. */
+.gwNum{font-family:var(--gw-mono);font-variant-numeric:tabular-nums}
+
+/* ==========================================================================
+   PORTED COMPONENTS. Each block replaces a card-shaped thing with something
+   that carries its weight through type and space instead. They live here
+   rather than in the numbered slices because the slices are HISTORICAL cuts of
+   one old file — putting new work in them would deepen exactly the mess the
+   redesign is meant to undo. They move into thematic files as the port lands.
+   ========================================================================== */
+
+/* ---- THE READOUT --------------------------------------------------------
+   The score of the model actually answering photographs, at instrument scale.
+   It was a <b> inside a card among four tiles: the single most important fact
+   about a project, set as a footnote. */
+.gwRead{
+  display:flex;gap:var(--gw-s5);flex-wrap:wrap;align-items:flex-end;
+  background:none;border:0;box-shadow:none;padding:var(--gw-s1) 0 var(--gw-s4)}
+.gwReadK{
+  display:block;font:600 .62rem/1 var(--gw-cond);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gw-ink-3);margin-bottom:var(--gw-s2)}
+.gwReadV{
+  display:block;font:600 var(--gw-t-read)/.9 var(--gw-mono);letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;color:var(--gw-good)}
+/* A missing score is NOT a perfect one. Until loadState lands a number the
+   readout holds a dash, and green would assert 0.0000 before anything is known. */
+.gwReadV:not(:has(*)){color:var(--gw-good)}
+.gwRead .gwReadV.gwPending,.gwReadV.uiPending{color:transparent}
+.gwReadSub{display:block;font:400 var(--gw-t-sm) var(--gw-mono);
+           color:var(--gw-ink-3);margin-top:var(--gw-s2)}
+.gwReadSub b{color:var(--gw-ink-2);font-weight:600}
+.gwReadWho{flex:1;min-width:16rem}
+.gwReadWho .servedName{font:600 var(--gw-t-lg)/1.4 var(--gw-mono);word-break:break-all}
+.gwReadWho .servedMeta{font:400 var(--gw-t-sm)/1.7 var(--gw-mono);
+                       color:var(--gw-ink-3);margin-top:var(--gw-s1)}
+.gwReadWho .servedMeta b{color:var(--gw-ink-2)}
+/* THE EXPERIMENTAL MARKER IS THE DASHED BOX, and only that. 07-dashboard.css
+   already draws it and calls it "a second signal, never the only one" — the
+   first being the word EXPERIMENTAL in the served name itself. A first pass
+   here added a dashed underline as well, which made three signals for one
+   state; the extra one is gone and the box is padded to sit on a readout
+   rather than on a card. */
+.gwRead.experimental{
+  border:2px dashed var(--gw-act);border-radius:var(--gw-r);
+  padding:var(--gw-s3) var(--gw-s4)}
+@media(max-width:560px){.gwRead{gap:var(--gw-s4)}}
+
+/* ---- COUNTS: no boxes ---------------------------------------------------
+   Four tiles, each a gradient card with a border and a shadow, became four
+   numbers with labels. The hierarchy is the type scale; the boxes were adding
+   weight without adding meaning. */
+.gwCounts{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));
+          gap:var(--gw-s4) var(--gw-s5)}
+.gwCt .v{display:block;font:600 var(--gw-t-2xl)/1 var(--gw-mono);
+         letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.gwCt .k{display:block;font:600 .62rem/1.45 var(--gw-cond);letter-spacing:.11em;
+         text-transform:uppercase;color:var(--gw-ink-3);margin-top:var(--gw-s1)}
+
+/* ---- RULED LISTS --------------------------------------------------------
+   Activity / scoreboard / odometer render .sbRow and .actRow into these. The
+   rows keep their markup; only the container stops being a card. */
+.gwList{margin:0}
+.gwList .sbRow,.gwList .actRow{border-bottom:1px solid var(--gw-rule)}
+.gwList .sbRow:last-child,.gwList .actRow:last-child{border-bottom:0}
+.gwList .sbMae{font-family:var(--gw-mono);font-variant-numeric:tabular-nums}
+/* Scoreboard and odometer are two columns of facts on a wide screen; on a
+   phone one column, because a squeezed number column is unreadable. */
+@media(min-width:900px){
+  #odometer.gwList,#scoreboard.gwList{
+    column-count:2;column-gap:var(--gw-s5)}
+  #odometer.gwList .sbRow,#scoreboard.gwList .sbRow{
+    break-inside:avoid;-webkit-column-break-inside:avoid}
+}
+
+/* ---- machine notes ------------------------------------------------------
+   What the project CARDS cannot say: when anything last happened, and any
+   project whose manifest will not parse. A one-line strip rather than a panel,
+   because on a healthy machine it is a single quiet sentence — and a broken
+   manifest must never be the thing a tidy-up drops. */
+.gwNotes{display:flex;flex-wrap:wrap;gap:var(--gw-s3);margin:var(--gw-s2) 0 0}
+.gwNote{font:400 var(--gw-t-xs) var(--gw-mono);color:var(--gw-ink-3)}
+.gwNote b{color:var(--gw-ink-2);font-weight:600}
+.gwNote.bad{color:var(--gw-bad)}
+
+/* ---- the run ledger -----------------------------------------------------
+   ONE TABLE FED BY TWO STORES that share three keys. Each family builds its own
+   <tr> (see runs_table.js on why a single normalised renderer is not worth the
+   risk to ~16 action handlers), so this cannot make the CONTENT symmetrical —
+   what it can do is stop the two looking like different tables.
+
+   Numbers to mono and right-aligned, so a column of scores is a column: the
+   whole point of this table is reading 0.0000 against 1.7353 down the page, and
+   in a proportional face those digits do not line up. */
+#runsTable table.runs{width:100%;border-collapse:collapse}
+#runsTable table.runs th{
+  font:600 .6rem/1 var(--gw-cond);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--gw-ink-3);background:var(--gw-sunk);
+  padding:.55rem .7rem;border-bottom:1px solid var(--gw-rule-2);text-align:left}
+#runsTable table.runs td{
+  padding:.6rem .7rem;border-bottom:1px solid var(--gw-rule);vertical-align:top}
+#runsTable table.runs tbody tr:hover td{background:var(--gw-rise)}
+/* the score and the delta are figures, wherever the row came from */
+#runsTable table.runs th:nth-child(3),#runsTable table.runs td:nth-child(3),
+#runsTable table.runs th:nth-child(4),#runsTable table.runs td:nth-child(4){
+  text-align:right;font-variant-numeric:tabular-nums}
+#runsTable table.runs td:nth-child(3),#runsTable table.runs td:nth-child(4){
+  font-family:var(--gw-mono)}
+/* run names are identifiers — mono makes -64 vs -65 legible at a glance */
+#runsTable .runsModel b{font:600 .84rem/1.3 var(--gw-cond);letter-spacing:.02em}
+#runsTable td:nth-child(2) b{font-family:var(--gw-mono);font-weight:600}
+/* actions: quiet until wanted. They are 6 buttons on one family's rows and 2 on
+   another's, which no styling can fix — but they should not shout either way. */
+#runsTable td.acts button{
+  font:400 .74rem/1 var(--gw-sans);background:transparent;color:var(--gw-ink-3);
+  border:1px solid var(--gw-rule);border-radius:var(--gw-r-sm);padding:.3rem .5rem}
+#runsTable td.acts button:hover{color:var(--gw-ink);border-color:var(--gw-act)}
+
+/* ---- Images: the three-collection switch -------------------------------
+   A segmented control, not tabs-inside-tabs: these are three filters on one
+   set of pictures, and the control should read as one thing with a position
+   rather than three separate destinations. The active segment takes the action
+   colour AND a weight change — shape as well as hue, per the standing rule. */
+.imgSeg{display:inline-flex;gap:0;border:1px solid var(--gw-rule-2);
+        border-radius:var(--gw-r);overflow:hidden;margin-bottom:var(--gw-s3);
+        flex-wrap:wrap}
+.imgSegBtn{
+  display:flex;align-items:center;gap:.45rem;min-height:40px;
+  font:400 var(--gw-t-md)/1 var(--gw-sans);color:var(--gw-ink-2);
+  background:transparent;border:0;border-right:1px solid var(--gw-rule);
+  border-radius:0;padding:.55rem .95rem;cursor:pointer;
+  transition:background var(--gw-t-fast),color var(--gw-t-fast)}
+.imgSegBtn:last-child{border-right:0}
+.imgSegBtn:hover{background:var(--gw-base);color:var(--gw-ink)}
+.imgSegBtn.active{background:var(--gw-base);color:var(--gw-ink);
+                  font-weight:600;box-shadow:inset 0 -2px 0 var(--gw-act)}
+/* The count rides the segment it belongs to: quiet mono, not an amber object —
+   these sit inside a control whose active state is already amber. */
+.imgSegBtn .badge{background:transparent;color:var(--gw-ink-3);
+  font:400 .74rem/1 var(--gw-mono);font-weight:400;padding:0;margin:0;
+  border-radius:0}
+.imgSegBtn.active .badge{color:var(--gw-act)}
+@media(max-width:520px){
+  .imgSeg{display:flex;width:100%}
+  .imgSegBtn{flex:1;justify-content:center;padding:.55rem .5rem;
+             font-size:var(--gw-t-sm)}
+}
+
+/* ---- the project tab strip ---------------------------------------------
+   A project's own tabs, along the top of its content instead of in the drawer.
+   Global entries stay in the drawer/sidebar; these do not, because the two have
+   completely different frequencies — you flip between Overview and Results
+   constantly and visit Guide once. */
+.projTabs{display:none}
+body.inProject .projTabs{
+  display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;
+  overflow-x:auto;overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  border-bottom:1px solid var(--gw-rule);
+  margin:0 0 var(--gw-s4);
+  /* Sticky, so flipping tabs never means scrolling back up for the control that
+     flips them — the whole point of moving them here. */
+  position:sticky;top:0;z-index:6;background:var(--gw-void)}
+.projTabs::-webkit-scrollbar{display:none}
+body.inProject .projTabs button{
+  flex:none;background:transparent;border:0;border-bottom:2px solid transparent;
+  border-radius:0;color:var(--gw-ink-2);white-space:nowrap;
+  /* SIZED TO FIT FIVE TABS, not chosen for its own sake. The strip is
+     overflow-x:auto, so a set too wide does not wrap — it scrolls, and the last
+     tab sits half-cut at the edge reading "Expo". Trimming the type one step
+     (.9 -> .8rem) and the side padding (.95 -> .72rem) takes the row from 385px
+     to comfortably under a narrow laptop's content width, which is where the
+     clipping was reported. min-height stays 44px: that is the touch target, and
+     it is not what was overflowing. */
+  font:400 var(--gw-t-sm)/1 var(--gw-sans);
+  padding:.7rem .72rem;min-height:44px;
+  transition:color var(--gw-t-fast),border-color var(--gw-t-fast)}
+body.inProject .projTabs button:hover{color:var(--gw-ink)}
+/* Underline AND weight — shape as well as colour, so the current tab survives
+   greyscale. Same rule the drawer's rail follows. */
+body.inProject .projTabs button.active{
+  color:var(--gw-ink);font-weight:600;border-bottom-color:var(--gw-act)}
+body.inProject .projTabs button .badge{
+  background:transparent;color:var(--gw-ink-3);padding:0;margin-left:.35rem;
+  font:400 .74rem/1 var(--gw-mono);border-radius:0}
+body.inProject .projTabs button.active .badge{color:var(--gw-act)}
+/* The header is sticky too, so the strip parks directly beneath it rather than
+   sliding under it. */
+@media (min-width:761px){body.inProject .projTabs{top:0}}
+
+/* THE "PROJECT" LABEL IS DEAD WEIGHT WHEREVER IT IS. It travelled with the
+   group when the tabs were lifted out of the drawer, and rendered as a flex
+   item inside the strip — a clipped "OJECT" scrolling off the left edge, which
+   is what a screenshot showed and a class check would not have. The project bar
+   directly above says which project you are in, by name. */
+.projTabs .navGroupLabel{display:none}
+body.inProject #navPanel .navGroupLabel{display:none}
+
+/* ---- Serving, on the Overview ------------------------------------------
+   The state and the control in one place. It was a collapsed <details> on
+   Results while the readout describing it sat here — so "what is serving" and
+   "change what is serving" were two tabs apart, one of them shut. Picking a
+   model WHILE COMPARING is still possible where it belongs: every row in the
+   ledger carries its own `use`. */
+.gwServe{max-width:64rem}
+.gwServeRow{display:flex;align-items:center;gap:var(--gw-s3);flex-wrap:wrap;
+            margin:var(--gw-s2) 0}
+.gwServeRow .lab{font:600 .62rem/1 var(--gw-cond);letter-spacing:.16em;
+                 text-transform:uppercase;color:var(--gw-ink-3);min-width:4.5rem}
+
+/* ---- the strip's ⋯ ------------------------------------------------------ */
+.projTabsMore{
+  flex:none;margin-left:auto;align-self:center;background:transparent;border:0;
+  color:var(--gw-ink-2);font-size:1.1rem;line-height:1;padding:.55rem .8rem;
+  min-height:44px;cursor:pointer}
+.projTabsMore:hover{color:var(--gw-ink)}
+.projTabsMore[hidden]{display:none !important}
+@media (max-width:760px){
+  /* The three EXTENSION tabs fold away; the core four never do. A tab the
+     project has not declared is already [hidden] — 01-base makes that
+     `display:none !important`, so it stays gone when the row opens. */
+  body.inProject .projTabs button[data-tab="synth"],
+  body.inProject .projTabs button[data-tab="halves"]{display:none}
+  body.inProject .projTabs.moreOpen{flex-wrap:wrap}
+  body.inProject .projTabs.moreOpen button[data-tab="synth"],
+  body.inProject .projTabs.moreOpen button[data-tab="halves"]{display:block}
+}
+
+/* ---- a fold whose summary IS the datum rule ----------------------------
+   So collapsing a section costs no extra chrome: the same ruled heading the
+   rest of the page uses, with a marker that turns.
+
+   THE DATUM GOES ON A SPAN INSIDE THE SUMMARY, NOT ON THE SUMMARY ITSELF.
+   .gwDatum sets display:flex, and putting that on <summary> detaches it from
+   the disclosure mechanism — the <details> then lays out every child as though
+   it had no summary, so the "collapsed" panel was fully visible with open
+   reporting false. Measured, not guessed: #modelList was 1024px wide and laid
+   out while the fold said it was shut. */
+.gwFold{margin:0}
+.gwFold>summary.gwFoldSum{
+  cursor:pointer;list-style:none;display:block}
+.gwFold>summary.gwFoldSum::-webkit-details-marker{display:none}
+.gwFold>summary .gwDatum{padding-right:1.6rem;margin-top:var(--gw-s5)}
+/* The marker is a caret at the far end of the rule, rotating on open. Shape,
+   not colour — the open/closed state has to survive greyscale like every other
+   state here. */
+.gwFold>summary .gwDatum::after{
+  content:"";position:absolute;right:.15rem;top:1.05rem;
+  width:.45rem;height:.45rem;border-right:2px solid var(--gw-ink-3);
+  border-bottom:2px solid var(--gw-ink-3);transform:rotate(45deg);
+  transition:transform var(--gw-t-fast)}
+.gwFold[open]>summary .gwDatum::after{transform:rotate(225deg);
+  border-color:var(--gw-act)}
+.gwFold>summary:hover .gwDatum::after{border-color:var(--gw-ink-2)}
+.gwFold[open]>summary:hover .gwDatum::after{border-color:var(--gw-act-hi)}
+@media (prefers-reduced-motion:reduce){
+  .gwFold>summary .gwDatum::after{transition:none}
+}
+
+/* The Train control's one-line status. A REFUSAL and a REASSURANCE look
+   different in shape, not only in colour — the owner is colour-blind and the
+   standing rule here is that no state is carried by hue alone. A block keeps
+   the default warning rule; "split: ok" drops to the quiet ink and loses the
+   marker, so a glance tells them apart in greyscale. */
+#tWhy.tWhyOk{color:var(--gw-ink-3);border-left-color:var(--gw-rule)}
+
+/* ---- API reference -------------------------------------------------------
+   Endpoints down the side, one open beside them. A reference is not read top to
+   bottom: you arrive knowing roughly what you want and need to find it in a
+   glance and read it in one screen. */
+.apLede{font:400 var(--gw-t-base)/1.7 var(--gw-sans);color:var(--gw-ink-2);
+        max-width:62ch;margin:0 0 var(--gw-s4)}
+.apIntro{display:grid;gap:var(--gw-s4);margin-bottom:var(--gw-s5);
+         grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.apIntro h3{margin:0 0 var(--gw-s2);font:600 .68rem/1 var(--gw-cond);
+            letter-spacing:.16em;text-transform:uppercase;color:var(--gw-ink-2)}
+.apIntro p{margin:0 0 var(--gw-s2);font:400 var(--gw-t-sm)/1.65 var(--gw-sans);
+           color:var(--gw-ink-3)}
+.apIntro > div{border-top:1px solid var(--gw-rule);padding-top:var(--gw-s3)}
+
+.apDocs{display:grid;grid-template-columns:minmax(14rem,20rem) 1fr;
+        gap:var(--gw-s5);align-items:start}
+@media(max-width:900px){.apDocs{grid-template-columns:1fr}}
+.apRail{position:sticky;top:var(--gw-s3);max-height:80dvh;overflow-y:auto;
+        scrollbar-width:thin}
+@media(max-width:900px){.apRail{position:static;max-height:none}}
+.apGroup{margin-bottom:var(--gw-s4)}
+.apGroupHead{font:600 .64rem/1 var(--gw-cond);letter-spacing:.18em;
+             text-transform:uppercase;color:var(--gw-ink-2);
+             border-top:1px solid var(--gw-rule);padding-top:var(--gw-s2);
+             margin-bottom:var(--gw-s1)}
+.apGroupBlurb{margin:0 0 var(--gw-s2);font:400 var(--gw-t-xs)/1.6 var(--gw-sans);
+              color:var(--gw-ink-3)}
+.apItem{display:flex;align-items:baseline;gap:.5rem;width:100%;
+        background:transparent;border:0;border-left:2px solid transparent;
+        padding:.42rem .5rem;cursor:pointer;text-align:left;min-height:36px}
+.apItem:hover{background:var(--gw-sunk)}
+.apItem.on{border-left-color:var(--gw-act);background:var(--gw-sunk)}
+.apPath{font:400 var(--gw-t-xs)/1.4 var(--gw-mono);color:var(--gw-ink-2);
+        word-break:break-all}
+.apItem.on .apPath{color:var(--gw-ink)}
+/* The verb is a SHAPE as much as a colour — the owner is colour-blind, so the
+   weight and the border carry it too. */
+.apVerb{flex:none;font:600 .58rem/1 var(--gw-mono);letter-spacing:.06em;
+        padding:.22rem .3rem;border:1px solid var(--gw-rule-2);border-radius:2px;
+        color:var(--gw-ink-3);min-width:3.2rem;text-align:center}
+.apVerb.v-POST{color:var(--gw-act);border-color:var(--gw-act)}
+.apVerb.v-DELETE{color:var(--gw-bad);border-color:var(--gw-bad);border-style:dashed}
+
+.apPane{min-width:0}
+.apHead{display:flex;align-items:center;gap:var(--gw-s2);flex-wrap:wrap;
+        border-bottom:1px solid var(--gw-rule);padding-bottom:var(--gw-s3);
+        margin-bottom:var(--gw-s3)}
+.apPathBig{font:600 var(--gw-t-base)/1.3 var(--gw-mono);color:var(--gw-ink);
+           word-break:break-all}
+.apBadge{font:400 .6rem/1 var(--gw-mono);letter-spacing:.08em;
+         text-transform:uppercase;color:var(--gw-ink-3);
+         border:1px solid var(--gw-rule);border-radius:2px;padding:.22rem .38rem}
+.apBadgeNo{color:var(--gw-warn);border-color:var(--gw-warn)}
+.apBadgeMut{color:var(--gw-act);border-color:var(--gw-act)}
+.apWhat{font:400 var(--gw-t-base)/1.6 var(--gw-sans);color:var(--gw-ink);
+        margin:0 0 var(--gw-s3)}
+.apDetail{font:400 var(--gw-t-sm)/1.7 var(--gw-sans);color:var(--gw-ink-2);
+          max-width:70ch;margin-bottom:var(--gw-s3)}
+.apH{font:600 .64rem/1 var(--gw-cond);letter-spacing:.16em;text-transform:uppercase;
+     color:var(--gw-ink-3);margin:var(--gw-s4) 0 var(--gw-s2)}
+.apParams{width:100%;border-collapse:collapse}
+.apParams td{border-top:1px solid var(--gw-rule);padding:.5rem .6rem .5rem 0;
+             vertical-align:top;font:400 var(--gw-t-sm)/1.6 var(--gw-sans);
+             color:var(--gw-ink-2)}
+.apPName{white-space:nowrap}
+.apPName code{font:600 var(--gw-t-sm) var(--gw-mono);color:var(--gw-ink)}
+.apPType{white-space:nowrap;font:400 var(--gw-t-xs) var(--gw-mono);
+         color:var(--gw-ink-3)}
+.apCode{background:var(--gw-sunk);border:1px solid var(--gw-rule);
+        border-left:2px solid var(--gw-act);border-radius:var(--gw-r-sm);
+        padding:var(--gw-s3);overflow-x:auto}
+.apCodeOut{border-left-color:var(--gw-rule-2)}
+.apCode code{font:400 var(--gw-t-sm)/1.65 var(--gw-mono);color:var(--gw-ink-2);
+             white-space:pre;display:block}
+.apNotes{margin:0;padding-left:1.1rem;font:400 var(--gw-t-sm)/1.7 var(--gw-sans);
+         color:var(--gw-ink-2)}
+.apNotes li{margin-bottom:.45rem}
+
+/* A cancel in flight. Disabled AND relabelled, because the panel it lives in is
+   rebuilt on every heartbeat — the state has to be in the render, not on the
+   element, or it is gone within seconds while the run is still winding down. */
+.trainCardCancel[disabled]{opacity:.75;cursor:default;
+  border-color:var(--gw-rule);color:var(--gw-ink-3)}
+
+/* "Run alongside the other job" — shown only while something is training. It is
+   a deliberate opt-in into a pairing that has wedged this box twice, so it gets
+   the action colour and sits with the other controls rather than hiding. */
+.tConc{display:flex;align-items:center;gap:.45rem;
+       font:400 var(--gw-t-sm) var(--gw-sans);color:var(--gw-act);
+       white-space:nowrap}
+.tConc[hidden]{display:none}

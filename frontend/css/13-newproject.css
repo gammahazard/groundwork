@@ -1,0 +1,135 @@
+/* 13-newproject.css — the new-project form, inside the shared modal
+ *
+ * Split out of 08-projects.css (2026-08-05), which was carrying the landing page, the Telegram bot cards and the new-project form.
+ *
+ * A CONTIGUOUS CUT, so the cascade is untouched: concatenating these files in
+ * their numbered order reproduces the original byte for byte, exactly as the
+ * first split did. Rules were not reordered — that is the one thing a thematic
+ * regroup cannot promise, and at equal specificity order decides the winner.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order. Do not
+ * reorder the <link> tags. */
+
+/* ---- new-project form (in the shared modal) ---------------------------- */
+.pjNew{cursor:pointer}
+.pjNew:hover,.pjNew:focus-visible{border-color:#3a4152;color:var(--txt)}
+.pjNew:focus-visible{outline:2px solid #3987e5;outline-offset:2px}
+
+.pjForm{display:grid;gap:1rem;margin-top:.4rem}
+.pjForm label{display:grid;gap:.3rem;font-size:.9rem}
+.pjForm input[type=text],.pjForm select{
+  width:100%;min-width:0;background:var(--card,#1a1f2b);color:var(--txt);
+  border:1px solid var(--edge);border-radius:8px;padding:.5rem .6rem;font-size:.95rem}
+.pjForm .pjSub{margin-top:0;line-height:1.35}
+.pjFormErr{
+  background:#20180d;border:1px solid #5a4420;border-left:3px solid var(--warn);
+  border-radius:8px;padding:.6rem .8rem;font-size:.85rem;color:var(--warn)}
+.pjFormActs{display:flex;justify-content:flex-end;gap:.5rem}
+/* 01-base has `form button{background:var(--acc)}` — written when a form had
+   exactly ONE button, so every button in a form is the primary action. This one
+   has two, and a Cancel that looks identical to Create is a real hazard, not a
+   cosmetic one. Reset to neutral here, then re-assert the primary with an extra
+   class so it still wins: `.pjFormActs .pjfPrimary` (0,2,0) beats
+   `.pjFormActs button` (0,1,1). */
+.pjFormActs button{
+  min-height:40px;padding:.5rem .9rem;
+  background:var(--panel);color:var(--txt);border:1px solid var(--edge);
+  font-weight:400}
+.pjFormActs button:hover{border-color:#3a4152}
+.pjFormActs .pjfPrimary{
+  background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.pjFormActs .pjfPrimary:disabled{opacity:.6}
+
+@media (pointer: coarse){
+  /* A form is the one place a 44px target is never negotiable. */
+  .pjForm input[type=text],.pjForm select{min-height:44px}
+  .pjFormActs button{min-height:44px;flex:1}
+}
+
+/* The register form reuses the project form's shape — same page, same grammar. */
+.botForm{margin:.6rem 0 1rem;max-width:34rem}
+.botForm code{font-size:.8rem;background:#0f1420;border-radius:4px;padding:0 .25rem}
+
+/* --- class editor -------------------------------------------------------
+   The project bar's class list is a BUTTON, because it is the only editable
+   thing on that bar and it was previously the only place classes appeared at
+   all — with no way to change them short of editing project.json by hand. */
+.pjClsLink{background:transparent;border:0;padding:0;font:inherit;color:var(--mut);
+  cursor:pointer;border-bottom:1px dashed var(--edge)}
+.pjClsLink:hover{color:var(--txt);border-bottom-color:currentColor}
+.pjClsCard{max-width:min(520px,96vw)}
+.pjClsRow{display:flex;align-items:center;gap:.5rem;margin:.35rem 0}
+/* The INDEX is shown because it is what the label files actually store — the
+   name is only a label on top of it. */
+.pjClsIdx{width:1.4rem;text-align:right;color:var(--mut);font-size:.8rem;
+  font-variant-numeric:tabular-nums}
+.pjClsName{flex:1;min-width:0;background:var(--card,#1a1f2b);color:var(--txt);
+  border:1px solid var(--edge);border-radius:8px;padding:.35rem .5rem;font:inherit}
+.pjClsUse{color:var(--mut);font-size:.78rem;min-width:5.5rem;text-align:right;
+  font-variant-numeric:tabular-nums}
+.pjClsDel{background:transparent;border:1px solid var(--edge);color:var(--mut);
+  border-radius:8px;padding:.2rem .5rem;font-size:.78rem;cursor:pointer}
+.pjClsDel:hover{color:var(--txt)}
+.pjClsAdd{display:flex;gap:.5rem;margin-top:.7rem;padding-top:.7rem;
+  border-top:1px solid var(--edge)}
+.pjClsAdd input{flex:1;background:var(--card,#1a1f2b);color:var(--txt);
+  border:1px solid var(--edge);border-radius:8px;padding:.35rem .5rem;font:inherit}
+.pjClsFoot{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.9rem}
+
+/* --- image-tag editor ----------------------------------------------------
+   Reordering IS offered here, unlike the class editor: a tag is a free-text
+   string on an image, so moving it only changes the difficulty ramp the chips
+   read in. A class is an index baked into every label file, so moving one
+   would re-point every dot ever drawn — hence no arrows there. */
+.bchipEdit{cursor:pointer;border-style:dashed !important;opacity:.75}
+.bchipEdit:hover{opacity:1}
+.tagEdCard{max-width:min(560px,96vw)}
+.tagEdRow{display:flex;align-items:center;gap:.5rem;margin:.35rem 0}
+.tagEdMove{display:flex;flex-direction:column;gap:1px}
+.tagEdMove button{background:transparent;border:1px solid var(--edge);color:var(--mut);
+  border-radius:5px;line-height:1;padding:0 .3rem;font-size:.7rem;cursor:pointer}
+.tagEdMove button:disabled{opacity:.25;cursor:not-allowed}
+.tagEdMove button:hover:not(:disabled){color:var(--txt)}
+.tagEdName{flex:1;min-width:0;background:var(--card,#1a1f2b);color:var(--txt);
+  border:1px solid var(--edge);border-radius:8px;padding:.35rem .5rem;font:inherit}
+.tagEdUse{color:var(--mut);font-size:.78rem;min-width:4.5rem;text-align:right;
+  font-variant-numeric:tabular-nums}
+.tagEdDel{background:transparent;border:1px solid var(--edge);color:var(--mut);
+  border-radius:8px;padding:.1rem .45rem;cursor:pointer;line-height:1.3}
+.tagEdDel:hover:not(:disabled){color:var(--txt)}
+.tagEdDel:disabled{opacity:.3;cursor:not-allowed}
+.tagEdAdd{display:flex;gap:.5rem;margin-top:.7rem;padding-top:.7rem;
+  border-top:1px solid var(--edge)}
+.tagEdAdd input{flex:1;background:var(--card,#1a1f2b);color:var(--txt);
+  border:1px solid var(--edge);border-radius:8px;padding:.35rem .5rem;font:inherit}
+.tagEdFoot{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.9rem}
+
+/* TOUCH SIZING. Measured on a 390px phone: the +tags chip came out 61x22 and
+   the reorder arrows 21x13 — both too small to hit reliably with a thumb, and
+   this cockpit IS used from a phone (image tagging is done on it).
+
+   `pointer: coarse` rather than a width breakpoint, because the question is
+   "is this being touched", not "is the window narrow" — a touchscreen laptop
+   wants the bigger targets and a small desktop window does not. Every .bchip
+   grows, not just the edit one: they are all click-to-filter controls, and one
+   chip in a row being taller than its neighbours would look like a mistake. */
+@media (pointer: coarse){
+  /* inline-BLOCK, not inline-flex. Flex turns the whitespace between a chip's
+     text nodes into dropped flex items, so "capsule 41 images" rendered as
+     "capsule41trays" — measured on a phone, and invisible on a desktop pass
+     because the rule is pointer:coarse only. inline-block honours min-height
+     just as well and leaves the text alone. */
+  .bchip{min-height:30px;display:inline-block;padding:.4rem .55rem;
+         font-size:.8rem;line-height:1.2}
+  .bchipEdit{padding:.2rem .7rem}
+  .tagEdMove button{min-height:22px;min-width:32px;font-size:.8rem}
+  .tagEdDel{min-height:34px;min-width:34px;font-size:1rem}
+  .tagEdName{min-height:38px}
+  .tagEdAdd input,.tagEdAdd button{min-height:42px}
+  .tagEdFoot button{min-height:42px;padding-left:1rem;padding-right:1rem}
+  /* Same treatment for the class editor's controls. */
+  .pjClsName{min-height:38px}
+  .pjClsAdd input,.pjClsAdd button{min-height:42px}
+  .pjClsDel{min-height:34px}
+  .pjClsFoot button{min-height:42px}
+}

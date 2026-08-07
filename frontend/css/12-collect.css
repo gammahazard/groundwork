@@ -1,0 +1,45 @@
+/* 12-collect.css — data collection: the Telegram bot cards
+ *
+ * Split out of 08-projects.css (2026-08-05), which was carrying the landing page, the Telegram bot cards and the new-project form.
+ *
+ * A CONTIGUOUS CUT, so the cascade is untouched: concatenating these files in
+ * their numbered order reproduces the original byte for byte, exactly as the
+ * first split did. Rules were not reordered — that is the one thing a thematic
+ * regroup cannot promise, and at equal specificity order decides the winner.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order. Do not
+ * reorder the <link> tags. */
+
+/* ---- data collection: Telegram bot cards ------------------------------- */
+.botList{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}
+.botCard{
+  background:linear-gradient(180deg,#19202f,#151b29);border:1px solid var(--edge);
+  border-radius:14px;padding:1rem 1.1rem;box-shadow:0 1px 3px #0006}
+.botHead{display:flex;justify-content:space-between;align-items:flex-start;gap:.8rem}
+.botCard h3{margin:0;font-size:1rem}
+/* Health carries a WORD, not just a coloured dot: the owner is colour-blind,
+   and "up but receiving nothing" is a state no single hue can express. */
+.botState{font-size:.82rem;margin-top:.2rem;color:var(--mut);
+          display:flex;align-items:center;gap:.35rem}
+.botDot{font-size:.7rem;line-height:1}
+.botState.ok .botDot{color:var(--ok,#3ddc84)}
+.botState.warn{color:var(--warn)} .botState.warn .botDot{color:var(--warn)}
+.botState.bad{color:#ff8b8b} .botState.bad .botDot{color:#ff8b8b}
+.botProbe{flex:none;min-height:38px}
+.botWhat{color:var(--mut);font-size:.85rem;margin:.7rem 0 .6rem;line-height:1.35}
+.botFacts{margin:0;display:grid;gap:.25rem;font-size:.8rem}
+.botFacts>div{display:flex;justify-content:space-between;gap:.6rem;
+              border-top:1px solid var(--edge);padding-top:.25rem}
+.botFacts dt{color:var(--mut);margin:0}
+.botFacts dd{margin:0;text-align:right;overflow-wrap:anywhere}
+.botFacts code{font-size:.75rem}
+.botProbeOut{font-size:.8rem;margin-top:.6rem;min-height:1.1em;color:var(--mut)}
+.botProbeOut.ok{color:var(--ok,#3ddc84)}
+
+.botSteps{margin:.4rem 0 0;padding-left:1.2rem;display:grid;gap:.8rem}
+.botSteps li{line-height:1.4}
+.botWhere{
+  font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);
+  border:1px solid var(--edge);border-radius:5px;padding:.05rem .35rem;margin-left:.4rem}
+.botStepBody{color:var(--mut);font-size:.85rem;margin-top:.2rem}
+

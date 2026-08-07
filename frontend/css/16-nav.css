@@ -1,0 +1,129 @@
+/* 11-nav.css — the navigation panel: pinned sidebar on wide screens, animated
+ * drawer on a phone. One markup, one set of handlers; this file decides which
+ * it is, so there is no second nav to keep in sync.
+ *
+ * WHY. There are 13 destinations. `nav{flex-wrap:wrap}` stacked them into four
+ * rows of chips on a phone, eating a third of the viewport before any content
+ * appeared — on a page whose main job is showing you an image photo.
+ *
+ * The breakpoint is 760px and MUST match NAV_BREAKPOINT in cockpit/nav.js. Two
+ * numbers, one meaning; if they drift, the drawer opens on a layout that is
+ * already showing the sidebar.
+ *
+ * Part 11 of 11. Order is load-bearing — see 01-base.css. */
+
+:root{--navW:230px}
+
+/* ---- header: burger + mark + title ------------------------------------- */
+body>header{display:flex;align-items:center;gap:.7rem}
+/* Condensed and letterspaced: this is a wordmark, not a sentence. */
+body>header h1{
+  margin:0;font:600 1rem/1 var(--gw-cond);letter-spacing:.07em;
+  text-transform:uppercase}
+
+/* THE MARK — the datum itself: a ruled baseline with a survey tick standing on
+   it. The same shape as .gwDatum's rule, so the identity and the page structure
+   are one idea rather than two. It replaced a brick emoji, which was the whole
+   of the brand.
+   It sits OUTSIDE #appTitle because identity.js assigns that element's
+   textContent, which would delete anything nested in it. */
+.gwMark{
+  flex:none;width:24px;height:24px;border-radius:6px;
+  background:var(--gw-act);position:relative}
+.gwMark::after{content:"";position:absolute;left:5px;right:5px;bottom:6px;
+  height:2px;background:var(--gw-act-ink)}
+.gwMark::before{content:"";position:absolute;left:10px;bottom:6px;width:2px;
+  height:9px;background:var(--gw-act-ink)}
+/* The worker is a different machine and says so — the ember theme already carries
+   it, and the mark follows rather than contradicting it. */
+body.lab .gwMark{background:var(--warn)}
+.navBurger{
+  flex:none;width:44px;height:44px;display:grid;place-items:center;
+  background:transparent;border:1px solid var(--edge);border-radius:10px}
+.navBurgerBars{display:block;width:18px;height:14px;position:relative}
+.navBurgerBars i{
+  position:absolute;left:0;right:0;height:2px;background:var(--txt);border-radius:2px;
+  transition:transform .26s cubic-bezier(.2,.7,.3,1),opacity .18s}
+.navBurgerBars i:nth-child(1){top:0}
+.navBurgerBars i:nth-child(2){top:6px}
+.navBurgerBars i:nth-child(3){top:12px}
+/* bars morph into an X while the drawer is open */
+body.navOpen .navBurgerBars i:nth-child(1){transform:translateY(6px) rotate(45deg)}
+body.navOpen .navBurgerBars i:nth-child(2){opacity:0}
+body.navOpen .navBurgerBars i:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+
+/* ---- the panel --------------------------------------------------------- */
+.navPanel{
+  position:fixed;top:0;bottom:0;left:0;width:var(--navW);z-index:25;
+  background:var(--gw-void);border-right:1px solid var(--gw-rule);
+  padding:1rem .7rem;overflow-y:auto;overscroll-behavior:contain;
+  transition:transform .28s cubic-bezier(.2,.7,.3,1)}
+.navPanel nav{display:flex;flex-direction:column;gap:.25rem}
+/* A RAIL, NOT A BOX. The active item is marked by a solid amber edge down its
+   left plus a weight change — shape as well as colour, which is the standing
+   rule here and not decoration: the owner's colour deficiency is blue-vs-purple
+   and every state must survive greyscale. The old treatment was a filled box
+   with a 1px border, which is the same visual weight as everything else on the
+   panel. */
+.navPanel nav button{
+  width:100%;text-align:left;min-height:42px;
+  border:0;border-left:2px solid transparent;border-radius:0 7px 7px 0;
+  padding:.5rem .7rem;color:var(--gw-ink-2);background:transparent;
+  display:flex;align-items:center;gap:.5rem;
+  transition:background var(--gw-t-fast),color var(--gw-t-fast)}
+.navPanel nav button:hover{background:var(--gw-base);color:var(--gw-ink)}
+.navPanel nav button.active{
+  background:var(--gw-base);color:var(--gw-ink);
+  border-left-color:var(--gw-act);font-weight:600}
+.navGroup{display:flex;flex-direction:column;gap:.15rem}
+.navGroupLabel{
+  color:var(--gw-ink-3);font:600 .62rem/1 var(--gw-cond);letter-spacing:.18em;
+  text-transform:uppercase;
+  padding:1rem .7rem .35rem;border-top:1px solid var(--gw-rule);margin-top:.6rem}
+
+/* COUNTS ARE QUIET AND ALIGNED, not amber objects. Elsewhere .badge is a filled
+   amber lozenge, which since the accent moved to amber makes "176" read as a
+   button. In the rail they are facts about the destination, so they sit right,
+   in mono, forming a column you can scan down. */
+.navPanel nav button .badge{
+  margin-left:auto;background:transparent;color:var(--gw-ink-3);
+  font:400 .74rem/1 var(--gw-mono);font-weight:400;padding:0;border-radius:0}
+.navPanel nav button.active .badge{color:var(--gw-act)}
+/* A project's tabs do not exist until a project is open. */
+.navGroupProject{display:none}
+body.inProject .navGroupProject{display:flex}
+
+/* The project's DASHBOARD is one of those tabs (owner, 2026-07-31) — it used to
+   be a second half of the global one, shown by a rule right here. Being a tab
+   is stronger than being a hidden div: showTab() redirects it to the landing
+   page outside a project, so there is nothing to hide. */
+
+.navScrim{
+  position:fixed;inset:0;background:#000a;z-index:24;
+  opacity:0;pointer-events:none;transition:opacity .28s}
+
+/* ---- WIDE: pinned open, content shifted over --------------------------- */
+@media (min-width:761px){
+  body>header,main{margin-left:var(--navW)}
+  .navPanel{top:0}
+  .navScrim{display:none}
+  /* Collapsed by choice on desktop: the burger still works, and main reclaims
+     the space rather than leaving a gap where the sidebar was. */
+  body.navCollapsed .navPanel{transform:translateX(-100%)}
+  body.navCollapsed>header,body.navCollapsed main{margin-left:0}
+}
+
+/* ---- NARROW: off-canvas drawer ----------------------------------------- */
+@media (max-width:760px){
+  .navPanel{transform:translateX(-100%);box-shadow:8px 0 24px #0008;width:min(82vw,300px)}
+  body.navOpen .navPanel{transform:none}
+  body.navOpen .navScrim{opacity:1;pointer-events:auto}
+  /* Lock the page behind the drawer — a drawer you can scroll past feels broken */
+  body.navOpen{overflow:hidden}
+  body>header{position:sticky;top:0}
+  main{padding:1rem}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .navPanel,.navScrim,.navBurgerBars i{transition:none}
+}

@@ -1,0 +1,1324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover is what makes env(safe-area-inset-*) report real values;
+     without it they are 0 and every safe-area rule below is decoration. NO
+     maximum-scale / user-scalable=no: blocking pinch-zoom on a page whose job is
+     inspecting photographs is hostile, and it is not what causes the accidental
+     side-to-side pan — double-tap is (see touch-action in 01-base.css). -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Groundwork HQ</title>
+<!-- Without this the browser probes /favicon.ico on every load, gets a 404, and
+     logs a console error that buries real ones. SVG so it stays sharp when the
+     cockpit is saved to a phone home screen. -->
+<link rel="icon" href="/static/favicon.svg?v=1" type="image/svg+xml">
+<!-- cockpit.css split into ordered slices (REFACTOR.md). ORDER IS LOAD-BEARING:
+     later rules win at equal specificity.
+     00-tokens.css comes FIRST and defines the design system — surfaces, type,
+     spacing, meaning. 01-base.css then re-points the OLD names (--bg, --panel,
+     --edge, --acc …) at it, so every rule in 02-12 re-skins itself without
+     being edited. The remap lives there, not in 00, because 01 declares :root
+     and loads later — same specificity, later wins. -->
+<link rel="stylesheet" href="/static/css/00-tokens.css?v=1">
+<link rel="stylesheet" href="/static/css/01-base.css?v=1">
+<link rel="stylesheet" href="/static/css/02-progress.css?v=1">
+<link rel="stylesheet" href="/static/css/03-runs-tab.css?v=1">
+<link rel="stylesheet" href="/static/css/04-grids.css?v=1">
+<link rel="stylesheet" href="/static/css/05-upload.css?v=1">
+<link rel="stylesheet" href="/static/css/06-audit.css?v=1">
+<link rel="stylesheet" href="/static/css/07-modals.css?v=1">
+<link rel="stylesheet" href="/static/css/08-editor.css?v=1">
+<link rel="stylesheet" href="/static/css/09-machine.css?v=1">
+<link rel="stylesheet" href="/static/css/10-dashboard.css?v=1">
+<link rel="stylesheet" href="/static/css/11-projects.css?v=1">
+<link rel="stylesheet" href="/static/css/12-collect.css?v=1">
+<link rel="stylesheet" href="/static/css/13-newproject.css?v=1">
+<link rel="stylesheet" href="/static/css/14-ui.css?v=1">
+<link rel="stylesheet" href="/static/css/15-project.css?v=1">
+<link rel="stylesheet" href="/static/css/16-nav.css?v=1">
+<link rel="stylesheet" href="/static/css/17-guide.css?v=1">
+<link rel="stylesheet" href="/static/css/18-auth.css?v=1">
+<link rel="stylesheet" href="/static/css/19-machines.css?v=1">
+</head>
+<!-- THREE STATES, NOT TWO. `signedOut` alone made the login form paint on every
+     refresh and then vanish once /api/me answered — a flash of a password prompt
+     at someone who is already signed in. `authUnknown` is the state before the
+     answer arrives: it hides the login too, so the page is briefly just its own
+     background, which is honest (it IS loading) instead of wrong.
+     signedOut stays alongside it so the fallback, if the answer never comes, is
+     the form rather than the app. -->
+<body class="authUnknown signedOut">
+<header>
+  <!-- Burger: the only nav control on a phone. On wide screens the panel is
+       pinned open and this collapses it, so it is useful there too. -->
+  <button id="navBurger" class="navBurger" aria-label="Menu"
+          aria-expanded="false" aria-controls="navPanel">
+    <span class="navBurgerBars" aria-hidden="true"><i></i><i></i><i></i></span>
+  </button>
+  <!-- THE MARK IS OUTSIDE #appTitle, deliberately. identity.js sets that
+       element's textContent ("🧪 Groundwork Trainer" on the worker), so anything
+       nested inside it is wiped the moment the page learns which machine it is.
+       The mark is the datum — a baseline with a survey tick — which is what
+       "groundwork" and "ground truth" both mean, and it is the same shape as
+       the rule under every section heading. -->
+  <span class="gwMark" aria-hidden="true"></span>
+  <h1 id="appTitle">Groundwork HQ</h1>
+  <!-- Who is signed in. Filled by cockpit/auth.js once /api/me answers; hidden
+       until then so the header never briefly claims nobody is. -->
+  <div id="whoami" class="whoami" hidden></div>
+</header>
+
+<!-- ===================== SIGN IN =====================================
+     A SIBLING of header/nav/main, not a tab: a tab is reachable from the nav,
+     and the nav is part of what is being gated. body.signedOut (set in the
+     markup above, cleared by auth.js) decides which of the two exists.
+
+     Starting signed OUT is deliberate — the alternative is the whole cockpit
+     painting for one frame before /api/me answers, which on a slow phone is a
+     flash of somebody else's data.
+
+     The gate is the SERVER's: web/auth/middleware.py refuses every route and
+     the /outputs mount alike, so this class is a convenience and never the
+     enforcement — the same relationship lab_guard has with hidden tabs. -->
+<!-- FIRST-RUN WIZARD — shown instead of login exactly while the instance has
+     zero accounts (auth.js asks /api/setup/status first). Same visual family
+     as the login screen: one column, one thing at a time. -->
+<section id="setupWizard" hidden>
+  <div class="loginWrap">
+    <div>
+      <p class="loginMark">Vision model trainer</p>
+      <h1 class="loginName">Groundwork</h1>
+      <p class="loginWhat">First run on <b id="suMachine">this machine</b>.
+        Claim it, name a project, and you are training. AGPL-3.0 —
+        this instance is yours.</p>
+    </div>
+    <div class="loginDatum" aria-hidden="true"></div>
+
+    <div id="suStepClaim">
+      <form class="loginForm" id="suClaimForm">
+        <div class="loginField">
+          <label for="suUser">Admin username</label>
+          <input id="suUser" type="text" autocapitalize="none" required>
+        </div>
+        <div class="loginField" style="margin-top:var(--gw-s3)">
+          <label for="suPass">Password</label>
+          <input id="suPass" type="password" minlength="8" required
+                 placeholder="at least 8 characters">
+        </div>
+        <div class="loginField" style="margin-top:var(--gw-s3)">
+          <label for="suPass2">Repeat it</label>
+          <input id="suPass2" type="password" required>
+        </div>
+        <div class="loginErr" id="suClaimMsg" role="alert"></div>
+        <button class="loginGo" type="submit">Create admin &amp; continue</button>
+      </form>
+      <p class="loginFoot">One account is created, then this door closes for
+        good — further accounts are made by you, inside.</p>
+    </div>
+
+    <div id="suStepRest" hidden>
+      <div class="panel">
+        <div class="row"><b>This machine</b></div>
+        <p class="hint" id="suGpu">⏳ probing…</p>
+      </div>
+      <div class="panel">
+        <div class="row"><b>First project</b></div>
+        <p class="hint" id="suProject"></p>
+        <form id="suProjForm" class="ctrls">
+          <input id="suProjName" type="text" size="18" placeholder="name — e.g. Fasteners" required>
+          <input id="suProjClasses" type="text" size="22" placeholder="classes — e.g. bolt, nut">
+          <button>Create</button><span class="mMeta" id="suProjMsg"></span>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="row"><b>Auto-labeler (optional)</b> <span class="mMeta" id="suLaState"></span></div>
+        <p class="hint">LocateAnything-3B labels new images so you correct
+          instead of clicking from zero. ~6&nbsp;GB, downloaded from Hugging
+          Face under <b>NVIDIA's license</b> — between you and them; this
+          platform never redistributes it. Skippable; re-run later from the
+          Admin tab.</p>
+        <div class="ctrls">
+          <label><input type="checkbox" id="suLaOk"> I accept NVIDIA's license terms on Hugging Face</label>
+          <button id="suLaBtn" type="button">⬇ Download</button>
+        </div>
+        <div class="ctrls" id="suHfTokRow" hidden>
+          <label>HF token <input id="suHfTok" type="password" size="24"
+            placeholder="hf_… (repo is gated for you)"></label>
+        </div>
+      </div>
+      <div class="ctrls" style="margin-top:var(--gw-s3)">
+        <button id="suDone" class="loginGo" type="button">Open the cockpit →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="login">
+  <div class="loginWrap">
+    <div>
+      <p class="loginMark">Vision model trainer</p>
+      <h1 class="loginName" id="loginName">Groundwork</h1>
+      <p class="loginWhat" id="loginWhat">Sign in to continue.</p>
+    </div>
+
+    <div class="loginDatum" id="loginDatum" aria-hidden="true"></div>
+
+    <form class="loginForm" id="loginForm" autocomplete="on">
+      <div id="loginFields">
+        <div class="loginField">
+          <label for="loginUser">Username</label>
+          <input id="loginUser" name="username" type="text" autocomplete="username"
+                 autocapitalize="none" autocorrect="off" spellcheck="false" required>
+        </div>
+        <div class="loginField" style="margin-top:var(--gw-s3)">
+          <label for="loginPw">Password</label>
+          <input id="loginPw" name="password" type="password"
+                 autocomplete="current-password" required>
+        </div>
+      </div>
+
+      <!-- The must-change step reuses this form rather than being a second
+           screen: same rule, same mark, a different question. -->
+      <div id="changeFields" hidden>
+        <div class="loginField">
+          <label for="newPw">New password</label>
+          <input id="newPw" type="password" autocomplete="new-password"
+                 minlength="8" placeholder="at least 8 characters">
+        </div>
+        <div class="loginField" style="margin-top:var(--gw-s3)">
+          <label for="newPw2">Repeat it</label>
+          <input id="newPw2" type="password" autocomplete="new-password">
+        </div>
+      </div>
+
+      <div class="loginErr" id="loginErr" role="alert" hidden></div>
+      <button class="loginGo" id="loginGo" type="submit">Sign in</button>
+    </form>
+
+    <!-- No CLI here. It named a command only someone with shell on this box can
+         run, on the one screen shown to people who do not have it — and it made
+         the door look open. State the door plainly instead. -->
+    <p class="loginFoot">Ask this instance's admin for an account.</p>
+  </div>
+
+  <!-- IN THE CORNER, out of the way of the one thing this page is for. It sat
+       in the footer beside the sign-in note, which put an invitation to
+       read next to a notice that you cannot get in. This is the first screen
+       anyone sees, so the offer should be present and calm rather than tangled
+       in the apology. Fixed, so it is in the same place on a phone. -->
+  <!-- THE FIELD BEING READ. Six reticles that find a dot, hold, and let it go
+       again, forever. This is what the product does — it looks at a picture and
+       marks what it finds — so the one screen everybody sees demonstrates it
+       rather than describing it. Aligned to the 54px dot grid so each bracket
+       lands ON a dot, never in the gap. Decorative: aria-hidden. -->
+  <div class="loginScan" aria-hidden="true">
+    <i style="--x:3;--y:2;--d:0s"></i>
+    <i style="--x:11;--y:4;--d:2.3s"></i>
+    <i style="--x:6;--y:9;--d:5.1s"></i>
+    <i style="--x:15;--y:8;--d:7.4s"></i>
+    <i style="--x:9;--y:12;--d:9.8s"></i>
+    <i style="--x:18;--y:3;--d:12.2s"></i>
+  </div>
+
+  <button type="button" id="loginHow" class="loginHowBtn">
+    <span class="loginHowTick" aria-hidden="true"></span>How it works
+  </button>
+</section>
+
+<!-- Tap-anywhere-else to close. Only ever visible over the drawer. -->
+<div id="navScrim" class="navScrim" aria-hidden="true"></div>
+
+<aside id="navPanel" class="navPanel">
+  <nav>
+    <div class="navGroup">
+    <button data-tab="projects" class="active">Projects</button>
+    <!-- Global: readable with no project open, which is exactly when a
+         newcomer arrives. See NAV_GLOBAL_TABS in cockpit/core.js. -->
+    <button data-tab="guide" title="What Groundwork is and how to use it">Guide</button>
+    <!-- Data collection is MACHINE-level (owner, 2026-07-31). A Telegram bot is
+         a thing running on this box; you set one up once, and the question worth
+         a screen is "what is collecting right now and where is it putting
+         things" — which spans projects by nature. Which project a bot feeds is
+         a field ON the bot, changeable from that page. -->
+    <button data-tab="collect">Data collection</button>
+    <!-- ACCOUNT is about YOU (name, password, API keys); Machines
+         will be about the INSTALLATION. Different scopes, so they
+         are siblings here rather than one nested in the other. -->
+    <button data-tab="machines">Machines</button>
+    <button data-tab="api">API</button>
+    <!-- Hidden unless this account is an admin — identity.js. -->
+    <button data-tab="admin" hidden>Admin</button>
+    <button data-tab="account">Account</button>
+    </div>
+    <!-- A project's OWN tabs. Hidden until one is open, because they are
+         meaningless without it — see body.inProject in 10-project.css. -->
+  </nav>
+</aside>
+
+<main>
+  <div id="projectBar" hidden></div>
+  <!-- THE PROJECT'S OWN TABS, along the top rather than in the drawer.
+       Global entries and project entries have completely different
+       frequencies: Projects / Guide / Data collection are visited
+       occasionally, Overview / Images / Train / Results are flipped between
+       constantly. Sharing one drawer made the constant ones pay the rare ones'
+       cost — on a phone, moving between two adjacent screens was burger, tab,
+       drawer-closes. Three actions to go one step sideways.
+       STILL A <nav>, and the buttons are untouched: core.js wires and lights
+       them with `nav button`, lab.js and identity.js hide extensions by
+       data-tab, and all of that keeps working because only the container
+       moved. Hidden entirely outside a project — see body.inProject. -->
+  <nav class="projTabs" id="projTabs">
+      <div class="navGroupLabel">Project</div>
+    <!-- TWO DASHBOARDS, and they are two TABS (owner, 2026-07-31). The global
+         one above answers "what is on this machine"; this one answers "how is
+         this project doing". They used to be one tab that grew a second half
+         once a project was open, which meant clicking Dashboard from inside a
+         project showed project data under the machine's heading — the exact
+         confusion the split removes. Same word in both groups on purpose: the
+         group label says which... except two buttons reading "Dashboard" one
+         above the other is a thing you have to STOP and parse. The global one
+         keeps the word; this one is the project's Overview. -->
+    <button data-tab="projdash">Overview</button>
+    <button data-tab="images">Images</button>
+    <button data-tab="runs">Train</button>
+    <button data-tab="results">Results</button>
+    <button data-tab="export">Export</button>
+    <!-- EXTENSION TABS. Present in the markup but shown only for a project that
+         DECLARES the extension — applyExtensionTabs reads project.json. They are
+         not deleted here for that reason: the first project retired all three
+         (_retired_extensions, 2026-08-05) so the strip is five tabs wide, and a
+         project that enables one gets its tab back with no markup change. -->
+    <button data-tab="count" hidden>Count</button>
+    <!-- On a phone the four core tabs stay put and the EXTENSIONS fold behind
+         this. Not the core ones: putting a tap in front of the thing you do
+         most is the cost this strip exists to remove. Hidden on wide screens
+         and whenever the project declares no extensions — see projTabsSync. -->
+    <button type="button" class="projTabsMore" id="projTabsMore" hidden
+            aria-expanded="false" aria-label="More tabs">⋯</button>
+  </nav>
+
+  <!-- Projects landing: one card per project. The pivot's whole point — the
+       counter is one project among others. Cards are rendered from
+       /api/projects; nothing is computed in the browser (see projects.js). -->
+  <!-- THE LANDING PAGE IS THE MACHINE *AND* THE PROJECTS, merged (2026-08-05).
+       They were two global tabs, Projects and Dashboard, and the split created a
+       naming collision the app has already paid for: "Dashboard" (the machine)
+       against "Overview" (one project) are two words for nearly the same thing,
+       told apart only by which nav group they sat in — and index.html's own
+       history records them shipping as ONE tab that showed project data under a
+       machine heading.
+       They are one question anyway: "what is this install, what has it done, and
+       what is in it". The ids below are unchanged, so overview.js and
+       projects.js both still find what they write. -->
+  <section id="projects" class="tab active">
+    <div class="gwDatum"><h2>This machine</h2>
+      <span class="n">every project on this box</span></div>
+    <div id="overviewTiles" class="gwCounts"></div>
+    <div id="overviewProjects" class="hint gwNotes"></div>
+
+    <div class="gwDatum"><h2>Projects</h2>
+      <span class="n">a project owns its own data</span></div>
+    <p class="hint">Each declares what it detects. Opening one scopes the tabs to it.</p>
+    <div id="projectGrid" class="pjGrid"></div>
+
+    <div class="gwDatum"><h2>Models</h2>
+      <span class="n">every run on this machine</span></div>
+    <div id="overviewModels" class="hint gwList"></div>
+  </section>
+  <!-- THE PROJECT'S dashboard. Its own tab in the Project nav group, so it can
+       only be reached with one open — showTab() redirects it to the landing
+       page otherwise, and cockpit/dashboard.js's loadState() refuses to fetch
+       without a project, so this section can never render the default
+       project's numbers by accident. -->
+  <section id="projdash" class="tab">
+    <!-- EVERY id HERE IS WRITTEN BY cockpit/dashboard.js loadState(), and
+         projdashHold() shimmers the same list by name. The structure around
+         them changed; not one of them did. -->
+    <div class="gwDatum"><h2 id="dashProjectTitle">Serving now</h2>
+      <span class="n">what answers a photograph today</span></div>
+
+    <!-- THE READOUT. An instrument's primary value is its readout, and here
+         that is the score of the model actually answering photographs. It used
+         to be a <b> inside a card among four tiles — the single most important
+         fact about a project, set as a footnote. -->
+    <div class="gwRead dashCard hero">
+      <div class="gwReadMain">
+        <span class="gwReadK">Holdout MAE</span>
+        <span class="gwReadV" id="stServedMae">–</span>
+        <span class="gwReadSub"><b id="stExact">–</b> images exact</span>
+      </div>
+      <div class="gwReadWho">
+        <span class="gwReadK"><span class="dot" id="servedDot"></span>Answering photographs</span>
+        <div class="servedName" id="stServed">–</div>
+        <div class="servedMeta">conf <span id="stConf">–</span> · iou <span id="stIou">–</span><span id="servingNote"></span></div>
+      </div>
+    </div>
+
+    <!-- COLLAPSED BY DEFAULT. The readout above already says what is serving;
+         this is how you CHANGE it, which is an occasional act on a page whose
+         job is status. The datum rule doubles as the summary, so folding it
+         costs no extra chrome. -->
+    <details class="gwFold">
+      <summary class="gwFoldSum"><span class="gwDatum"><h2>Change what serves</h2>
+        <span class="n">model &amp; engine</span></span></summary>
+      <div class="gwServe">
+      <div class="gwServeRow">
+        <span class="lab">Model</span>
+        <button id="modelUnpin" title="Serve the newest run automatically">Use newest</button>
+      </div>
+      <div id="modelList" class="models"></div>
+      <p class="hint">Pick which model the bot serves, then <code>/restart</code> it
+        (the bot loads its model on restart). This is your revert: if a retrain does
+        not help, activate the previous run to roll back.</p>
+
+      <div class="gwServeRow" id="enginePanel">
+        <span class="lab">Engine</span>
+        <span class="ctrls" id="engineCtrls"></span>
+      </div>
+      <p class="hint">Which architecture answers photographs. YOLOv8n is the
+        default; switching does NOT touch the pinned yolo run, so flipping back is
+        instant. The phone chooses separately, in the app. The bot picks up a change
+        on its next <code>/restart</code>; the web counter switches on the next count.</p>
+      </div>
+    </details>
+
+    <div class="gwDatum"><h2>The data</h2>
+      <span class="n">what every model is measured on</span></div>
+    <div class="gwCounts">
+      <div class="gwCt"><span class="v" id="stTrays">–</span><span class="k">training images</span></div>
+      <div class="gwCt"><span class="v" id="stTest">–</span><span class="k">holdout images</span></div>
+      <!-- "in training images", because the Overview's "labelled objects"
+           above counts every project's train AND holdout. Same page, two
+           totals, and without this the reader has to guess which is wrong.
+           IMAGES and OBJECTS, not images and objects: an image is the original project's word
+           for one of its images, and it does not survive a second project.
+           The project tabs say image too now (owner, 2026-08-05) — this is a
+           multi-project trainer, and "image" reads as a bug in a screws
+           project. "Image" survives only where the subject really is the
+           physical object image. -->
+      <div class="gwCt"><span class="v" id="stObjects">–</span><span class="k">objects labelled in training images</span></div>
+      <div class="gwCt"><span class="v" id="stFix">–</span><span class="k">need fixing</span></div>
+    </div>
+
+    <div class="gwDatum"><h2>Right now</h2><span class="n">both machines</span></div>
+    <div id="activityList" class="hint gwList"></div>
+
+    <div class="gwDatum"><h2>Best per model</h2><span class="n">same holdout</span></div>
+    <div id="scoreboard" class="hint gwList"></div>
+
+    <div class="gwDatum"><h2>The machine</h2><span class="n">both boxes</span></div>
+    <div id="odometer" class="hint gwList"></div>
+    <div class="gwDatum"><h2>Accuracy over time</h2>
+      <span class="n">every model · lower is better</span></div>
+    <div id="maeChart" class="hint"></div>
+  </section>
+
+  <!-- YOLO: everything that DOES yolo — train (Trainer-first), live run, models/pin. -->
+  <!-- Models & Runs: the four tabs PIVOT said the split "actively prevents"
+       the comparison the pivot exists for — yolo actions, challenger actions,
+       and both run ledgers — in one place. Sub-panels keep their original ids
+       so every existing handler still finds what it binds to. -->
+  <!-- TRAIN. THE ID STAYS "runs" DELIBERATELY, and that is a safety property
+       rather than laziness. Six places key off it — the 8s heartbeat's
+       loadYolo/trainBusyTick/runLog/run_vis conditions in dashboard.js, lab.js's
+       poll guard, identity.js opening it by default on the worker — and
+       lab.js:294 calls .addEventListener on `nav button[data-tab="runs"]` with
+       NO optional chaining, so a missing button is a load-time TypeError that
+       kills that whole file. Renaming the id would mean six simultaneous edits
+       to the paths that keep a live training run visible and cancellable, which
+       is the last thing to be casual with. The LABEL changes; the id does not.
+       (It also cannot become "train": that id is the Training set grid until
+       the Fix/Training/Test merge frees it.) -->
+  <section id="runs" class="tab">
+    <div class="gwDatum"><h2>Train</h2>
+      <span class="n">start a run, and watch it</span></div>
+
+    <!-- ONE Train panel. It was two — "Train — champion (YOLO)" and "Train —
+         challengers" — plus a link that opened a SECOND cockpit on the worker so
+         you could press ITS Retrain. Model, machine and card are fields now;
+         which combinations are possible comes from /api/train/options, which
+         reads each venv's COMPILED arch list (DEIM's torch carries no sm_120
+         kernels, so it cannot use the 5070 Ti at all). -->
+    <details class="runsPanel" open>
+      <summary>Train</summary>
+      <div class="panel">
+        <div class="trainGrid">
+          <label>model
+            <select id="tModel"></select>
+            <span class="pjSub" id="tModelNote"></span>
+          </label>
+          <label>machine
+            <select id="tMachine"></select>
+            <span class="pjSub" id="tMachineNote"></span>
+          </label>
+          <label>card
+            <select id="tCard"></select>
+            <span class="pjSub" id="tCardNote"></span>
+          </label>
+        </div>
+        <div class="ctrls trainOpts">
+          <label>epochs <input id="tEpochs" type="number" min="1" max="2000"
+                 style="width:5rem" placeholder="auto"
+                 title="Blank = this model's default"></label>
+          <!-- SPLIT SEED — yolo only. Which images land in train vs val is a
+               seeded hash of the stem, so the same seed always builds the same
+               split. Changing it asks the one question repeat runs cannot: does
+               this result survive a DIFFERENT split, or was it that split? The
+               backend has taken it since runs 59-65; the browser never sent it. -->
+          <label id="tSeedWrap">split seed <input id="tSeed" type="number" min="0"
+                 max="99" style="width:4rem" placeholder="0"
+                 title="Which train/val split to build. Same seed = same split. Change it to test whether a score survives a different one."></label>
+          <!-- RUN ALONGSIDE THE OTHER JOB. The server has refused this since
+               2026-08-02 unless allow_concurrent is passed, and the browser
+               never sent it — so the Train button reported the SPLIT gate as
+               fine and then got a 409 from a gate it did not know about. Shown
+               only when something is already training. -->
+          <label id="tConcWrap" hidden class="tConc">
+            <input type="checkbox" id="tConc">
+            run alongside the job already training</label>
+          <label>size <select id="tSize">
+            <option value="960">960</option>
+            <option value="1280" selected>1280</option>
+            <option value="1920">1920</option>
+          </select></label>
+          <label>batch <input id="tBatch" type="number" min="1" max="64"
+                 style="width:4.5rem" placeholder="auto"
+                 title="Blank = the safe default for this card"></label>
+          
+          <button id="tTrain">▶ Train</button>
+          <button id="retrainCancel" hidden>🛑 Cancel</button>
+        </div>
+        <div class="trainWhy" id="tWhy" hidden></div>
+        <div id="tCards" class="trainCards"></div>
+        <div id="retrainStatus" class="status"></div>
+        <div id="retrainBar" class="pbar" hidden>
+          <div class="pbarTrack"><div id="retrainBarFill" class="pbarFill"></div></div>
+          <span id="retrainBarText" class="mMeta"></span>
+          <span id="retrainVs" hidden></span>
+        </div>
+        <!-- OUTSIDE #retrainBar on purpose: that bar is hidden unless THIS
+             machine is retraining, so while training ran on the worker the button
+             was unhidden and still invisible. peek.js decides when it shows. -->
+        <button id="peekBtn" class="peekBtn" hidden title="Live look inside the run: the actual augmented batches the model is training on, stage pipeline, and live curves">🔬 Watch training</button>
+        <div id="labStatus" class="hint"></div>
+        <pre id="retrainLog" class="log" hidden></pre>
+        <div id="runVis" hidden></div>
+      </div>
+    </details>
+
+  </section>
+
+  <!-- RESULTS. The other half of what was one 3431px page across eight
+       sections: Models & Runs was two jobs with opposite rhythms sharing a
+       scroll. Train is "now, watch it"; this is "what have I got". Splitting
+       them means the ledger is not 1700px of live logs away, and a run in
+       flight does not push the charts off the screen. -->
+  <section id="results" class="tab">
+    <div class="gwDatum"><h2>Results</h2>
+      <span class="n">every run, and what serves</span></div>
+
+    <!-- Charts first, one group per family, then ONE table holding both. The
+         table is last because it is the long thing; putting it between the two
+         chart groups (where the yolo ledger used to sit) left the challenger
+         trend stranded below 81 rows of table. -->
+    <!-- HEADINGS, NOT PARAGRAPHS. Each of these three groups opened with two to
+         four lines of prose explaining what it was. Read once, skipped forever,
+         and on a phone they pushed the actual charts below the fold. A rule and
+         a two-word label says the same thing at a glance; anything that was a
+         FACT rather than an explanation stayed (the pinned champion's score) or
+         moved next to the control it describes (the sort buttons' tooltips). -->
+    <div class="runsLedger">
+    <h3 class="runsHead">YOLOv8n stats <span class="runsHeadNote">the default model only</span></h3>
+    <div id="runsSummary" class="runsSummary"></div>
+    <div id="runsCharts" class="charts"></div>
+    </div>
+
+    <!-- DATASET IS NOT A YOLO FACT (owner, 2026-08-02). "how big was the data"
+         describes the project every model is measured on, so it sat wrongly
+         under a heading that says "champion only". Its own section, above the
+         per-family stats, because it is the context for both of them. -->
+    <div class="runsLedger">
+    <h3 class="runsHead">Dataset <span class="runsHeadNote">what every model is trained and examined on</span></h3>
+    <div id="dataCharts" class="charts"></div>
+    </div>
+
+    <div class="runsLedger">
+    <h3 class="runsHead">All run stats <span class="runsHeadNote">every model, same holdout</span></h3>
+    <div id="labPinned" class="hint"></div>
+    <div id="labRuns"></div>
+    </div>
+
+    <div class="runsLedger">
+    <h3 class="runsHead">All runs <span class="runsHeadNote">detail · dots for a run's curve and misses</span></h3>
+    <div class="hint" id="runsSatNote" hidden></div>
+    <div id="runsTable"></div>
+    </div>
+
+  </section>
+
+  <!-- EXPORT — its own tab (owner, 2026-08-05). It was a panel under Results,
+       on the reasoning that picking what to export is the same act as reading
+       which run won. In practice it is a DESTINATION: you arrive meaning to
+       ship something, and hunting for it at the bottom of the longest page in
+       the app is the opposite of that. Its own tab also lets it load its own
+       run list rather than scraping the ledger's table, which is what let it
+       show "no runs" whenever Results had not been opened first. -->
+  <section id="export" class="tab">
+    <div class="gwDatum"><h2>Export</h2>
+      <span class="n">turn a run into something you can deploy</span></div>
+    <div id="xPanel" class="xPanel">
+      <div class="xControls">
+        <label>run <select id="xRun"></select></label>
+        <label>format <select id="xFormat"></select></label>
+        <span class="xSize gwNum" id="xSize"></span>
+        <!-- TensorRT only. Populated from the cards this machine actually
+             reported — never a hardcoded 0/1, which offered a second card on a
+             one-card laptop. -->
+        <label id="xCardWrap" hidden>card <select id="xCard"></select></label>
+        <button type="button" id="xGo">Export</button>
+      </div>
+      <div class="xNote" id="xNote" hidden></div>
+      <div class="xStatus" id="xStatus"></div>
+      <h3 class="runsHead">Exported <span class="runsHeadNote">on this machine</span></h3>
+      <div id="xArtifacts"></div>
+    </div>
+  </section>
+
+
+  <!-- Fix queue -->
+    <!-- IMAGES — the three collections that were three tabs.
+       They are ONE grid with three filters: same renderer (cockpit/grids.js),
+       same cards, same editor. On a phone they were three taps deep inside a
+       drawer, and the difference between them — which folder a picture is in —
+       is a property of the picture, not a different screen.
+       EVERY id IS UNCHANGED. #fixGrid, #trainGrid, #testGrid, both bucket-total
+       strips, the audit and dedup outputs and all three badges are exactly
+       where they were; only their wrapper moved. The badges in particular are
+       written without a null guard (dashboard.js loadState), so losing one
+       would be a TypeError that takes the project Overview down with it. -->
+  <section id="images" class="tab">
+    <div class="gwDatum"><h2>Images</h2>
+      <span class="n">everything this project has been shown</span></div>
+
+    <div class="imgSeg" role="tablist" aria-label="Which images">
+      <button class="imgSegBtn" data-pane="fix" role="tab">Fix queue
+        <span id="fixBadge" class="badge"></span></button>
+      <button class="imgSegBtn active" data-pane="train" role="tab">Training set
+        <span id="trainBadge" class="badge"></span></button>
+      <button class="imgSegBtn" data-pane="testset" role="tab">Holdout
+        <span id="testBadge" class="badge"></span></button>
+    </div>
+
+    <div class="imgPane" id="pane-fix" hidden>
+    <p class="hint">Images waiting to be labelled — from ✗ Wrong on Telegram, or uploaded here.
+      Each shows your target count where there is one; edit the dots to match, then
+      <b>Done</b> moves it into training and opens the next.</p>
+      <!-- Add images opens the ONE upload modal (bottom of <main>). It used to
+           be an inline file input here, which is where uploads still land — but
+           the same control now sits on Training set and Test set too, and three
+           copies of a file input is three ids and one behaviour. -->
+      <div class="upBar"><button class="upBtn upOpen">⬆ Add images</button></div>
+    <div id="fixGrid" class="grid"></div>
+  </div>
+    <div class="imgPane" id="pane-train">
+    <p class="provenance">✋ <b>Provenance:</b> every image in the training set was checked by hand — its marks verified before it entered training.</p>
+    <p class="hint">All labelled training images. Click any to check or tweak its marks. <b>Tag an image</b> to see your training-mix totals below — inventory only, tags never affect training.</p>
+    <div class="row"><button class="upBtn upOpen">⬆ Add images</button>
+      <button id="auditBtn" title="Run the model this project serves over every training image and list the ones whose object count it disagrees with — a way to find a mislabelled image">🔎 Check labels against the model</button>
+      <button id="dedupTrainBtn" title="Full sweep: train↔test leaks + duplicates within training and within the holdout — image hash + dot-geometry re-shoot check">🔍 Check for duplicates</button></div>
+    <div id="auditResult" class="hint auditOut"></div>
+    <div id="dedupTrainResult" class="hint dedupOut"></div>
+    <div id="trainBucketTotals" class="bktTotals"></div>
+    <div id="trainGrid" class="grid"></div>
+  </div>
+    <div class="imgPane" id="pane-testset" hidden>
+    <p class="provenance">✋ <b>Provenance:</b> every holdout image was checked by hand. The model never trains on these — they exist only to grade it.</p>
+    <p class="hint">Fixed <b>holdout</b> — verified-correct images kept <b>out of training</b> and scored on <i>every</i> retrain, so the score is comparable run-to-run (not split noise). Edit marks, or ↩ send an image back to training. <b>Tag an image</b> to get a per-type score on Results — this is an eval lens only, it never changes the model.</p>
+    <div class="row"><button class="upBtn upOpen">⬆ Add images</button>
+      <button id="dedupBtn" title="Full sweep: train↔test leaks + duplicates within training and within the holdout — image hash + dot-geometry re-shoot check">🔍 Check for duplicates</button></div>
+    <div id="dedupResult" class="hint dedupOut"></div>
+    <div id="testBucketTotals" class="bktTotals"></div>
+    <div id="testGrid" class="grid"></div>
+  </div>
+  </section>
+
+
+
+  <!-- Training set -->
+  
+
+  <!-- Test set (fixed holdout) -->
+  
+
+  <!-- 🧪 RTMDet: the Apache-2.0 challenger (RF-DETR concluded — altmodels/README) -->
+
+  <!-- RTM Runs: the challenger ledger — trend across runs + per-run detail. -->
+
+  <!-- Training runs history -->
+
+
+
+  <!-- Data collection: the Telegram bots that feed this project -->
+  <!-- DATA COLLECTION — machine-level. Every Telegram bot on this box, whichever
+       project it feeds, plus the setup that used to be a list of instructions
+       telling you to go and edit files by hand. See web/api/bot_setup.py for the
+       rails that make writing a token and a unit from here defensible. -->
+  <section id="collect" class="tab">
+    <h2>Data collection</h2>
+    <p class="hint">Almost everything in every project arrived through a
+      <b>Telegram bot</b>. These are the bots of the projects you can open —
+      whether each is alive, who may use it, and how to add another.</p>
+
+
+    <div id="botList" class="botList"></div>
+
+    <details class="runsPanel" id="botSetup">
+      <summary>➕ Add a collection bot</summary>
+      <!-- Shown instead of the form when there is nothing to add a bot TO:
+           no projects yet, or every project already has one for every job it
+           allows. A form whose selects are empty and whose submit can only fail
+           is worse than a sentence saying what to do first. -->
+      <p class="hint" id="bfNone" hidden></p>
+      <form id="botForm" class="pjForm botForm">
+        <label>Which project does it feed?
+          <select id="bfProject"></select>
+        </label>
+        <label>What does it do?
+          <select id="bfRole"></select>
+          <span class="pjSub" id="bfRoleWhat"></span>
+        </label>
+        <label>Bot name
+          <input id="bfName" type="text" required maxlength="60" autocomplete="off"
+                 placeholder="e.g. Bolt Collector">
+          <span class="pjSub">Just a label for the card. Its service name and
+            the variable holding its token are worked out from the project and
+            the job, so they cannot clash with anyone else's.</span>
+        </label>
+        <div class="pjFormErr" id="bfErr" hidden></div>
+        <div class="pjFormActs">
+          <button type="submit" id="bfAdd" class="pjfPrimary">Register bot</button>
+        </div>
+      </form>
+      <p class="hint">Step 1 is a conversation with <b>@BotFather</b> from your own
+      Telegram account — there is no API for creating a bot, by design, because a
+      bot is owned by a human account. Everything after that happens here: paste
+      the token on the card, press Install, and the service is written, enabled
+      and started.</p>
+      <ol id="botSteps" class="botSteps"></ol>
+    </details>
+  </section>
+
+
+
+  <!-- ===================== MACHINES =====================================
+       WHERE runs execute. Machine-level like Data collection, and a sibling of
+       Account rather than a panel inside it: different scope, different
+       audience, different frequency. -->
+  <section id="machines" class="tab">
+    <div class="acctWrap">
+      <div class="gwDatum"><h2>Machines</h2></div>
+      <p class="hint">Where training runs can execute. What each machine can run
+        is <b>measured from it</b>, never assumed — a card's compute capability
+        against a venv's compiled arch list is what decides whether a model will
+        even start.</p>
+      <div id="machineList"></div>
+
+      <details class="gwFold">
+        <summary class="gwFoldSum"><span class="gwDatum"><h3>Add a machine</h3></span></summary>
+    <div class="panel">
+      <div class="row"><b>Pair a machine</b></div>
+      <p class="hint">On the new machine: install Groundwork with
+        <code>GW_ROLE=worker</code>, open ITS Machines tab, press
+        <b>Create pairing code</b>, and paste the string here. One paste
+        registers it, exchanges keys and probes its cards. <b>This machine
+        will receive full copies of every project you train on it.</b></p>
+      <form id="pairForm" class="ctrls">
+        <input id="pairCode" type="text" size="48" placeholder="GW1.…" required>
+        <button>Pair</button>
+      </form>
+      <div class="mMeta" id="pairMsg"></div>
+    </div>
+
+    <div class="panel" id="workerPairCard" hidden>
+      <div class="row"><b>Pair with an HQ</b></div>
+      <p class="hint">This machine runs as a <b>worker</b>. Mint a one-time
+        code and paste it on your HQ's Machines tab. The code contains a
+        train-scope API key for this box — treat it like one. Confirm the URL
+        first: it is what the HQ will call.</p>
+      <div class="ctrls">
+        <label>reachable URL <input id="mintPairUrl" type="text" size="28"
+          placeholder="http://this-box:8000"></label>
+        <button id="mintPairBtn" type="button">Create pairing code</button>
+      </div>
+      <pre class="hint" id="mintPairOut" style="user-select:all;white-space:break-spaces"></pre>
+    </div>
+
+        <p class="hint">It needs <b>two</b> things, and they do different jobs.
+          The <b>API key</b> is the control plane — probing, dispatching, status
+          — and is created <b>on that machine</b>, not here. <b>ssh</b> is the
+          data plane: the dataset is rsynced there and finished runs are pulled
+          back, which stays rsync because its incremental delta is why a
+          pre-training sync costs a second instead of re-uploading gigabytes.</p>
+        <ol class="botSteps">
+          <li>Install Groundwork on that machine and start its cockpit.</li>
+          <li>On it, run
+            <code>python -m groundwork.web.auth.keys add hq</code> — it prints a
+            key once.</li>
+          <li>Make sure you can <code>ssh</code> to it from this machine
+            (<code>ssh-copy-id user@host</code> if not).</li>
+          <li>Fill this in, then press <b>Probe</b> on its card.</li>
+        </ol>
+        <form class="pjForm" id="machineForm">
+          <label>Name
+            <input id="mfName" type="text" required maxlength="40"
+                   placeholder="Studio box" autocomplete="off">
+          </label>
+          <label>Cockpit address
+            <input id="mfUrl" type="text" required placeholder="http://100.x.y.z:8000"
+                   autocomplete="off" spellcheck="false">
+          </label>
+          <label>API key <span class="pjSub">created on that machine</span>
+            <input id="mfKey" type="text" placeholder="gw_…" autocomplete="off"
+                   spellcheck="false">
+          </label>
+          <label>ssh host <span class="pjSub">for the dataset sync</span>
+            <input id="mfSsh" type="text" placeholder="user@100.x.y.z"
+                   autocomplete="off" spellcheck="false">
+          </label>
+          <label>Its checkout path <span class="pjSub">where the repo lives there</span>
+            <input id="mfRoot" type="text" placeholder="/home/user/counter1"
+                   autocomplete="off" spellcheck="false">
+          </label>
+          <div class="pjFormActs">
+            <button type="submit" class="pjfPrimary">Add machine</button>
+            <span class="acctMsg" id="machineFormMsg"></span>
+          </div>
+        </form>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===================== ACCOUNT =====================================
+       You: your name, your password, your API keys. Machines (where runs
+       execute) is a separate global tab — different scope, different audience,
+       different frequency. -->
+  <section id="account" class="tab">
+    <div class="acctWrap">
+      <div class="gwDatum"><h2>Account</h2></div>
+      <div class="acctWho" id="acctWho"></div>
+      <p class="hint" style="margin-top:var(--gw-s3)">
+        Accounts are created on this machine, from a terminal or by an admin.
+        There is no sign-up. API keys live on the <b>API</b> tab.</p>
+
+      <div class="gwDatum"><h3>Password</h3></div>
+      <form class="acctForm" id="pwForm">
+        <div class="loginField"><label for="pwOld">Current</label>
+          <input id="pwOld" type="password" autocomplete="current-password" required></div>
+        <div class="loginField"><label for="pwNew">New</label>
+          <input id="pwNew" type="password" autocomplete="new-password" minlength="8" required></div>
+        <div class="loginField"><label for="pwNew2">Repeat</label>
+          <input id="pwNew2" type="password" autocomplete="new-password" required></div>
+        <button type="submit">Change password</button>
+        <span class="acctMsg" id="pwMsg"></span>
+      </form>
+      <p class="hint">At least 8 characters. Changing it signs out your other
+        sessions, but not this one.</p>
+
+      <!-- FOLDED, AND THE PASSWORD FIELD IS RELABELLED.
+           Three forms on this page each carried a password box, so the browser
+           autofilled all of them — and a filled, editable password field sitting
+           under a "Username" heading reads as somewhere to change your password.
+           Two fixes, both about one element doing one job:
+
+             * this section is a fold (the .gwFold convention from 00-tokens,
+               whose summary IS the datum rule), so the field is not on screen
+               next to the real password form unless you asked for it;
+             * the label says CONFIRM. The field's job is proving it is you, not
+               setting anything, and "Your password" did not say which.
+
+           autocomplete=off is a nudge, not a guarantee — browsers override it on
+           type=password — which is exactly why the fold and the wording carry
+           the meaning instead. -->
+      <details class="gwFold">
+        <summary class="gwFoldSum"><span class="gwDatum"><h3>Change username</h3></span></summary>
+        <p class="hint">Every project you own moves with you, and so do your keys
+          and sessions — so you are not locked out of your own work.</p>
+        <form class="acctForm" id="userForm">
+          <div class="loginField"><label for="userNew">New username</label>
+            <input id="userNew" type="text" required autocapitalize="none"
+                   spellcheck="false" autocomplete="off"></div>
+          <div class="loginField"><label for="userPw">Confirm with your password</label>
+            <input id="userPw" type="password" autocomplete="off" required
+                   placeholder="not changed here"></div>
+          <button type="submit">Change username</button>
+          <span class="acctMsg" id="userMsg"></span>
+        </form>
+      </details>
+
+      <div class="gwDatum"><h3>Session</h3></div>
+      <!-- NOT class="keyKill". It shared that class with Revoke and Remove, so
+           the one control on this page that reloads the whole app looked exactly
+           like a row-level action — which is how it gets pressed by accident and
+           reads as "the page refreshed on its own". Its own class, its own
+           words, and it says what it does. -->
+      <p class="hint">Signing out ends this browser's session. Your other
+        sessions and your API keys are unaffected.</p>
+      <button type="button" id="signOutBtn" class="signOutBtn">Sign out</button>
+    </div>
+  </section>
+
+  <!-- API — the reference, and where keys are made. Keys moved here from
+       Account (owner, 2026-08-05): Account is about WHO YOU ARE, and a key is
+       about what a script may do on your behalf. They had different subjects
+       sharing a page. -->
+  <section id="api" class="tab">
+    <div class="gwDatum"><h2>API</h2>
+      <span class="n">drive this cockpit from anywhere</span></div>
+    <p class="apLede">Everything this interface does, it does over HTTP. The same
+      endpoints are yours: start a run on either machine, read what it scored,
+      export a model, push images in. Authenticate with an <b>API key</b> as a
+      bearer token.</p>
+
+    <div class="apIntro">
+      <div>
+        <h3>Getting a key</h3>
+        <p>Make one below. It is shown <b>once</b> — the server keeps only a
+          SHA-256, so there is no reveal button and there never can be. Revoke it
+          any time; anything using it stops immediately.</p>
+      </div>
+      <div>
+        <h3>Using it</h3>
+        <p>Send it as a bearer token, never as a query parameter — URLs end up in
+          shell history, proxy logs and screenshots.</p>
+        <div class="keyNew keyEx"><code>export GW_KEY=gw_your_key_here</code></div>
+      </div>
+      <div>
+        <h3>What a key cannot do</h3>
+        <p>Change your password, rename you, manage accounts, or mint another
+          key — those need a password session. That asymmetry is what makes a key
+          safe to leave in a config file on a training box: if it leaks you
+          revoke it, you do not lose the account.</p>
+      </div>
+    </div>
+
+    <div class="gwDatum"><h3>Your keys</h3></div>
+    <form class="acctForm" id="keyForm">
+      <div class="loginField" style="flex:1 1 14rem">
+        <label for="keyName">What is it for</label>
+        <input id="keyName" type="text" maxlength="60"
+               placeholder="hq-control — or leave blank" autocomplete="off"
+               spellcheck="false">
+      </div>
+      <!-- SCOPE. Filled from /api/keys/scopes so the vocabulary lives in one
+           place (auth/keys.py) rather than being restated here. -->
+      <div class="loginField" style="flex:0 1 13rem">
+        <label for="keyScope">What it may do</label>
+        <select id="keyScope"></select>
+      </div>
+      <button type="submit">Create key</button>
+      <span class="acctMsg" id="keyMsg"></span>
+    </form>
+    <p class="hint" id="keyScopeWhat"></p>
+    <div id="keyList"></div>
+
+    <div class="gwDatum"><h3>Reference</h3>
+      <span class="n">every endpoint worth driving from a script</span></div>
+    <div class="apDocs">
+      <nav class="apRail" id="apRail" aria-label="API endpoints"></nav>
+      <div class="apPane" id="apDetail"></div>
+    </div>
+  </section>
+
+  <!-- ADMIN — the only screen here whose subject is OTHER PEOPLE. Account is
+       you, API is your keys; this is the household. Server-side every endpoint
+       it uses goes through require_admin, which also refuses key auth, so
+       hiding the tab is a courtesy and the refusal is the server's. -->
+  <section id="admin" class="tab">
+    <!-- EXTRAS — the wizard's opt-in downloads, re-runnable here so skipping
+         one during setup is never a dead end. Same endpoints, same consent. -->
+    <div class="panel" id="adminExtras">
+      <div class="row"><b>Extras</b> <span class="mMeta" id="axState"></span></div>
+      <p class="hint">Optional components the setup wizard offers. The
+        auto-labeler (~6&nbsp;GB) downloads from Hugging Face under
+        <b>NVIDIA's license</b> — between you and them. Challenger stacks
+        build sidecar environments (their own torch builds) and clone pinned
+        vendor code.</p>
+      <div class="ctrls">
+        <label><input type="checkbox" id="axLaOk"> accept the auto-labeler's license</label>
+        <button id="axLaBtn" type="button">⬇ Auto-labeler</button>
+        <label><input type="checkbox" id="axStackOk"> accept Apache-2.0</label>
+        <button id="axStackDeim" type="button">⛏ DEIM stack</button>
+        <button id="axStackRtm" type="button">⛏ RTMDet stack</button>
+      </div>
+      <div class="mMeta" id="axMsg"></div>
+    </div>
+    <div class="gwDatum"><h2>Admin</h2>
+      <span class="n">accounts on this machine, and what happened</span></div>
+
+    <div class="gwCounts" id="adSummary"></div>
+
+    <div class="gwDatum"><h3>Accounts</h3></div>
+    <div id="adUsers"></div>
+
+    <details class="gwFold">
+      <summary class="gwFoldSum"><span class="gwDatum"><h3>Create an account</h3></span></summary>
+      <p class="hint">There is no sign-up. Accounts are made here or from a
+        terminal, and the person also needs to be on your network to
+        reach this cockpit at all.</p>
+      <form class="acctForm" id="adNewUser">
+        <div class="loginField"><label for="adNewName">Username</label>
+          <input id="adNewName" type="text" required autocapitalize="none"
+                 spellcheck="false" autocomplete="off"></div>
+        <div class="loginField"><label for="adNewPw">Password</label>
+          <input id="adNewPw" type="password" required minlength="8"
+                 autocomplete="new-password" placeholder="at least 8 characters"></div>
+        <label class="adAdminBox"><input type="checkbox" id="adNewAdmin">
+          admin — can create and remove accounts</label>
+        <button type="submit">Create account</button>
+        <span class="acctMsg" id="adNewMsg"></span>
+      </form>
+    </details>
+
+    <div class="gwDatum"><h3>Security trail</h3>
+      <span class="n">newest first</span></div>
+    <p class="hint">Sign-ins, account changes and key activity. Failed attempts
+      are rate-limited after 5 tries from one name or one address — the block
+      expires on its own, so nobody can lock you out by failing your login.</p>
+    <div class="adTrail" id="adTrail"></div>
+  </section>
+
+
+
+  <!-- Count -->
+  <section id="count" class="tab">
+    <p class="hint">Ad-hoc count (not saved). Upload an image.</p>
+    <form id="countForm"><input type="file" id="countFile" accept="image/*" required><button>Count</button></form>
+    <div id="countResult"></div>
+  </section>
+  <!-- ===================== What is Groundwork? =========================
+       The only page written for someone who has never seen this before, so it
+       assumes nothing: not what a holdout is, not why labelling matters, not
+       what training does. Everything it points at EXISTS — checked against the
+       UI on 2026-08-02 rather than described from memory. In particular it does
+       NOT promise a bulk auto-label button (that path is CLI-only) and it does
+       not promise a guided new-project flow beyond what Phase 6 actually built.
+  -->
+  <section id="guide" class="tab">
+    <div class="gWrap">
+      <div class="gHero">
+        <h2>What is Groundwork?</h2>
+        <p class="gLede">Groundwork teaches a computer to <b>count things in
+          photographs</b>. You show it examples, mark what you want counted, and it
+          learns to do it for you.</p>
+        <p class="gSub">What you end up with is a <b>trained detector</b> — a file
+          that runs wherever you put it: a chat bot, this cockpit, a phone, a
+          Raspberry&nbsp;Pi with a camera over a bench. It is a workshop, not one
+          tool: each thing you teach it to see is a <b>project</b>.
+          <b>the original project</b> — counting objects on a workplace image — is the one that
+          already lives here; a bolt counter or a seed counter would be another.</p>
+      </div>
+      <!-- The steps are DATA (tabs/guide_steps.js) rendered one at a time by
+           tabs/guide.js. They were 166 lines of prose in this file, all expanded —
+           several screens of scroll on a phone with no landmark to aim at. -->
+      <div id="gStage"></div>
+    </div>
+  </section>
+  <!-- ONE upload modal for all three collection tabs. Uploads always land in
+       the FIX QUEUE regardless of which tab opened it, and the modal says so —
+       `raw/` and `testset/` mean labelled, and an unlabelled image there would
+       train on an empty label file and score zero with nothing looking wrong. -->
+  <div id="upModal" class="modal" hidden>
+    <div class="modalCard upCard" role="dialog" aria-modal="true" aria-labelledby="upTitle">
+      <header class="modalHead">
+        <h3 id="upTitle">Add images</h3>
+        <button class="modalX" id="upClose" aria-label="Close">×</button>
+      </header>
+      <div class="modalBody">
+        <label class="upDrop" id="upDrop">
+          <input id="upFiles" type="file" accept="image/*" multiple hidden>
+          <span class="upDropIcon" aria-hidden="true">⬆</span>
+          <span class="upDropMain">Choose images, or drop them here</span>
+          <span class="upDropSub" id="upPicked">JPEG · PNG · WEBP · HEIC · up to 60MB each</span>
+        </label>
+        <label class="upCheck">
+          <input type="checkbox" id="upPredict">
+          <span>
+            <b>Pre-label with this project's model first</b>
+            <span class="pjSub" id="upPredictWho">…</span>
+          </span>
+        </label>
+        <p class="hint upWhere">They land in the <b>Fix queue</b> to be checked —
+          that is the front door for everything, including images from Telegram.
+          Press <b>Done</b> on one and it moves into the training set.</p>
+        <div class="pjFormErr" id="upErr" hidden></div>
+        <div id="upReport" class="upReport" hidden></div>
+      </div>
+      <footer class="modalFoot">
+        <button id="upCancel">Cancel</button>
+        <button id="upGo" class="pjfPrimary" disabled>Upload</button>
+      </footer>
+    </div>
+  </div>
+</main>
+
+<!-- Dot editor overlay -->
+<div id="editor" class="editor" hidden>
+  <div class="editorBar">
+    <button id="edPrev" title="Previous image (←)">‹</button>
+    <span id="edPos"></span>
+    <button id="edNext" title="Next image (→)">›</button>
+    <span id="edTitle"></span>
+    <!-- Multi-class projects only (hidden at one class, which is every project
+         that behaves as this editor always has). Placing a dot uses whichever
+         is selected; ed.cls is written into the point's third element. -->
+    <select id="edClass" class="edClass" hidden
+            title="Which class the next dot will be"></select>
+    <span class="spacer"></span>
+    <!-- SECONDARY TOOLS. `display:contents` on wide screens, so these lay out
+         inline exactly as before and every $("#edX") handler is untouched. On a
+         phone the same wrapper becomes a drop-down behind ⋯ — fifteen buttons
+         wrapped to four rows and ate 39% of the viewport before the image. -->
+    <button id="edMoreBtn" class="edMoreBtn" hidden aria-expanded="false"
+            aria-controls="edMore" title="More tools">⋯</button>
+    <div id="edMore" class="edMore">
+      <button id="edZoomOut">–</button><button id="edZoomIn">+</button>
+      <button id="edTarget" title="Set / fix the true count for this image">✏️ Target</button>
+      <button id="edDupes" title="Find dots stacked on top of each other (double-counts)">⚠ Dupes</button>
+      <button id="edBoxes" title="Show the actual training boxes + reading-order numbers">▦ Boxes</button>
+      <button id="edCrop" title="Trim a too-zoomed-out shot: drag a box around what matters; everything outside is removed">✂ Crop</button>
+      <button id="edClear" title="Remove ALL marks from this image (not saved until you Save) — e.g. before adopting LocateAnything's crosshairs">🧹 Clear</button>
+        <button id="edAudit" title="Compare this image with the model this project serves (~1s, unlike the LA probe) and ring ONLY the disagreements">⊕ Compare</button>
+        <button id="edAuditAll" title="Also ring every point the model found, not just the disagreements">◌ All model dots</button>
+      <button id="edLA" title="Emergency second opinion: run LocateAnything (slow, ~30–90s) and show its detections as crosshairs">✛ LA</button>
+    </div>
+    <!-- Kept OUT of the menu: both are hidden until LocateAnything has actually
+         run, so they cost no space, and when they do appear they are the next
+         thing you want to press — not something to go hunting for. -->
+    <button id="edLAAdopt" class="laAdopt" hidden title="Replace this image's marks with the crosshairs (still needs Save)"></button>
+    <button id="edLADismiss" hidden title="Hide the crosshair overlay">✛✕</button>
+    <button id="edSave">Save</button>
+    <button id="edDone" hidden>✓ Done → training</button>
+    <button id="edDoneTest" hidden title="Save the fixed dots and send this image to the holdout test set (out of training)">🎯 Done → test set</button>
+    <button id="edClose">Close</button>
+  </div>
+  <!-- Tap to expand on a phone: the help is worth having while the select-then-
+       act model is still new, but not worth three permanent lines of a 664px
+       screen. Clamped to one line, full text on tap. -->
+  <div class="editorHelp" id="edHelp" title="Tap for the full help">Left-click add · right-click remove · wheel/±&nbsp;zoom · ← →&nbsp;prev/next image</div>
+  <div id="edCanvasWrap"><canvas id="edCanvas"></canvas>
+    <!-- LOADING. Opening an image is two waits — the points call, then the
+         photograph itself — and the canvas is genuinely blank for both, so the
+         editor opened onto nothing and the picture appeared without warning.
+         Shown by editor.js while loading, hidden once the image has painted. -->
+    <div id="edLoading" class="edLoading" hidden aria-live="polite">
+      <span class="edLoadingMark" aria-hidden="true"></span>
+      <span class="edLoadingText">Loading…</span>
+    </div>
+  </div>
+
+  <!-- Touch-only dot cluster. FIXED at the bottom rather than floating beside
+       the selected dot: a floating pad sits under your own thumb on a phone,
+       and moves out from under it every time you nudge. Down here the targets
+       are thumb-reachable and never occlude the object you are looking at. -->
+  <div id="edDotPad" class="edDotPad" hidden aria-label="Selected dot controls">
+    <div class="edPadNudge" role="group" aria-label="Nudge the dot">
+      <button class="edNudge" data-dx="0"  data-dy="-1" aria-label="Move up">▲</button>
+      <button class="edNudge" data-dx="-1" data-dy="0"  aria-label="Move left">◀</button>
+      <button class="edNudge" data-dx="1"  data-dy="0"  aria-label="Move right">▶</button>
+      <button class="edNudge" data-dx="0"  data-dy="1"  aria-label="Move down">▼</button>
+    </div>
+    <div class="edPadInfo">
+      <b id="edPadWhat">dot</b>
+      <span id="edPadPos" class="mMeta"></span>
+    </div>
+    <div class="edPadActs">
+      <button id="edPadDel" class="edPadDanger" title="Delete this dot">🗑</button>
+      <button id="edPadCancel" title="Undo the move and deselect">✗</button>
+      <button id="edPadOk" class="edPadOk" title="Keep it and deselect">✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== HOW IT WORKS (signed out) =====================
+     The SAME content as the Guide tab, rendered from window.GUIDE_STEPS rather
+     than copied — a second copy of an explanation is a second thing to keep
+     true, and the Guide's own header records four directions that went stale in
+     one night. Shown before sign-in because the one screen a newcomer can
+     always reach is this one. -->
+<!-- HOW IT WORKS — the SAME guide the signed-in Guide tab shows, mounted a
+     second time (tabs/guide.js mountGuide). It used to be a hand-written list
+     of titles and ledes here, which is a second telling of the same thing: it
+     could drift, and it did — it never gained the Export step. -->
+<div id="howModal" class="modal howModal" hidden>
+  <div class="modalCard howCard" role="dialog" aria-modal="true"
+       aria-labelledby="howTitle">
+    <button type="button" class="modalClose" id="howX" title="Close">✕</button>
+    <div class="gwDatum"><h3 id="howTitle">How Groundwork works</h3>
+      <span class="n">nine steps, start to finish</span></div>
+    <p class="howLede">You show it examples, mark what you want counted, and it
+      learns to do it for you. The result is a trained detector — a file — that
+      runs wherever you put it.</p>
+    <div id="howSteps" class="howSteps"></div>
+  </div>
+</div>
+
+<!-- ===================== NEW API KEY =====================================
+     A MODAL, because this string exists exactly once. Inline on a long page it
+     can be scrolled past, and the server keeps only a SHA-256 — there is no
+     second chance and no "reveal" button that could ever be built. A modal is
+     the one shape that makes losing it require dismissing something. -->
+
+<!-- SESSIONS — opened from the count on the Account page, because that number
+     was already the question ("3 active sessions" invites "which three?") and
+     had no answer. -->
+<div id="sessModal" class="modal" hidden>
+  <div class="modalCard sessCard" role="dialog" aria-modal="true"
+       aria-labelledby="sessTitle">
+    <button type="button" class="modalClose" id="sessX" title="Close">✕</button>
+    <div class="gwDatum"><h3 id="sessTitle">Where you are signed in</h3></div>
+    <p class="hint">Each row is one browser. Revoking signs it out immediately;
+      the one you are using now can only be ended with Sign out.</p>
+    <div id="sessList"></div>
+    <button type="button" id="sessRevokeAll" class="signOutBtn" hidden></button>
+  </div>
+</div>
+
+<div id="keyModal" class="modal" hidden>
+  <div class="modalCard keyCard" role="dialog" aria-modal="true"
+       aria-labelledby="keyModalTitle">
+    <button type="button" class="modalClose" id="keyModalX" title="Close">✕</button>
+    <div class="gwDatum"><h3 id="keyModalTitle">Your new key</h3></div>
+    <p class="keyWarn"><b>Copy it now.</b> It is stored only as a hash, so this
+      is the only time it can be shown.</p>
+    <div class="keyBox">
+      <code id="keyValue"></code>
+      <button type="button" id="keyCopy" class="keyCopy">Copy</button>
+    </div>
+    <p class="hint" id="keyModalMeta"></p>
+    <p class="hint">It acts as you — it can train, read and report, and it
+      cannot change your password, rename you, manage accounts or mint another
+      key.</p>
+    <div class="modalFoot" style="display:flex;justify-content:flex-end;gap:.6rem">
+      <button type="button" id="keyModalDone" class="loginGo" style="min-height:44px;padding:0 1.2rem">
+        I have copied it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Run detail modal (curve / log) -->
+<div id="runModal" class="modal" hidden>
+  <div class="modalCard">
+    <button class="modalClose" id="runModalClose" title="Close (Esc)">✕</button>
+    <div id="runModalBody"></div>
+  </div>
+</div>
+
+<!-- LocateAnything probe modal -->
+<div id="laModal" class="modal" hidden>
+  <div class="modalCard laCard">
+    <button class="modalClose" id="laClose" title="Close (keeps running in the background)">✕</button>
+    <div class="row"><b>✛ LocateAnything — second opinion</b></div>
+    <p class="hint">Emergency tool for an image the model messed up: LA-3B finds what you
+    describe and shows <span class="laMark">crosshairs</span> next to your dots. Slow
+    (~30–90&nbsp;s on this card) and GPU-heavy — it runs alone in its own process and
+    is blocked during retrains. Nothing is saved unless you <b>Adopt</b> + Save.</p>
+    <div class="ctrls">
+      <label>look for <input id="laDesc" type="text" value="" size="22" placeholder="e.g. bolt · white oval part"></label>
+      <button id="laRun">✛ Run</button>
+      <button id="laCancel" hidden>🛑 Cancel</button>
+    </div>
+    <div class="laChips" id="laChips"></div>
+    <div id="laStatus" class="status"></div>
+  </div>
+</div>
+
+
+<!-- Manual object-crop modal -->
+<div id="cropModal" class="modal" hidden>
+  <div class="modalCard cropCard">
+    <button class="modalClose" id="cropClose" title="Close (Esc)">✕</button>
+    <div class="row"><b>Crop an object</b> — pick an image, drag a box around one object (best for capsules).</div>
+    <div class="ctrls">
+      <select id="cropTray"></select>
+      <select id="cropShape" title="Region shape — ellipse/lasso clip out a neighbour's sliver">
+        <option value="box">▭ box</option>
+        <option value="ellipse">◯ ellipse</option>
+        <option value="lasso">✎ lasso (trace)</option>
+      </select>
+      <select id="cropMode" title="How to cut the object out of the region">
+        <option value="tight">auto (color)</option>
+        <option value="grabcut">smart (capsules)</option>
+        <option value="box">whole region</option>
+      </select>
+      <span id="cropHint" class="mMeta">draw around an object…</span>
+      <span class="spacer"></span>
+      <span class="mMeta">preview</span> <img id="cropPreview" alt="">
+      <button id="cropSave" disabled>Save cutout</button>
+    </div>
+    <div id="cropWrap"><canvas id="cropCanvas"></canvas></div>
+  </div>
+</div>
+
+<script src="/static/cockpit/core.js?v=5"></script>
+<script src="/static/tabs/setup.js?v=1"></script>
+<script src="/static/cockpit/auth.js?v=1"></script>
+<script src="/static/cockpit/charts.js?v=1"></script>
+<script src="/static/cockpit/ui.js?v=3"></script>
+<script src="/static/cockpit/nav.js?v=1"></script>
+<script src="/static/cockpit/projects.js?v=3"></script>
+<script src="/static/cockpit/projects_new.js?v=1"></script>
+<script src="/static/cockpit/classes.js?v=1"></script>
+<script src="/static/cockpit/identity.js?v=6"></script>
+<script src="/static/cockpit/grids.js?v=2"></script>
+<script src="/static/cockpit/images.js?v=1"></script>
+<script src="/static/cockpit/yolo.js?v=2"></script>
+<script src="/static/cockpit/runs/runs_table.js?v=1"></script>
+<script src="/static/cockpit/runs/runs_acts.js?v=1"></script>
+<script src="/static/cockpit/collect.js?v=1"></script>
+<script src="/static/cockpit/runs/train.js?v=3"></script>
+<script src="/static/cockpit/runs/train_busy.js?v=1"></script>
+<script src="/static/cockpit/runs/train_cancel.js?v=1"></script>
+<script src="/static/cockpit/runs/run_log.js?v=1"></script>
+<script src="/static/cockpit/runs/run_vis.js?v=1"></script>
+<script src="/static/cockpit/runs/model_metrics.js?v=1"></script>
+<script src="/static/cockpit/audit.js?v=1"></script>
+<script src="/static/cockpit/overview.js?v=1"></script>
+<script src="/static/cockpit/upload.js?v=1"></script>
+<script src="/static/cockpit/export.js?v=1"></script>
+<script src="/static/cockpit/machines.js?v=1"></script>
+<script src="/static/cockpit/account.js?v=1"></script>
+<script src="/static/cockpit/dashboard.js?v=19"></script>
+<script src="/static/tabs/buckets.js?v=1"></script>
+<script src="/static/tabs/tag_editor.js?v=1"></script>
+<script src="/static/cockpit/sessions.js?v=1"></script>
+<script src="/static/cockpit/admin.js?v=1"></script>
+<script src="/static/tabs/api/_registry.js?v=1"></script>
+<script src="/static/tabs/api/train.js?v=1"></script>
+<script src="/static/tabs/api/results.js?v=1"></script>
+<script src="/static/tabs/api/export.js?v=1"></script>
+<script src="/static/tabs/api/data.js?v=1"></script>
+<script src="/static/tabs/api/machine.js?v=1"></script>
+<script src="/static/tabs/api/identity.js?v=1"></script>
+<script src="/static/tabs/api/docs.js?v=1"></script>
+<script src="/static/tabs/guide_steps.js?v=1"></script>
+<script src="/static/tabs/guide.js?v=1"></script>
+<script src="/static/tabs/dedup.js?v=2"></script>
+<script src="/static/editor/editor_mirrors.js?v=2"></script>
+<script src="/static/editor/editor.js?v=19"></script>
+<script src="/static/editor/editor_crop.js?v=1"></script>
+<script src="/static/editor/editor_more.js?v=1"></script>
+<script src="/static/editor/editor_hit.js?v=1"></script>
+<script src="/static/editor/editor_draw.js?v=1"></script>
+<script src="/static/editor/editor_dotpad.js?v=1"></script>
+<script src="/static/editor/editor_touch.js?v=1"></script>
+<script src="/static/tabs/history.js?v=21"></script>
+<script src="/static/tabs/snapshot.js?v=1"></script>
+<script src="/static/tabs/lab.js?v=16"></script>
+<script src="/static/tabs/peek.js?v=6"></script>
+<script src="/static/tabs/rundiff.js?v=1"></script>
+<script src="/static/editor/la.js?v=1"></script>
+<script src="/static/editor/audit_overlay.js?v=1"></script>
+</body>
+</html>

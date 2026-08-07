@@ -1,0 +1,74 @@
+/* 02-progress.css — live-run progress, the vs-previous chip, the watch-training modal and the run-vs-run diff
+ *
+ * Split out of 02-runs.css (2026-08-05), which was carrying both the live-run chrome and the Models & Runs tab's own layout.
+ *
+ * A CONTIGUOUS CUT, so the cascade is untouched: concatenating these files in
+ * their numbered order reproduces the original byte for byte, exactly as the
+ * first split did. Rules were not reordered — that is the one thing a thematic
+ * regroup cannot promise, and at equal specificity order decides the winner.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order. Do not
+ * reorder the <link> tags. */
+
+/* Retrain progress bar (fixed-length runs -> honest ETA) */
+.pbar{margin-top:.55rem}
+.pbarTrack{height:8px;background:#0b0d11;border:1px solid var(--edge);border-radius:99px;overflow:hidden}
+.pbarFill{height:100%;width:0;background:linear-gradient(90deg,#3987e5,#2fbf71);border-radius:99px;transition:width .6s ease}
+.pbar .mMeta{display:block;margin-top:.3rem;font-variant-numeric:tabular-nums}
+.peekBtn{margin-top:.35rem;padding:.25rem .65rem;font-size:.8rem}
+/* live trajectory verdict vs the previous run (val-mAP leading indicator) */
+#retrainVs{display:block;margin-top:.3rem}
+.vsChip{display:inline-block;border:1px solid var(--edge);border-left-width:3px;border-radius:6px;padding:.15rem .5rem;font-size:.8rem;color:var(--txt)}
+.vsChip b{font-variant-numeric:tabular-nums}
+.vsChip.vs-ahead{border-left-color:var(--ok)}
+.vsChip.vs-behind{border-left-color:#e37}
+.vsChip.vs-similar{border-left-color:var(--edge);color:var(--mut)}
+.peekVs{margin:.2rem 0 .5rem}
+/* 🔬 Watch-training modal */
+.modalCard:has(#peekWrap){max-width:min(1100px,96vw)}
+.peekStages{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin:.2rem 0 .5rem}
+.pkStage{border:1px solid var(--edge);border-radius:999px;padding:.15rem .6rem;font-size:.78rem;color:var(--mut)}
+.pkStage.done{color:var(--ok);border-color:#1f5c3d}
+.pkStage.cur{color:#fff;border-color:#3987e5;background:rgba(57,135,229,.15)}
+.pkArrow{color:var(--mut);font-size:.8rem}
+.pkH{margin:1rem 0 .2rem;font-size:.92rem}
+.pkGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.6rem}
+.pkFig{margin:0;background:var(--card,#1a1f2b);border:1px solid var(--edge);border-radius:8px;overflow:hidden}
+.pkFig img{width:100%;display:block;background:#000;cursor:zoom-in}
+.pkFig figcaption{font-size:.72rem;color:var(--mut);padding:.25rem .45rem}
+/* batch carousel */
+.pkCar{display:flex;align-items:center;gap:.5rem;margin-top:.3rem}
+.pkCar a{flex:1;min-width:0}
+.pkCar img{width:100%;display:block;border:1px solid var(--edge);border-radius:8px;background:#000;cursor:zoom-in}
+.pkCar button{font-size:1.1rem;line-height:1;padding:.3rem .55rem}
+.pkCarCap{margin-top:.3rem;text-align:center}
+/* watch-it-learn filmstrip */
+.tlBlock{margin:.6rem 0 1rem}
+.tlHead{font-size:.85rem;color:var(--mut);margin-bottom:.25rem}
+.tlHead b{color:var(--txt)}
+.tlHead .ok{color:var(--ok)}.tlHead .short{color:var(--warn)}
+.tlSlider{width:100%;accent-color:#3987e5;margin:.15rem 0 .35rem}
+.tlImg{width:100%;display:block;border:1px solid var(--edge);border-radius:8px;background:#000}
+/* run-vs-run diff modal */
+.dfChips{display:flex;gap:.4rem;flex-wrap:wrap;margin:.2rem 0 .6rem}
+.dfChip{border:1px solid var(--edge);border-left-width:3px;border-radius:6px;padding:.12rem .5rem;font-size:.8rem;color:var(--mut)}
+.dfChip b{color:#fff}
+.dfChip.fixed{border-left-color:var(--ok)}
+.dfChip.broke{border-left-color:#e33}
+.dfChip.improved{border-left-color:#3987e5}
+.dfChip.worsened{border-left-color:var(--warn)}
+.dfChip.sameWrong{border-left-color:var(--edge)}
+.dfChip.hchg{border-left-color:#b07de0}
+.dfTable td a{color:var(--txt)}
+tr.df-fixed td{background:rgba(47,191,113,.08)}
+tr.df-broke td{background:rgba(238,51,51,.10)}
+tr.df-worsened td{background:rgba(224,168,62,.08)}
+.log{margin-top:.7rem;background:#0b0d11;border:1px solid var(--edge);border-radius:8px;padding:.7rem;max-height:260px;overflow:auto;font-size:.78rem;white-space:pre-wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:10px;overflow:hidden;cursor:pointer;position:relative;transition:transform .12s,box-shadow .12s}
+.card:hover{transform:translateY(-2px);box-shadow:0 4px 14px #0007}
+.card.bmatch:hover{box-shadow:0 0 0 2px #1769ff,0 4px 14px #0007}
+.card .del{position:absolute;top:6px;right:6px;z-index:2;background:#000a;border:0;border-radius:6px;padding:.2rem .35rem;cursor:pointer;font-size:.9rem;opacity:.55}
+.card:hover .del{opacity:1}
+.card img{width:100%;display:block;aspect-ratio:3/4;object-fit:cover;background:#000}
+

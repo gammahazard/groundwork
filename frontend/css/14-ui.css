@@ -1,0 +1,136 @@
+/* 09-ui.css — shared loading / failure / motion primitives.
+ *
+ * The vocabulary every panel uses, so "it is working", "it is slow" and "it
+ * broke" look the same everywhere. See cockpit/ui.js for the three-state
+ * rationale; the short version is that a 25s stall to the Trainer is normal on
+ * this network, so slow must not read as broken.
+ *
+ * Part 9 of 9. Order is load-bearing — see 01-base.css. */
+
+/* ---- motion, opt-out ---------------------------------------------------- */
+@keyframes uiRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.uiReveal{animation:uiRise .28s cubic-bezier(.2,.7,.3,1) both}
+@media (prefers-reduced-motion: reduce){
+  .uiReveal{animation:none}
+  .uiSkel{animation:none;background:#1a2130}
+}
+
+/* ---- skeletons ---------------------------------------------------------- */
+/* A moving sheen, not a pulse: pulsing reads as "error" to a lot of people,
+   and a left-to-right sweep reads as "in transit", which is what it is. */
+@keyframes uiSheen{to{background-position:200% 0}}
+.uiSkel{
+  background:linear-gradient(90deg,#161d2b 25%,#1e2637 37%,#161d2b 63%);
+  background-size:200% 100%;
+  animation:uiSheen 1.4s ease-in-out infinite;
+  border-radius:10px;border:1px solid var(--edge)}
+.uiSkelCard{height:190px;margin:0}
+.uiSkelRow{height:2.2rem;margin:.35rem 0}
+.uiSkelTile{height:88px}
+.uiSkelText{height:.85rem;margin:.45rem 0;border-radius:6px}
+.uiSkelText:nth-child(3n){width:72%}
+.uiSkelText:nth-child(3n+2){width:88%}
+/* One line of copy — the summary strips above the charts. */
+.uiSkelLine{height:1.05rem;width:60%;margin:.2rem 0;border-radius:6px}
+
+/* A CHART-SHAPED HOLE, sized by ASPECT RATIO rather than a fixed height.
+   .charts is a flex row (04-modals.css) and .chartCard is `flex:1 1 320px`, so
+   the same chart is ~200px tall when two share a row and ~500px when one
+   stretches the full width. Both happen on Models & Runs — #runsCharts holds
+   two or three, #dataCharts holds one. A px height would be right for exactly
+   one of those cases.
+   340/158 IS the charts' own viewBox (cockpit/charts.js), used unmodified, and
+   the first attempt at padding it out to cover the card's chrome was measurably
+   worse. The chrome — title, tap-readout strip, padding — is a FIXED ~30px at
+   any width, while the plot scales, so no single ratio can absorb it: allowing
+   for it (340/230) overshot a full-width chart by 184px and a half-width one by
+   134. The bare viewBox ratio lands within ~30px either way, which is the fixed
+   chrome itself and the best a width-independent rule can do.
+
+   It carries flex properties AND works as a plain block, because uiHold drops
+   these into containers it does not own: inside `.charts` (flex) they share the
+   row exactly as .chartCard does; inside #labRuns (block) the flex values are
+   simply ignored and the aspect-ratio still sizes it. */
+.uiSkelChart{flex:1 1 320px;min-width:280px;aspect-ratio:340/158;height:auto}
+/* A held container must never collapse to nothing mid-swap. */
+.uiSkelChart:only-child{min-height:180px}
+
+/* skeletons inherit whatever layout the real content will use, so replacing
+   them does not move anything */
+.uiLoading{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
+.uiLoading:has(.uiSkelRow),.uiLoading:has(.uiSkelText),
+.uiLoading:has(.uiSkelLine){display:block}
+.uiLoading:has(.uiSkelTile){grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+/* MATCH .charts EXACTLY — same display, gap and wrapping. Without this the
+   grid rule above wins over the flex layout the real charts use, and the
+   skeleton would reserve a differently-shaped space from the thing replacing
+   it, which is the bug rather than the fix. */
+.uiLoading:has(.uiSkelChart){display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem}
+
+/* ---- "this is slow" (NOT a failure) ------------------------------------- */
+.uiSlow{
+  grid-column:1/-1;color:var(--warn);font-size:.85rem;
+  display:flex;align-items:center;gap:.45rem}
+.uiSlow::before{
+  content:"";width:.7rem;height:.7rem;border-radius:50%;
+  border:2px solid var(--warn);border-top-color:transparent;
+  animation:uiSpin .8s linear infinite;flex:none}
+@keyframes uiSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.uiSlow::before{animation:none}}
+
+/* ---- failure ------------------------------------------------------------ */
+.uiFail{
+  grid-column:1/-1;display:flex;align-items:center;gap:.8rem;
+  background:#20180d;border:1px solid #5a4420;border-left:3px solid var(--warn);
+  border-radius:10px;padding:.8rem 1rem}
+.uiFailIcon{
+  flex:none;width:1.6rem;height:1.6rem;border-radius:50%;
+  background:var(--warn);color:#000;font-weight:800;
+  display:grid;place-items:center}
+.uiFailBody{flex:1;min-width:0}
+.uiFailWhy{color:var(--mut);font-size:.82rem;margin-top:.15rem;
+           overflow-wrap:anywhere}
+.uiRetry{flex:none;border-color:var(--warn);color:var(--warn);background:transparent}
+.uiRetry:hover{background:#2a2010}
+
+@media (max-width:560px){
+  .uiFail{flex-wrap:wrap}
+  .uiRetry{width:100%}
+}
+
+/* ---- reduced motion, applied GLOBALLY ---------------------------------- */
+/* The block at the top of this file only covered .uiReveal and .uiSkel, so every
+   button, card and panel kept its 0.06-0.28s transitions under a setting whose
+   entire point is "stop moving things". Audited at 1440px with
+   prefers-reduced-motion:reduce and found transitions still live on .navBurger
+   and every <button>.
+   Belt-and-braces values rather than `none`: a 0.01ms duration still FIRES
+   transitionend/animationend, so anything waiting on those events keeps working
+   instead of hanging — which `animation:none` would break. */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important}
+}
+
+/* ---- a number that has not arrived yet ---------------------------------- */
+/* For placeholders that live in STATIC markup and are written to by id — the
+   projdash tiles and its serving hero. A skeleton cannot be used there: it
+   would replace the very element loadState() writes into, so the id would be
+   gone by the time the data landed.
+   Transparent text over the same sheen, so the shimmer takes the number's own
+   width and the layout does not move when the digits appear. min-width stops a
+   one-character "–" from shimmering as a sliver. */
+.uiPending{
+  color:transparent !important;
+  background:linear-gradient(90deg,#161d2b 25%,#1e2637 37%,#161d2b 63%);
+  background-size:200% 100%;
+  animation:uiSheen 1.4s ease-in-out infinite;
+  border-radius:6px;
+  display:inline-block;min-width:2.5ch;
+}
+@media (prefers-reduced-motion: reduce){
+  .uiPending{animation:none;background:#1a2130}
+}

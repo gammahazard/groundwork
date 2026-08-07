@@ -1,0 +1,78 @@
+/* 07-dashboard.css — Dashboard status cards: the serving hero, the experimental-engine
+   dashed edge, the RTM detail gallery, the mirror-failure fix link.
+ *
+ * Part 7 of 8. cockpit.css was 408 lines; these are CONTIGUOUS slices of it,
+ * in cascade order, so the split is provably a no-op — concatenating them with
+ * comments stripped reproduces the original byte for byte. The boundaries are
+ * therefore HISTORICAL, not thematic: where a file's contents are mixed it says
+ * so rather than pretending. Regroup properly during the redesign, when the
+ * rules are being rewritten anyway and a visual check is possible.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order and later
+ * rules win at equal specificity. Do not reorder the <link> tags. */
+/* ---- Dashboard status cards: serving hero + activity/scoreboard grid ---- */
+.dashCard{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:1rem 1.2rem;box-shadow:0 1px 3px #0006}
+.dashCard h3{margin:0 0 .55rem;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.dashCard.hero{margin-bottom:1.2rem;background:linear-gradient(180deg,#19202f,#151b29)}
+body.lab .dashCard.hero{background:linear-gradient(180deg,#241c11,#1d150c)}
+/* An experimental engine is serving. The card also SAYS so — this dashed edge
+   is a second signal, never the only one, because two dark shades are exactly
+   what this owner cannot separate. */
+.dashCard.hero.experimental{border:2px dashed var(--gw-act)}
+.servedName{font-size:1.35rem;font-weight:700}
+.servedMeta{color:var(--mut);font-size:.86rem;margin-top:.3rem}
+.servedMeta b{color:var(--txt)}
+.dot{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:var(--ok);margin-right:.5rem;box-shadow:0 0 6px var(--ok)}
+.dashGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1.2rem}
+.actRow{padding:.4rem 0;border-bottom:1px solid var(--edge)}
+.actRow:last-child{border-bottom:0}
+.sbRow{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--edge)}
+.sbRow:last-child{border-bottom:0}
+.sbRow .lic{font-size:.68rem;border:1px solid var(--edge);border-radius:99px;padding:.05rem .5rem;color:var(--mut);margin-left:.45rem;vertical-align:middle}
+.sbMae{font-weight:700;font-variant-numeric:tabular-nums}
+
+/* RTM detail gallery: wrong images get an amber ring (label carries meaning) */
+.pkFig.missFig{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}
+/* gallery captions must read on the dark card: bright text, amber wash on
+   misses, explicit over/short colors (bare classes had no styling here) */
+.pkFig figcaption{color:var(--txt)}
+.pkFig.missFig figcaption{background:rgba(224,168,62,.16);font-weight:600}
+.pkFig .over{color:#ff8a9a}
+.pkFig .short{color:#ffc46b}
+.engineBtn{background:transparent;border:1px solid var(--edge);color:var(--txt);border-radius:8px;padding:.35rem .7rem;cursor:pointer;margin-right:.4rem}
+.engineBtn.active{background:var(--ok,#1f7a4d);border-color:var(--ok,#1f7a4d);color:#fff;cursor:default}
+.engineBtn .lic{font-size:.68rem;opacity:.75;margin-left:.4rem}
+/* mirror-failure fix link: the auth URL as a tap target, not a journal hunt */
+.authFix{display:inline-block;margin-left:.4rem;background:var(--warn,#e0a83e);color:#1a1206;
+  font-weight:700;font-size:.8rem;border-radius:8px;padding:.15rem .6rem;text-decoration:none}
+.authFix:hover{filter:brightness(1.1)}
+.syncErr{margin-top:.25rem;font-family:ui-monospace,monospace;font-size:.72rem;opacity:.8}
+
+
+/* ---- platform overview (cockpit/overview.js) ---------------------------- */
+/* There are TWO dashboards and they are two TABS, so each says which it is in
+   its own heading rather than relying on the nav. #dashProjectTitle used to
+   carry a top border, because it was a divider between the two halves of one
+   page; it is the first line of its own tab now, so the divider went with the
+   split. */
+.ovTitle{
+  margin:.2rem 0 .7rem;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mut);font-weight:700}
+/* Six tiles, so allow narrower ones than the four-tile project row. */
+.ovTiles{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.ovTiles .tile span{font-size:1.6rem}
+
+/* A summary you cannot act on is a dead end — these rows open the project. */
+.ovProject{cursor:pointer;border-radius:7px;margin:0 -.35rem;padding:.1rem .35rem}
+.ovProject:hover{background:#1b2536}
+.ovProject:focus-visible{outline:2px solid #3987e5;outline-offset:1px}
+
+/* "Still asking" is a THIRD state, distinct from both a live row and "all quiet"
+ * (2026-08-02). It has to be legible as provisional without relying on colour —
+ * the owner is colour-blind on blue/purple — so the word "checking" carries it
+ * and the pulse is only a reinforcement. */
+.actWaiting{ opacity: .72; }
+@media (prefers-reduced-motion: no-preference){
+  .actWaiting{ animation: actPulse 1.6s ease-in-out infinite; }
+  @keyframes actPulse{ 0%,100%{ opacity:.55 } 50%{ opacity:.9 } }
+}

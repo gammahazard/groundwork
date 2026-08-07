@@ -1,0 +1,160 @@
+/* The "What is Groundwork?" guide — the only page written for someone who has
+ * never seen this before.
+ *
+ * MOBILE FIRST, and that is not a slogan here: the owner labels images on a phone,
+ * so the phone layout is the real one and the desktop grid is the enhancement.
+ * Everything below is a single column until 780px.
+ *
+ * SHORT MEASURE ON PURPOSE. This page is prose, and prose at the full width of a
+ * 1500px cockpit is unreadable — 68ch is about 11 words a line, which is where
+ * the eye stops losing its place.
+ *
+ * No colour carries meaning anywhere in here. The owner is colour-blind on
+ * blue/purple, so every step is numbered, every callout is prefixed with a word
+ * ("Why this matters", "Careful"), and the tints are decoration only.
+ */
+
+#guide{ --gMeasure: 68ch; }
+
+.gWrap{ max-width: var(--gMeasure); margin: 0 auto; padding: 0 .2rem 3rem; }
+
+/* ---- hero ------------------------------------------------------------- */
+.gHero{ padding: 1.4rem 0 .4rem; }
+.gHero h2{ margin: 0 0 .5rem; font-size: 1.55rem; line-height: 1.2; }
+.gLede{ font-size: 1.05rem; line-height: 1.6; opacity: .9; margin: 0 0 .5rem; }
+.gHero .gSub{ opacity: .72; font-size: .92rem; line-height: 1.55; }
+
+/* ---- the numbered steps ------------------------------------------------ */
+.gStep{
+  position: relative;
+  padding: 1.15rem 0 .2rem 0;
+  border-top: 1px solid var(--line, #2a2f37);
+  margin-top: 1.5rem;
+}
+.gStep:first-of-type{ border-top: 0; }
+.gStep > h3{
+  margin: 0 0 .55rem;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  display: flex; align-items: baseline; gap: .55rem;
+}
+/* The number is a real element, not a ::before counter: a screen reader should
+   read "Step 3" rather than skipping a decorative pseudo-element. */
+.gNum{
+  flex: 0 0 auto;
+  font-size: .78rem; font-weight: 700;
+  padding: .12rem .5rem; border-radius: 999px;
+  background: var(--chip, #232a33); opacity: .95;
+  font-variant-numeric: tabular-nums;
+}
+.gStep p{ margin: 0 0 .7rem; line-height: 1.62; }
+.gStep ul{ margin: 0 0 .8rem; padding-left: 1.15rem; line-height: 1.6; }
+.gStep li{ margin-bottom: .35rem; }
+.gStep li::marker{ opacity: .55; }
+
+/* Where a thing lives in the UI. Inline so a sentence can point at it. */
+.gWhere{
+  display: inline-block;
+  font-size: .82rem; padding: .1rem .45rem; border-radius: 5px;
+  background: var(--chip, #232a33); white-space: nowrap;
+}
+.gKey{
+  font-size: .82rem; padding: .05rem .4rem; border-radius: 4px;
+  border: 1px solid var(--line, #2a2f37); white-space: nowrap;
+}
+
+/* ---- callouts ---------------------------------------------------------- */
+.gNote{
+  margin: .2rem 0 .9rem;
+  padding: .7rem .85rem;
+  border-left: 3px solid var(--line, #2a2f37);
+  background: rgba(127,127,127,.07);
+  border-radius: 0 6px 6px 0;
+  line-height: 1.58; font-size: .94rem;
+}
+/* ONLY THE LEADING <b> IS THE TITLE. As `.gNote b` this also hit every inline
+ * bold inside the prose, so "you still press <b>Save</b>" rendered as a
+ * block-level uppercase SAVE on its own line with the full stop stranded
+ * underneath. Caught on a screenshot, not by reading the CSS. */
+.gNote > b:first-child{
+          display: block; margin-bottom: .2rem; font-size: .84rem;
+          letter-spacing: .03em; text-transform: uppercase; opacity: .8; }
+.gNote.gWhy{ border-left-color: #3987e5; }
+.gNote.gCare{ border-left-color: #e0a83e; }
+
+/* ---- the loop diagram -------------------------------------------------- */
+.gLoop{
+  display: flex; flex-wrap: wrap; gap: .35rem;
+  margin: .9rem 0 1.6rem; padding: 0; list-style: none;
+}
+.gLoop li{
+  font-size: .84rem; padding: .3rem .6rem;
+  background: var(--chip, #232a33); border-radius: 6px;
+  white-space: nowrap; margin: 0;
+}
+.gLoop li::after{ content: " →"; opacity: .4; }
+.gLoop li:last-child::after{ content: ""; }
+
+/* ---- desktop ----------------------------------------------------------- */
+@media (min-width: 780px){
+  #guide{ --gMeasure: 72ch; }
+  .gHero h2{ font-size: 1.85rem; }
+  .gStep{ padding-left: 0; }
+  /* Two columns ONLY for the side-by-side pair (upload vs bot), which is a
+     genuine either/or. Everything else stays one column — prose in two columns
+     means scrolling up to read the second one. */
+  .gPair{ display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+}
+.gPair{ display: grid; gap: .8rem; margin-bottom: .8rem; }
+.gPair > div{
+  border: 1px solid var(--line, #2a2f37); border-radius: 8px;
+  padding: .8rem .9rem;
+}
+.gPair h4{ margin: 0 0 .4rem; font-size: .97rem; }
+.gPair p{ margin: 0; font-size: .93rem; line-height: 1.55; }
+
+/* ---- the stepper (2026-08-05) -------------------------------------------
+   One step on screen at a time. The rail says where you are and how much is
+   left; before this the guide was eight expanded steps, several phone-screens
+   of scroll with no landmark to aim at. */
+.gRail{display:flex;gap:.3rem;overflow-x:auto;scrollbar-width:none;
+       padding-bottom:.5rem;margin-bottom:var(--gw-s4);
+       border-bottom:1px solid var(--gw-rule)}
+.gRail::-webkit-scrollbar{display:none}
+.gRail button{
+  flex:none;display:flex;align-items:center;gap:.45rem;background:transparent;
+  border:0;border-bottom:2px solid transparent;border-radius:0;
+  color:var(--gw-ink-3);padding:.45rem .6rem;min-height:44px;cursor:pointer;
+  font:400 var(--gw-t-sm)/1 var(--gw-sans);white-space:nowrap}
+.gRail button .n{font:600 .7rem/1 var(--gw-mono);
+  border:1px solid var(--gw-rule-2);border-radius:99px;padding:.2rem .45rem}
+.gRail button:hover{color:var(--gw-ink-2)}
+/* Number AND underline AND weight — the current step survives greyscale. */
+.gRail button.on{color:var(--gw-ink);font-weight:600;
+  border-bottom-color:var(--gw-act)}
+.gRail button.on .n{border-color:var(--gw-act);color:var(--gw-act)}
+@media (max-width:720px){ .gRail button .t{display:none} }
+
+.gStepNum{font:600 .62rem/1 var(--gw-cond);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gw-ink-3);margin:0 0 .4rem}
+.gStep>h3{font:600 1.35rem/1.25 var(--gw-cond);margin:0 0 .5rem}
+.gStep .gLede{font-size:1.02rem;color:var(--gw-ink-2);margin:0 0 var(--gw-s3)}
+
+/* Real footage, not diagrams: the same image before and after marking, the
+   actual collages a run trained on, a run's own curves. */
+.gFig{margin:0 0 var(--gw-s4);max-width:34rem}
+.gFig img{width:100%;height:auto;display:block;border-radius:var(--gw-r);
+  border:1px solid var(--gw-rule);background:var(--gw-sunk)}
+.gFig figcaption{font:400 var(--gw-t-xs)/1.5 var(--gw-sans);
+  color:var(--gw-ink-3);margin-top:.45rem}
+
+.gNav{display:flex;gap:.6rem;margin-top:var(--gw-s5);
+      padding-top:var(--gw-s3);border-top:1px solid var(--gw-rule)}
+.gNavBtn{flex:1;min-height:48px;text-align:left;background:transparent;
+  border:1px solid var(--gw-rule-2);border-radius:var(--gw-r);
+  color:var(--gw-ink-2);padding:.6rem .9rem;cursor:pointer;
+  font:400 var(--gw-t-sm)/1.3 var(--gw-sans);
+  overflow:hidden;text-overflow:ellipsis}
+.gNavBtn:hover{border-color:var(--gw-act);color:var(--gw-ink)}
+.gNavNext{text-align:right}
+@media (max-width:520px){ .gNavBtn{font-size:var(--gw-t-xs)} }

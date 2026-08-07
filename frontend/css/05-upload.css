@@ -1,0 +1,35 @@
+/* 05-upload.css — the Add-images bar and its report
+ *
+ * Split out of 03-grids.css (2026-08-05), which was carrying grids, uploads and the label audit.
+ *
+ * A CONTIGUOUS CUT, so the cascade is untouched: concatenating these files in
+ * their numbered order reproduces the original byte for byte, exactly as the
+ * first split did. Rules were not reordered — that is the one thing a thematic
+ * regroup cannot promise, and at equal specificity order decides the winner.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order. Do not
+ * reorder the <link> tags. */
+
+/* ---- upload into the fix queue (cockpit/upload.js) ---------------------- */
+.upBar{display:flex;align-items:center;gap:.7rem;margin:.2rem 0 .8rem;flex-wrap:wrap}
+/* A <label for> styled as a button: the real <input type=file> is unstyleable
+   across browsers, and this keeps the click target and the a11y association. */
+.upBtn{
+  display:inline-grid;place-items:center;background:var(--panel);color:var(--txt);
+  border:1px solid var(--edge);border-radius:8px;padding:.45rem .9rem;cursor:pointer;
+  min-height:38px;font-size:.9rem}
+.upBtn:hover{border-color:#3a4152}
+#upFiles:focus-visible+.upBtn,.upBtn:focus-visible{outline:2px solid #3987e5;outline-offset:2px}
+.upReport{
+  background:#20180d;border:1px solid #5a4420;border-left:3px solid var(--warn);
+  border-radius:8px;padding:.6rem .8rem;margin:0 0 .9rem;font-size:.85rem}
+.upSkip{color:var(--mut);margin-top:.2rem;overflow-wrap:anywhere}
+
+/* Drop target. A dashed inset rather than a colour change, so it reads as
+   "release here" and not merely "this is selected". */
+#fix.upDrag{
+  outline:2px dashed #3987e5;outline-offset:-6px;border-radius:12px;
+  background:rgba(57,135,229,.06)}
+
+@media (pointer: coarse){ .upBtn{min-height:44px;padding:.6rem 1rem} }
+

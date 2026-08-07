@@ -1,0 +1,92 @@
+/* 11-projects.css — the projects landing: cards, thumbnails, the class and tag editors
+ *
+ * Split out of 08-projects.css (2026-08-05), which was carrying the landing page, the Telegram bot cards and the new-project form.
+ *
+ * A CONTIGUOUS CUT, so the cascade is untouched: concatenating these files in
+ * their numbered order reproduces the original byte for byte, exactly as the
+ * first split did. Rules were not reordered — that is the one thing a thematic
+ * regroup cannot promise, and at equal specificity order decides the winner.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order. Do not
+ * reorder the <link> tags. */
+
+/* ---- Projects landing: one card per project ------------------------------
+   The shell the pivot exists to produce. Responsive by grid auto-fill rather
+   than breakpoints, so it reads the same on a phone over the network as on the
+   desktop — the cockpit is used from both. */
+.pjGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}
+.pjCard{background:linear-gradient(180deg,#19202f,#151b29);border:1px solid var(--edge);
+        border-radius:14px;padding:1.1rem 1.2rem;box-shadow:0 1px 3px #0006;
+        transition:border-color .15s,transform .08s,box-shadow .15s}
+.pjCard:hover{border-color:#3a4152;transform:translateY(-2px);box-shadow:0 6px 18px #0007}
+.pjHead{display:flex;justify-content:space-between;align-items:flex-start;gap:.8rem}
+.pjCard h3{margin:0;font-size:1.05rem}
+.pjSlug{color:var(--mut);font-size:.8rem;margin-top:.15rem}
+.pjSub{color:var(--mut);font-size:.8rem;margin-top:.25rem}
+.pjMuted{color:var(--mut)}
+.pjErr{color:#ff7a70;font-size:.85rem}
+.pjOpen{background:var(--panel);border:1px solid #3a4152;white-space:nowrap}
+.pjChips{display:flex;flex-wrap:wrap;gap:.3rem;margin:.7rem 0 .2rem}
+.chip{display:inline-block;background:#1b2334;border:1px solid var(--edge);border-radius:999px;
+      padding:.1rem .55rem;font-size:.78rem;color:var(--txt)}
+.chipExt{background:#16212b;border-color:#2a4152;color:#8fc6e8}
+/* counts read as a row of small stats, same shape as the dashboard tiles so the
+   two pages feel like one product */
+.pjCounts{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:.5rem;
+          margin:.8rem 0;padding:.6rem 0;border-top:1px solid var(--edge);
+          border-bottom:1px solid var(--edge)}
+.pjCounts b{display:block;font-size:1.15rem;line-height:1.1}
+.pjCounts label{color:var(--mut);font-size:.7rem}
+.pjMetric{font-size:1.05rem}
+.pjMetric b{font-size:1.4rem}
+/* A tie count next to the headline metric, because the holdout is saturated and
+   "best run" without it implies a winner that does not exist. */
+.pjTie{display:inline-block;border:1px solid var(--warn);color:var(--warn);border-radius:999px;
+       padding:0 .45rem;font-size:.7rem;vertical-align:middle;margin-left:.3rem}
+.pjCard.pjNew:hover,.pjCard.pjBroken:hover{transform:none;border-color:var(--edge);box-shadow:0 1px 3px #0006}
+.pjNew{cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;
+       text-align:center;border-style:dashed;color:var(--mut);min-height:190px}
+.pjPlus{font-size:2rem;line-height:1;color:var(--mut)}
+.pjSoon{margin-top:.5rem;font-size:.72rem;border:1px solid var(--edge);border-radius:999px;
+        padding:.1rem .55rem}
+.pjBroken{border-color:#5a2a26}
+/* Which project you are inside, pinned in the header next to the nav. */
+#projectBar{display:flex;align-items:center;gap:.6rem;margin:.5rem 0 .2rem;flex-wrap:wrap}
+.pjOpenName{font-weight:700}
+.pjBackBtn{font-size:.8rem;padding:.25rem .6rem}
+@media (max-width:560px){
+  .pjGrid{grid-template-columns:1fr}
+  .pjHead{flex-direction:column}
+  .pjOpen{align-self:stretch}
+}
+
+/* ---- card thumbnail ----------------------------------------------------- */
+/* Bleeds to the card's edges by cancelling its padding, so the picture reads as
+   part of the card rather than a framed inset. The radius is the card's 14px
+   less its 1px border, or a hairline of card background shows outside the
+   image corners. */
+/* A plain block, NOT a centring grid. `place-items:center` stops the grid item
+   stretching, so the img's height:100% had nothing to resolve against and the
+   picture rendered at 451x602 inside a box meant to be 132px tall — the card
+   became mostly photograph. Centring belongs on the empty variant only, which
+   is the one with content to centre. */
+.pjThumb{
+  margin:-1.1rem -1.2rem .9rem;height:132px;overflow:hidden;
+  border-radius:13px 13px 0 0;background:#0f1420}
+/* object-fit:cover crops rather than distorts — images are photographed in both
+   orientations and a squashed one is unreadable. */
+.pjThumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* An empty project is a NORMAL state — it is what every project looks like on
+   day one. So it gets a deliberate empty look, not something that reads as a
+   thumbnail that failed to load. */
+.pjThumbEmpty{
+  display:grid;place-items:center;align-content:center;gap:.3rem;color:var(--mut);
+  background:repeating-linear-gradient(45deg,#0f1420,#0f1420 8px,#121828 8px,#121828 16px)}
+.pjThumbIcon{font-size:1.7rem;opacity:.45;line-height:1}
+.pjThumbNone{font-size:.75rem}
+
+@media (max-width:560px){
+  .pjThumb{height:112px}
+}
+

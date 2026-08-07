@@ -1,0 +1,55 @@
+/* 10-project.css — how the cockpit looks INSIDE a project.
+ *
+ * Same family, clearly a different room. The precedent is body.lab in
+ * 06-machine.css: a body class, and CSS branches off it. Here it is
+ * body.inProject, set by cockpit/projects.js.
+ *
+ * Shape AND tint, not tint alone — the header grows a solid left rail, the
+ * active tab gets an underline as well as a fill. Partly that is just clearer
+ * at a glance on a phone; it also keeps the signal working for the owner, whose
+ * colour deficiency is specifically blue-vs-purple (mild — normal use of blue,
+ * amber, green and red is fine; what to avoid is blue against purple as the
+ * only difference between two states).
+ *
+ * Part 10 of 10. Order is load-bearing — see 01-base.css. */
+
+body.inProject{--panel:#161d2b;--edge:#2f3b52}
+
+/* The rail is the primary signal: a solid 3px edge down the whole header. */
+body.inProject>header{
+  border-left:3px solid #3987e5;
+  background:linear-gradient(180deg,#111a28ee,#0d1320ee)}
+
+/* Active tab: underline (shape) as well as fill (colour), so the state survives
+   greyscale and reads at a glance on a small screen. */
+body.inProject nav button.active{
+  position:relative;background:#1b2536;border-color:#3a4a63}
+body.inProject nav button.active::after{
+  content:"";position:absolute;left:.55rem;right:.55rem;bottom:-1px;height:2px;
+  background:#3987e5;border-radius:2px}
+
+/* ---- the project bar: name, stats, and the way out --------------------- */
+#projectBar{
+  display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;
+  margin:.1rem 0 .7rem;padding:.5rem .7rem;
+  background:#131b28;border:1px solid var(--edge);border-radius:10px}
+.pjOpenName{font-weight:700;font-size:1rem}
+.pjOpenName::before{content:"▸ ";color:#3987e5}
+#projectBar .pjSub{margin:0;flex:1;min-width:8ch}
+
+/* Back is a real target, not a link. 44px is Apple's minimum and this is used
+   from a phone more than a desktop. */
+.pjBackBtn{
+  min-height:44px;padding:.4rem .9rem;white-space:nowrap;
+  border-color:#3a4a63;background:#18202f}
+.pjBackBtn:hover{border-color:#3987e5}
+
+@media (max-width:560px){
+  /* On a phone the bar stacks and Back spans the width — it is the control you
+     reach for most, and a 44px target crammed beside two text runs is not one. */
+  #projectBar{gap:.35rem}
+  .pjOpenName{width:100%}
+  #projectBar .pjSub{width:100%;flex:none}
+  .pjBackBtn{width:100%}
+  body.inProject>header{border-left-width:4px}
+}

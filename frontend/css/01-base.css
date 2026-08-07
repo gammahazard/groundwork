@@ -1,0 +1,98 @@
+/* 01-base.css — Design tokens and the base look everything else assumes.
+   LOADED FIRST — :root lives here, so every other file depends on it.
+ *
+ * Part 1 of 8. cockpit.css was 408 lines; these are CONTIGUOUS slices of it,
+ * in cascade order, so the split is provably a no-op — concatenating them with
+ * comments stripped reproduces the original byte for byte. The boundaries are
+ * therefore HISTORICAL, not thematic: where a file's contents are mixed it says
+ * so rather than pretending. Regroup properly during the redesign, when the
+ * rules are being rewritten anyway and a visual check is possible.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order and later
+ * rules win at equal specificity. Do not reorder the <link> tags. */
+/* ==========================================================================
+   COMPATIBILITY: the old names, pointed at the new system.
+   TEMPORARY. Every rule in 01-12 reads these, so re-pointing them here re-skins
+   the whole cockpit without editing a single one of those files — and lets the
+   port proceed page by page instead of as one unreviewable change. Delete each
+   line as its last consumer is rewritten.
+   ========================================================================== */
+:root{
+  --bg:var(--gw-void);
+  --panel:var(--gw-base);
+  --edge:var(--gw-rule);
+  --txt:var(--gw-ink);
+  --mut:var(--gw-ink-2);
+  --ok:var(--gw-good);
+  --warn:var(--gw-warn);
+  /* --acc WAS #e33 and meant both "primary" and "destructive". It now means
+     PRIMARY only; everything destructive names --gw-bad explicitly. */
+  --acc:var(--gw-act);
+  --card:var(--gw-base);
+}
+
+/* The one rule that has to come with the --acc remap: those buttons hardcode
+   `color:#fff`, which is unreadable on amber. Scoped to exactly the selector
+   list 01-base.css uses, so nothing else is caught. */
+button#retrainBtn,form button,#edSave,#edDone,#genBtn{color:var(--gw-act-ink)}
+
+*{box-sizing:border-box}
+[hidden]{display:none !important}   /* the hidden attr must win over .editor's display:flex */
+body{margin:0;font-family:var(--gw-sans);background:var(--bg);color:var(--txt);
+     -webkit-font-smoothing:antialiased}
+/* Base look for EVERY button/input so nothing falls back to browser-default
+   grey. Declared early: all specific button styles later in the file win. The
+   hover uses brightness (not a background swap) so it works on any color. */
+button{font:inherit;background:var(--panel);color:var(--txt);border:1px solid var(--edge);border-radius:8px;padding:.45rem .8rem;cursor:pointer;transition:filter .15s,transform .06s,border-color .15s}
+button:hover:not(:disabled){filter:brightness(1.2)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #3987e5;outline-offset:1px}
+input,select{font:inherit}
+input[type=text],input[type=number]{background:var(--card,#1a1f2b);color:var(--txt);border:1px solid var(--edge);border-radius:8px;padding:.35rem .5rem}
+/* `body>header`, not `header`: this styled EVERY <header> element, so the
+   <header> inside each project card and each bot card inherited the page
+   chrome — sticky positioning, a border-bottom and the blurred backdrop.
+   There is exactly one page header and it is a direct child of body. */
+body>header{padding:1rem 1.5rem;border-bottom:1px solid var(--edge);position:sticky;top:0;background:#0d1320ee;backdrop-filter:blur(6px);z-index:5}
+h1{margin:0 0 .6rem;font:600 1.15rem/1.2 var(--gw-cond);letter-spacing:.02em}
+nav{display:flex;gap:.4rem;flex-wrap:wrap}
+nav button{background:transparent;color:var(--mut);border:1px solid var(--edge);padding:.4rem .8rem;border-radius:8px;cursor:pointer;font-size:.9rem}
+nav button.active{background:var(--panel);color:#fff;border-color:#3a4152}
+.badge{background:var(--warn);color:#000;border-radius:10px;padding:0 .4rem;font-size:.72rem;font-weight:700;margin-left:.2rem}
+.badge:empty{display:none}
+main{padding:1.2rem 1.5rem;max-width:1200px;margin:0 auto}
+.tab{display:none}.tab.active{display:block}
+.hint{color:var(--mut);font-size:.9rem;margin:.2rem 0 1rem}
+.provenance{font-size:.9rem;margin:.4rem 0 .3rem;padding:.45rem .7rem;border:1px solid var(--edge);border-left:3px solid #4a8;border-radius:8px;background:#161a21}
+.gridHead{grid-column:1/-1;color:var(--mut);font-size:.95rem;font-weight:700;margin:1rem 0 .2rem;padding-top:.6rem;border-top:1px solid var(--edge)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.2rem}
+.tile{background:linear-gradient(180deg,#19202f,#151b29);border-radius:12px;padding:1rem 1.2rem;border:1px solid var(--edge);box-shadow:0 1px 3px #0006}
+.tile span{font-size:2rem;font-weight:700;display:block}
+.tile label{color:var(--mut);font-size:.8rem}
+.tile.warn span{color:var(--warn)}
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:1.1rem}
+.row{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+button#retrainBtn,form button,#edSave,#edDone,#genBtn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:.55rem 1rem;font-weight:600;cursor:pointer}
+#retrainCancel,#laCancel{color:#ff7a70;border-color:#5a2a26}
+button:disabled{opacity:.5;cursor:default}
+.status{margin-top:.7rem;color:var(--mut);font-size:.9rem}
+
+/* ---- phones: stop the ACCIDENTAL zoom, keep the deliberate one ---------- */
+/* Reported as "I can scroll side to side slightly on all the images". Measured
+   in WebKit at 375/390/430: nothing on those tabs is wider than the viewport
+   and nothing scrolls — so the pan is not a layout overflow, it is the page
+   being ZOOMED. On a grid of tappable image cards, a quick second tap is
+   double-tap-to-zoom, and once zoomed you can pan a little in every direction.
+
+   `touch-action:manipulation` removes double-tap zoom (and the 300ms click
+   delay that comes with it) on the things you tap, while leaving PINCH zoom
+   completely alone — deliberately, because this app's whole job is looking
+   closely at photographs and taking that away would be worse than the bug. */
+button, .card, .pjCard, .botCard, nav button, .upDrop, summary, label.upBtn,
+.trainCard, .sbRow, .ovProject { touch-action: manipulation; }
+
+/* The notch and the home indicator. viewport-fit=cover (index.html) lets the
+   page use the full screen, which also means content can sit UNDER them —
+   including in landscape, where the left/right insets are the notch side. */
+body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+header { padding-top: env(safe-area-inset-top); }

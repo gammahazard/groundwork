@@ -1,0 +1,192 @@
+/* 04-modals.css — Modals — run detail, eval gallery, the LocateAnything probe — and the
+   Synthesize tab.
+ *
+ * Part 4 of 8. cockpit.css was 408 lines; these are CONTIGUOUS slices of it,
+ * in cascade order, so the split is provably a no-op — concatenating them with
+ * comments stripped reproduces the original byte for byte. The boundaries are
+ * therefore HISTORICAL, not thematic: where a file's contents are mixed it says
+ * so rather than pretending. Regroup properly during the redesign, when the
+ * rules are being rewritten anyway and a visual check is possible.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order and later
+ * rules win at equal specificity. Do not reorder the <link> tags. */
+/* Run detail modal (curve / log) */
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:30;padding:1rem}
+.modalCard{position:relative;background:var(--panel,#1a1f2b);border:1px solid var(--edge);border-radius:12px;max-width:min(720px,96vw);max-height:88vh;overflow:auto;padding:1.1rem 1.2rem}
+.modalCard .log{max-height:64vh}
+.modalClose{position:absolute;top:.45rem;right:.55rem;background:transparent;border:0;color:var(--muted,#8b93a5);font-size:1.15rem;cursor:pointer;line-height:1}
+.modalClose:hover{color:var(--txt)}
+.modalTitle{margin:.1rem 2rem .7rem 0;font-size:1rem}
+/* Eval gallery: predicted dots per holdout image, worst-first. Widen the modal. */
+.modalCard:has(.galGrid){max-width:min(1100px,96vw)}
+.galGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.7rem;margin-top:.4rem}
+.galCell{margin:0;background:var(--card,#1a1f2b);border:1px solid var(--edge);border-radius:8px;overflow:hidden}
+.galCell img{width:100%;display:block;background:#000;cursor:zoom-in}
+.galCell figcaption{padding:.35rem .5rem;font-size:.8rem;color:var(--mut);line-height:1.35}
+.galCell figcaption b{color:#fff}
+.galCell .delta{float:none;margin-right:.2rem}
+.dupeFlag{color:#e63cd2;font-weight:600}
+.dupeSummary{font-size:.85rem;margin:.2rem 0 .6rem;padding:.4rem .6rem;border:1px solid var(--edge);border-radius:8px;background:rgba(230,60,210,.08);color:var(--txt)}
+.dupeSummary.ok{background:rgba(47,191,113,.08);color:var(--mut)}
+
+/* LocateAnything probe (emergency second opinion) — magenta ✛ matches the
+   crosshairs drawn on the canvas; dots stay blue. */
+.laMark{color:#e63cd2;font-weight:600}
+.card .laShort{position:absolute;top:6px;right:2.4rem;z-index:2;background:#000a;border:0;border-radius:6px;padding:.2rem .35rem;cursor:pointer;font-size:.9rem;color:#e63cd2;opacity:.55}
+.card:hover .laShort{opacity:1}
+.laCard{max-width:min(560px,96vw)}
+.laCard input#laDesc{background:var(--card,#1a1f2b);color:var(--txt);border:1px solid var(--edge);border-radius:8px;padding:.4rem .5rem}
+.laChips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.6rem 0 .2rem}
+.laChips .chip{background:transparent;border:1px solid var(--edge);color:var(--mut);border-radius:999px;padding:.2rem .65rem;cursor:pointer;font-size:.82rem}
+.laChips .chip:hover{color:var(--txt);border-color:#e63cd2}
+.editorBar #edLAAdopt{background:#e63cd2;border:0;color:#fff;font-weight:600}
+#laRun{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:.45rem .9rem;font-weight:600;cursor:pointer}
+
+/* Synthesize tab */
+#synth .ctrls label{margin-left:.8rem;font-size:.85rem;color:var(--muted,#8b93a5)}
+#synth .ctrls input[type=number]{width:3.4rem;background:var(--card,#1a1f2b);color:var(--txt);border:1px solid var(--edge);border-radius:6px;padding:.2rem .3rem}
+.pillGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:.5rem;margin-top:.6rem}
+.pillCell{position:relative;aspect-ratio:1;border:1px solid var(--edge);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background-color:#2a2e38;
+  background-image:linear-gradient(45deg,#3a3f4b 25%,transparent 25%),linear-gradient(-45deg,#3a3f4b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#3a3f4b 75%),linear-gradient(-45deg,transparent 75%,#3a3f4b 75%);
+  background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+.pillCell img{max-width:88%;max-height:88%;object-fit:contain}
+.pillCell .del{position:absolute;top:3px;right:3px;background:#000a;border:0;border-radius:6px;padding:.1rem .3rem;cursor:pointer;font-size:.78rem;opacity:.55}
+.pillCell:hover .del{opacity:1}
+.pillCell .bgTag{position:absolute;top:3px;left:3px;z-index:2;background:#c47f17;color:#fff;border-radius:4px;padding:0 .3rem;font-size:.62rem;font-weight:700;letter-spacing:.03em}
+.pillCell{cursor:pointer}
+.pillCell.sel{border-color:#1769ff;box-shadow:0 0 0 2px #1769ff inset}
+.cropCard{max-width:min(940px,96vw)}
+#cropWrap{margin-top:.6rem;max-height:70vh;overflow:auto}
+#cropCanvas{cursor:crosshair;display:block;max-width:100%;border:1px solid var(--edge);border-radius:6px}
+#cropPreview{height:42px;vertical-align:middle;border:1px solid var(--edge);border-radius:4px;background-color:#2a2e38;
+  background-image:linear-gradient(45deg,#3a3f4b 25%,transparent 25%),linear-gradient(-45deg,#3a3f4b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#3a3f4b 75%),linear-gradient(-45deg,transparent 75%,#3a3f4b 75%);
+  background-size:12px 12px;background-position:0 0,0 6px,6px -6px,-6px 0}
+#cropPreview:not([src]){display:none}
+#cropModal .ctrls label{display:inline-flex;align-items:center;gap:.25rem}
+table.runs input.note{background:var(--card,#1a1f2b);color:var(--txt);border:1px solid var(--edge);border-radius:6px;padding:.25rem .4rem;min-width:9rem}
+table.runs .acts button{background:transparent;border:1px solid var(--edge);color:var(--txt);border-radius:6px;padding:.2rem .5rem;cursor:pointer;margin-right:.2rem}
+.charts{display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem}
+.chartCard{background:var(--card,#1a1f2b);border:1px solid var(--edge);border-radius:10px;padding:.6rem .7rem;flex:1 1 320px;min-width:280px}
+.chartTitle{font-size:.82rem;color:var(--muted,#8b93a5);margin-bottom:.2rem;display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
+.chartLegend{font-size:.72rem;color:var(--muted,#8b93a5);text-align:right}
+.chartLegend span{white-space:nowrap}
+.chartEmpty{color:var(--muted,#8b93a5);font-size:.85rem;padding:2.5rem 0;text-align:center}
+
+/* TAP-TO-INSPECT. The <title> tooltip is desktop-only — it never fires on touch,
+   and the owner uses this cockpit mostly from a phone — so each point also has an
+   invisible 13px-radius hit circle feeding this readout line. */
+/* ONE surface, nearest-point selection. Per-point targets could not be made big
+   enough to hit reliably without overlapping each other — twenty attempts across
+   a 340-unit axis sit ~15 units apart — so every position on the plot resolves
+   to its closest run instead. pan-y keeps the page scrollable under the finger;
+   horizontal movement scrubs along the chart. */
+.chartSurface{cursor:crosshair;outline:none;touch-action:pan-y}
+.chartSurface:focus-visible{outline:2px solid var(--acc,#c77b1e);outline-offset:-2px}
+/* The halo on the point you are about to read. It exists because on a phone your
+   finger covers the marker — you need to see which one answered. */
+.chartCursor{pointer-events:none;transition:cx .06s linear,cy .06s linear,opacity .1s}
+.chartHit{cursor:pointer;outline:none}
+/* The perfect-score key. Not colour-coded — the ring is drawn in each series'
+   own colour, so this glyph is deliberately neutral and says what it means. */
+.legendPerfect{color:var(--ok,#2fbf71);white-space:nowrap}
+.chartHit:focus-visible{outline:2px solid var(--acc,#c77b1e);outline-offset:1px}
+.chartReadout{margin-top:.35rem;padding:.3rem .45rem;border-radius:6px;
+  font-size:.72rem;line-height:1.35;color:var(--muted,#8b93a5);
+  background:rgba(127,127,127,.10);border:1px solid transparent;
+  /* Two lines' worth, reserved. Without a min-height the card jumps when the
+     first tap lands and every chart below it shifts under the finger. */
+  min-height:2.3em;word-break:break-word}
+.chartReadoutOn{color:var(--txt,#e6e9ef);border-color:var(--edge)}
+
+@media (max-width:760px), (pointer:coarse){
+  /* Taller on a phone: the viewBox is 340x158, so at 430px wide the plot is only
+     ~145px tall and eight series inside it are unreadable. Letting the SVG grow
+     vertically costs nothing — it scales, and the y-axis is what needs the room. */
+  .chart{min-height:190px}
+  .chartCard{min-width:0;padding:.5rem .55rem}
+  .chartTitle{font-size:.76rem}
+  .chartLegend{font-size:.68rem;text-align:left}
+  .chartReadout{font-size:.74rem;min-height:2.6em}
+}
+svg.chart{width:100%;height:auto;display:block}
+svg.chart .grid{stroke:#2c2c2a;stroke-width:1}
+svg.chart .ytick,svg.chart .xtick{fill:#898781;font-size:9px;font-variant-numeric:tabular-nums}
+svg.chart .ytick{text-anchor:end}
+svg.chart .vlabel{font-size:10px;font-weight:600}
+/* NOT cursor:pointer. These markers carry a <title> tooltip and nothing else —
+   there is no click handler anywhere — so a hand cursor promised an interaction
+   that does not exist. The grow-on-hover stays: it is honest feedback that the
+   marker is the thing under the pointer, without claiming it does something. */
+svg.chart .dot{cursor:default;transition:r .1s}
+svg.chart .dot:hover{r:6}
+.editorBar #edSave{background:var(--acc);border:0}.editorBar #edDone{background:var(--ok);border:0;color:#04240f}
+.editorBar #edPrev,.editorBar #edNext{font-size:1.2rem;line-height:1;padding:.2rem .6rem}
+#edPos{color:var(--mut);font-size:.85rem;min-width:3.5rem;text-align:center}
+.editorHelp{color:var(--mut);font-size:.8rem;padding:.3rem 1rem;background:var(--panel)}
+/* position:relative so the loading overlay (08-editor.css) can cover exactly
+   the canvas area rather than the whole viewport. */
+#edCanvasWrap{flex:1;overflow:auto;background:#05070a;display:block;
+              -webkit-overflow-scrolling:touch;position:relative}
+
+/* On touch, the cutout delete is 22x18 and sits on a small square tile — the
+   same finger-hostile size the image cards had. It also relies on :hover to
+   become fully opaque, and a touch device never hovers, so it was permanently
+   dimmed AND tiny. Full opacity and a real target on coarse pointers. */
+@media (pointer: coarse){
+  .pillCell .del{
+    min-width:34px;min-height:34px;padding:.25rem;font-size:.95rem;opacity:1;
+    display:grid;place-items:center;background:#000b}
+}
+
+@media (pointer: coarse){
+  /* The synth count/size inputs were 24px. Number fields are fiddly enough
+     without also being half-height. */
+  .ctrls input[type=number],.panel input[type=number]{min-height:36px}
+}
+
+/* ---- Add images: one modal, opened from three tabs ---------------------- */
+/* Header/body/footer so the primary action sits in a fixed place however long
+   the per-file report gets — a modal whose button moves as content grows is one
+   you have to hunt in. */
+.upCard{width:min(560px,96vw)}
+.modalHead{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.7rem}
+.modalHead h3{margin:0;font-size:1.05rem}
+.modalX{background:transparent;border:0;color:var(--mut);font-size:1.4rem;line-height:1;padding:.1rem .4rem;cursor:pointer}
+.modalX:hover{color:var(--txt)}
+.modalFoot{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem}
+
+/* The drop target IS the picker — one affordance, both gestures. Dashed, which
+   is the same "nothing here yet" language as .pjNew and the empty dashboard. */
+.upDrop{display:flex;flex-direction:column;align-items:center;gap:.3rem;
+  border:2px dashed var(--edge);border-radius:12px;padding:1.5rem 1rem;
+  text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.upDrop:hover,.upDrop.over{border-color:var(--acc);background:rgba(238,51,51,.05)}
+.upDropIcon{font-size:1.6rem;color:var(--mut)}
+.upDropMain{font-weight:600}
+.upDropSub{color:var(--mut);font-size:.82rem;word-break:break-word}
+
+/* The pre-label option. Laid out so the model NAME sits under the label rather
+   than beside it — it is a sentence, not a word, and wrapping it around a
+   checkbox reads as noise. */
+.upCheck{display:flex;gap:.6rem;align-items:flex-start;margin:.9rem 0 .5rem;
+  padding:.6rem .7rem;border:1px solid var(--edge);border-radius:9px}
+.upCheck input{margin-top:.2rem;flex:0 0 auto}
+.upCheck .pjSub{display:block;margin-top:.15rem}
+.upCheck input:disabled + span{opacity:.6}
+.upWhere{margin:.2rem 0 0}
+
+.upSkips{margin:.5rem 0 0;padding-left:1.1rem;font-size:.85rem;color:var(--mut)}
+.upActs{margin-top:.7rem}
+
+/* Phones: the modal is the whole screen, and the footer buttons go full-width
+   so they are thumb-sized rather than two small targets in a corner. */
+@media (max-width:560px){
+  .modal{padding:0;align-items:stretch}
+  .upCard{width:100vw;max-width:100vw;max-height:100vh;border-radius:0;border:0}
+  .modalFoot{flex-direction:column-reverse}
+  .modalFoot button{width:100%}
+}
+
+/* Whose runs a group of charts is about. Sits above the group, not inside a
+   card, because it scopes all of them. */
+.chartScope{margin:.1rem 0 .5rem;font-size:.76rem;color:var(--muted,#8b93a5)}

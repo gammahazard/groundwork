@@ -1,0 +1,155 @@
+/* 04-grids.css — image cards, the bucket chips, the editor shell, the models list and the run table
+ *
+ * Split out of 03-grids.css (2026-08-05), which was carrying grids, uploads and the label audit.
+ *
+ * A CONTIGUOUS CUT, so the cascade is untouched: concatenating these files in
+ * their numbered order reproduces the original byte for byte, exactly as the
+ * first split did. Rules were not reordered — that is the one thing a thematic
+ * regroup cannot promise, and at equal specificity order decides the winner.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order. Do not
+ * reorder the <link> tags. */
+
+/* synthetic previews: show the WHOLE image (letterboxed) so edge objects aren't cropped by the card */
+#synGrid .card img{object-fit:contain;background:#0a0a0a}
+.card .cap{padding:.5rem .7rem;font-size:.85rem;color:var(--mut)}
+.card .cap b{color:#fff}
+.card .delta{float:right;font-weight:700}
+.delta.short{color:var(--warn)}.delta.over{color:#e37}.delta.ok{color:var(--ok)}
+/* Holdout eval buckets: a small tag <select> on each test-set card + per-type
+   MAE chips on the Runs tab. Color is a hint only (labels carry the meaning). */
+.bucketWrap{padding:0 .7rem .55rem}
+.card select.bucket{width:100%;background:var(--card,#1a1f2b);color:var(--txt);border:1px solid var(--edge);border-radius:6px;padding:.25rem .35rem;font-size:.8rem;cursor:pointer;border-left-width:3px}
+select.bucket.b-object,.bchip.b-object{border-left-color:#3987e5}
+select.bucket.b-capsule,.bchip.b-capsule{border-left-color:#b07de0}
+select.bucket.b-hard,.bchip.b-hard{border-left-color:var(--warn)}
+select.bucket.b-stacked,.bchip.b-stacked{border-left-color:#2fbfa0}
+/* stacked-capsule: the hardest combination, so it gets the warn edge — but the
+   NAME carries it, as always here; the colour is only an echo. */
+select.bucket.b-stacked-capsule,.bchip.b-stacked-capsule{border-left-color:#e0555f}
+select.bucket.b-untagged{border-left-color:var(--edge)}
+.bktTotals{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin:.2rem 0 1rem}
+.bktTotals .bktLead{font-size:.9rem;color:var(--txt);margin-right:.3rem}
+.bktTotals .bchip{font-size:.82rem}
+.bchips{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.3rem}
+.bchip{font-size:.74rem;color:var(--mut);background:rgba(255,255,255,.04);border:1px solid var(--edge);border-left-width:3px;border-radius:5px;padding:.05rem .35rem;white-space:nowrap}
+.bchip b{color:#fff;font-variant-numeric:tabular-nums}
+.bchip.b-untagged{opacity:.6}
+/* Clickable chip filter: highlight that tag's images; dim the rest */
+.bchip[data-b]{cursor:pointer;user-select:none}
+/* :not(.active) is load-bearing. `.bchip[data-b]:hover` is three
+   class-level parts and `.bchip.active` is two, so hover WON — and the
+   pointer is always sitting on the chip you just clicked, so a selected
+   chip rendered grey and read as "the click did not take". Invisible
+   while only one tag could be on; obvious the moment several can. */
+.bchip[data-b]:not(.active):hover{border-color:#3a4152;color:var(--txt)}
+.bchip.active{background:rgba(255,255,255,.12);color:#fff;border-color:#fff;opacity:1}
+.card.bdim{opacity:.25}
+.card.bmatch{box-shadow:0 0 0 2px #1769ff}
+/* Dupe sweep: side-by-side pair cards for the human check before deleting */
+.dedupOut{margin:.3rem 0 .8rem}
+.dedupLine{margin:.4rem 0}
+.dupePair{display:inline-flex;gap:.6rem;align-items:flex-start;background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:.55rem;margin:.3rem .6rem .3rem 0;vertical-align:top}
+.dupeSide{margin:0;width:140px}
+.dupeSide img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;display:block;background:#000;cursor:zoom-in}
+.dupeSide figcaption{font-size:.72rem;color:var(--mut);margin-top:.3rem;word-break:break-all;line-height:1.35}
+.dupeSide figcaption b{color:var(--txt)}
+.dupeDel{margin-top:.3rem;background:#0006;border:1px solid var(--edge);color:#e37;border-radius:6px;padding:.18rem .45rem;cursor:pointer;font-size:.72rem}
+.dupeDel:hover{border-color:#e37}
+.dupeMeta{font-size:.7rem;color:var(--mut);align-self:center;max-width:6.5rem;text-align:center}
+#countResult{margin-top:1rem}#countResult img{max-width:100%;border-radius:10px}
+#countResult .big{font-size:2rem;font-weight:700}
+/* z-index 26 is NOT arbitrary: it must beat .navPanel's 25 (11-nav.css). The
+   editor is a full-screen overlay, but at 20 the pinned desktop sidebar painted
+   straight through its left 230px — so the leftmost strip of every image silently
+   swallowed clicks into the nav instead of placing a dot. Below .modal's 30, so
+   the run/LA/identify modals still open on top of the editor. */
+.editor{position:fixed;inset:0;background:#000d;z-index:26;display:flex;flex-direction:column}
+.editorBar{display:flex;align-items:center;gap:.5rem;padding:.6rem 1rem;background:var(--panel);border-bottom:1px solid var(--edge)}
+.editorBar .spacer{flex:1}
+.editorBar button{background:transparent;border:1px solid var(--edge);color:var(--txt);border-radius:8px;padding:.4rem .7rem;cursor:pointer}
+.editorBar button.active{background:var(--acc);border-color:var(--acc)}
+.ctrls{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.ctrls select{background:var(--card,#1a1f2b);color:var(--txt);border:1px solid var(--edge);border-radius:8px;padding:.4rem .5rem}
+.models{display:flex;flex-direction:column;gap:.35rem;margin:.4rem 0}
+#modelList{display:flex;flex-direction:column;gap:.4rem;max-height:22rem;overflow-y:auto}
+.modelToggle{align-self:flex-start;background:transparent;border:0;color:var(--muted,#8b93a5);cursor:pointer;font-size:.85rem;padding:.2rem .1rem}
+.modelToggle:hover{color:var(--txt)}
+.modelRow{display:flex;align-items:center;gap:.6rem;padding:.35rem .5rem;border:1px solid var(--edge);border-radius:8px}
+.modelRow .mName{font-weight:600}
+.modelRow .mMeta{color:var(--muted,#8b93a5);font-size:.85rem;flex:1}
+.modelRow .mActive{color:var(--ok);font-size:.85rem;font-weight:600}
+.modelRow .mUse{background:transparent;border:1px solid var(--edge);color:var(--txt);border-radius:6px;padding:.25rem .6rem;cursor:pointer}
+.card .mv{position:absolute;top:.3rem;left:.3rem;background:rgba(0,0,0,.55);border:0;color:#fff;border-radius:6px;padding:.1rem .35rem;cursor:pointer;font-size:.9rem}
+.card .earmark{position:absolute;top:.3rem;left:.3rem;z-index:2;background:#1769ff;color:#fff;border-radius:6px;padding:.12rem .4rem;font-size:.72rem;font-weight:700}
+.runsSummary{display:flex;gap:1.3rem;flex-wrap:wrap;align-items:baseline;margin:.1rem 0 .9rem;font-size:.92rem}
+.runsSummary b{color:#fff}
+.tblwrap{overflow-x:auto;max-height:34rem;overflow-y:auto}
+table.runs{border-collapse:collapse;width:100%;font-size:.9rem}
+table.runs th,table.runs td{text-align:left;padding:.4rem .6rem;border-bottom:1px solid var(--edge);white-space:nowrap;vertical-align:top}
+table.runs td.wrap{white-space:normal}
+table.runs th{color:var(--muted,#8b93a5);font-weight:600;position:sticky;top:0;background:var(--bg);z-index:1}
+table.runs tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+table.runs tr.muted td{opacity:.5}
+table.runs tr.best td{background:rgba(25,158,112,.10)}
+table.runs tr.expanded td{background:rgba(57,135,229,.16);box-shadow:inset 3px 0 0 #3987e5}
+table.runs .acts button.active{border-color:#3987e5;color:#3987e5}
+/* Action buttons stay reachable without side-scrolling: the acts column pins
+   to the right edge of the scroll area, with a soft shadow seam. Solid bg so
+   scrolled columns disappear beneath it (row tints redrawn per state). */
+table.runs td.acts,table.runs th:last-child{position:sticky;right:0;background:var(--bg);box-shadow:-8px 0 10px -8px #000c;z-index:1}
+table.runs tbody tr:nth-child(even) td.acts{background:#161b24}
+table.runs tr.best td.acts{background:#12241d}
+table.runs tr.expanded td.acts{background:#17263a}
+table.runs input.note{min-width:7rem;max-width:9rem}
+
+/* A flex item's default min-width is `auto`, i.e. its CONTENT — so an <input>
+   carrying size="44" refuses to shrink below ~442px and pushes the whole page
+   sideways on a 390px phone. `min-width:0` is what lets it shrink; the flex
+   basis keeps it comfortably wide wherever there is room. This is the generic
+   fix, applied to text inputs inside .ctrls rather than to one id, because the
+   next one added would have the same problem. */
+.ctrls input[type=text],.ctrls input[type=number]{min-width:0;max-width:100%}
+.ctrls input[type=text]{flex:1 1 14rem}
+
+/* ---- phone: the card overlay controls were finger-hostile -------------- */
+/* Measured on a 390px viewport: 🗑 was 26x23, ✛ was 23x22, 🎯 was 29x20 —
+   all well under the 44px that a thumb can reliably hit, on the cards used for
+   ALL curation and used mostly from a phone. They stay small on desktop, where
+   a cursor is precise and shrinking the photo would be a loss for nothing. */
+@media (pointer: coarse){
+  .card .del,.card .mv,.card .laShort{
+    min-width:38px;min-height:38px;padding:.35rem;font-size:1rem;
+    display:grid;place-items:center}
+  /* They sit ON the photo, so give them a solid enough backing to be findable
+     against a pale image rather than relying on the emoji's own contrast. */
+  .card .del,.card .laShort{background:#000a}
+  .card .mv{background:#000a}
+  .card select.bucket{min-height:38px;font-size:.85rem}
+}
+
+/* "Use this" picks which model SERVES — the bot and the cockpit both count with
+   whatever it selects. A 29px target for that is too small to be pressed
+   confidently on a phone, and pressing the wrong row is a real consequence. */
+@media (pointer: coarse){
+  .modelRow .mUse{min-height:38px;padding:.4rem .8rem}
+  .modelRow{padding:.45rem .5rem}
+}
+
+/* Dense-table controls on touch. A full 44px per control would treble the
+   height of an 81-row table, so these get 32px — a real improvement on 23px
+   without making the table unusable for its actual job, which is comparison. */
+@media (pointer: coarse){
+  table.runs .acts button{min-height:32px;padding:.35rem .55rem}
+  table.runs input.note{min-height:32px}
+  .modelToggle{min-height:32px;padding:.4rem .1rem}
+}
+
+/* A bare checkbox is 13px and its label was 20px tall — the label IS the target
+   (clicking it toggles), so make the label the real one on touch. */
+@media (pointer: coarse){
+  label.hint:has(input[type=checkbox]){
+    min-height:36px;display:inline-flex;align-items:center;gap:.4rem}
+  input[type=checkbox]{width:19px;height:19px}
+}
+

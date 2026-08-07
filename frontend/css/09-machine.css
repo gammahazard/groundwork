@@ -1,0 +1,44 @@
+/* 06-machine.css — Machine identity: HQ slate-blue vs the lab's ember, the trainer-watch
+   card, the ghost row, the HQ train area.
+ *
+ * Part 6 of 8. cockpit.css was 408 lines; these are CONTIGUOUS slices of it,
+ * in cascade order, so the split is provably a no-op — concatenating them with
+ * comments stripped reproduces the original byte for byte. The boundaries are
+ * therefore HISTORICAL, not thematic: where a file's contents are mixed it says
+ * so rather than pretending. Regroup properly during the redesign, when the
+ * rules are being rewritten anyway and a visual check is possible.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order and later
+ * rules win at equal specificity. Do not reorder the <link> tags. */
+/* ---- Machine identity: HQ = cool slate-blue (the :root default above);
+   Trainer = warm ember charcoal. The difference is brightness + warmth, not
+   hue alone, so the two pages read apart at a glance on any colour vision —
+   and the 🧪 title/banner stays the explicit, non-colour cue. cockpit.js adds
+   body.lab when /api/state says this cockpit is the lab. ---- */
+body.lab{--bg:#181109;--panel:#221a10;--edge:#453722;--acc:#c77b1e}
+body.lab>header{background:#181109ee}
+body.lab .tile{background:linear-gradient(180deg,#241c11,#1d150c)}
+body.lab .provenance{background:#1d150c}
+body.lab nav button.active{border-color:#5a4626}
+body.lab #labBanner{border-color:#c77b1e;background:rgba(199,123,30,.10)}
+
+/* HQ's Trainer-watch card: ember palette on the blue HQ page = "this is about
+   the OTHER machine" at a glance. Sits apart from the surrounding hint text. */
+/* #labWatch is GONE (2026-08-05). identity.js no longer creates it — the
+   error banner it styled was a pointer at its own neighbour. */
+/* Ghost row: where the cooking run WILL land in Models — faded + breathing. */
+.modelRow.ghost{border-style:dashed;border-color:#453722;background:rgba(199,123,30,.05);animation:ghostPulse 2.6s ease-in-out infinite}
+.modelRow.ghost .mName{font-style:italic;color:var(--mut)}
+@keyframes ghostPulse{0%,100%{opacity:.45}50%{opacity:.8}}
+
+/* HQ train area: the Trainer is the headline action (real button, ember =
+   the other machine's identity); local training folds away as the fallback. */
+#hqLocalTrain{margin:.45rem 0 0}
+#hqLocalTrain summary{cursor:pointer;color:var(--mut);font-size:.88rem}
+#hqLocalTrain summary:hover{color:var(--txt)}
+#hqLocalTrain .ctrls{margin-top:.55rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+
+/* .trainerBtn is GONE (2026-08-05). It opened a SECOND cockpit on the worker so
+   you could press ITS Retrain; Train dispatches there directly now — model x
+   machine x card, one control — so the link was a door to a room you no
+   longer have to enter. */

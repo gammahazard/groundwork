@@ -1,0 +1,71 @@
+/* 06-audit.css — the label audit — where the model disagrees with the dots
+ *
+ * Split out of 03-grids.css (2026-08-05), which was carrying grids, uploads and the label audit.
+ *
+ * A CONTIGUOUS CUT, so the cascade is untouched: concatenating these files in
+ * their numbered order reproduces the original byte for byte, exactly as the
+ * first split did. Rules were not reordered — that is the one thing a thematic
+ * regroup cannot promise, and at equal specificity order decides the winner.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order. Do not
+ * reorder the <link> tags. */
+
+/* ---- label audit: where the model disagrees with the dots --------------- */
+/* A table, because four aligned numbers per row is what you compare — and it
+   scrolls in its own box on a phone rather than making the page pan. */
+.auditOut{margin:.5rem 0}
+.auditTable{width:100%;border-collapse:collapse;margin-top:.6rem;font-size:.88rem}
+.auditTable th{text-align:left;color:var(--mut);font-weight:600;font-size:.75rem;
+  letter-spacing:.06em;text-transform:uppercase;padding:.3rem .5rem;
+  border-bottom:1px solid var(--edge)}
+.auditTable td{padding:.35rem .5rem;border-bottom:1px solid var(--edge);
+  font-variant-numeric:tabular-nums}
+.auditTable tr:last-child td{border-bottom:0}
+.auditTable a{color:var(--txt);text-decoration:underline;text-underline-offset:2px}
+.auditTable a:hover{color:#fff}
+/* The sign is stated as a NUMBER with its sign, never carried by colour alone —
+   the owner is colour-blind, and "+2" and "-2" mean different things. */
+.auditTable .over{color:#ff8a9a}
+.auditTable .short{color:#ffc46b}
+@media (max-width:760px){
+  .auditOut{overflow-x:auto}
+  .auditTable{min-width:22rem}
+}
+/* The audit's live step line — one sentence under the bar saying what it is
+   doing, because "37/160" alone does not distinguish "loading the model" from
+   "stuck". */
+.auditStep{margin-top:.2rem;font-variant-numeric:tabular-nums}
+
+/* --- chip filter: pull the tagged images to the top ------------------------
+   FLIP animation, driven from buckets.js/applyBucketHighlight. The cards are
+   re-ordered in the DOM, transformed back to where they were, then released —
+   so the browser animates a compositor-only transform instead of reflowing a
+   grid of 240 images every frame.
+
+   TWO EXISTING RULES had to be worked around rather than overridden: .card
+   already carries `transition: transform .12s` and `:hover{transform:...}`
+   (02-runs.css). `.card.flipping` is a two-class selector, so it beats the
+   .12s without !important; and the transform written during a flip is INLINE,
+   which beats the hover rule outright, so passing the pointer over a card
+   mid-flight cannot yank it out of position. */
+.card.flipping{
+  transition:transform .34s cubic-bezier(.2,.7,.3,1);
+  /* Above its neighbours while travelling, so a moving card is never sliced
+     in half by the one it is passing. */
+  z-index:2;
+}
+/* The divider labels a grouping a filter has just broken up. Hidden, not
+   removed — it comes straight back when the last chip goes off. */
+.gridHeadHidden{display:none}
+/* The click-order badge, shown only when more than one tag is on (see
+   renderBucketTotals): with a single tag there is no stacking to explain. */
+.bchipOrd{
+  display:inline-block;min-width:1.05em;margin-right:.3rem;padding:0 .25em;
+  border-radius:999px;background:rgba(255,255,255,.22);color:#fff;
+  font-size:.72em;font-weight:700;text-align:center;line-height:1.5;
+}
+@media (prefers-reduced-motion:reduce){
+  /* The reorder still HAPPENS — it is the feature — it simply arrives without
+     the travel. applyBucketHighlight also skips the measure/invert entirely. */
+  .card.flipping{transition:none}
+}

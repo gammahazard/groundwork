@@ -1,0 +1,246 @@
+/* 05-editor.css — The editor canvas, the phone-width refinements and touch sizing.
+   The editor's SHELL is in 03-grids.css; see the note there.
+ *
+ * Part 5 of 8. cockpit.css was 408 lines; these are CONTIGUOUS slices of it,
+ * in cascade order, so the split is provably a no-op — concatenating them with
+ * comments stripped reproduces the original byte for byte. The boundaries are
+ * therefore HISTORICAL, not thematic: where a file's contents are mixed it says
+ * so rather than pretending. Regroup properly during the redesign, when the
+ * rules are being rewritten anyway and a visual check is possible.
+ *
+ * ORDER IS LOAD-BEARING. index.html links these in numeric order and later
+ * rules win at equal specificity. Do not reorder the <link> tags. */
+/* pan-x pan-y: one-finger drag scrolls natively; two-finger pinch reaches our
+   JS zoom instead of zooming the whole page */
+/* -webkit-touch-callout:none kills iOS's long-press menu ("Copy", "Save to
+   Photos", "Share…"). Long-press over the image is how you ADD A DOT on a phone,
+   so the callout fires on the exact gesture the editor is built around and
+   covers the object you were aiming at. user-select stops the text-selection
+   handles the same press can start. Neither affects the mouse. */
+#edCanvas{display:block;cursor:crosshair;touch-action:pan-x pan-y;
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+/* Same press can land on the wrapper if a tap misses the canvas edge. */
+#edCanvasWrap{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#edTitle b{color:#fff}#edTitle .short{color:var(--warn)}#edTitle .ok{color:var(--ok)}
+
+.drugTag{color:#7db8ff;font-size:.78rem}
+#labBanner{margin-top:.5rem;padding:.45rem .7rem;border:1px solid #7a5df0;border-left-width:4px;border-radius:8px;background:rgba(122,93,240,.12);font-size:.85rem}
+
+/* ---- Mobile (phone-width) refinements: nothing cut off, thumb-sized ---- */
+@media (max-width:700px){
+  body>header{padding:.6rem .8rem}
+  h1{font-size:1rem;margin-bottom:.45rem}
+  nav{gap:.3rem}
+  nav button{padding:.32rem .55rem;font-size:.82rem}
+  main{padding:.8rem .7rem}
+  .panel{padding:.8rem}
+  .tiles{gap:.6rem}
+  .tile{padding:.7rem .8rem}
+  .tile span{font-size:1.5rem}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+  .galGrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  table.runs{font-size:.8rem}
+  table.runs th,table.runs td{padding:.35rem .4rem}
+  table.runs input.note{min-width:4.5rem;max-width:6rem}
+  .modalCard{padding:.8rem}
+  .modalTitle{font-size:.92rem}
+  /* editor toolbar: wrap into rows instead of running off-screen */
+  .editorBar{flex-wrap:wrap;gap:.35rem;padding:.45rem .6rem}
+  .editorBar button{padding:.3rem .5rem;font-size:.85rem}
+  .editorHelp{font-size:.72rem;padding:.25rem .6rem}
+  .runsSummary{gap:.7rem;font-size:.85rem}
+}
+
+/* Touch devices: finger-sized editor controls (after the narrow-screen block
+   above so these win on phones, which match both queries) */
+@media (pointer: coarse){
+  .editorBar button{padding:.5rem .7rem;font-size:.9rem}
+  .editorBar #edPrev,.editorBar #edNext{font-size:1.35rem;padding:.35rem .85rem}
+}
+
+
+/* ---- touch dot pad (editor.js, ED_COARSE only) -------------------------- */
+/* Fixed to the bottom of the editor overlay so it is thumb-reachable and never
+   sits on top of the object being edited. Above the canvas in z, below modals. */
+.edDotPad{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:flex;align-items:center;gap:.75rem;
+  padding:.55rem .7rem calc(.55rem + env(safe-area-inset-bottom));
+  background:#111725f2;backdrop-filter:blur(8px);
+  border-top:1px solid var(--edge)}
+.edDotPad[hidden]{display:none}
+
+/* 3x3 grid with the arrows in a cross — a d-pad reads as one control, where
+   four separate buttons in a row read as four unrelated ones. */
+.edPadNudge{
+  flex:none;display:grid;gap:2px;
+  grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,34px)}
+.edPadNudge .edNudge:nth-child(1){grid-area:1/2}
+.edPadNudge .edNudge:nth-child(2){grid-area:2/1}
+.edPadNudge .edNudge:nth-child(3){grid-area:2/3}
+.edPadNudge .edNudge:nth-child(4){grid-area:2/2}
+.edNudge{
+  background:#1b2334;color:var(--txt);border:1px solid var(--edge);
+  border-radius:8px;font-size:.9rem;line-height:1;
+  display:grid;place-items:center;touch-action:none;user-select:none}
+.edNudge:active{background:#2a3550}
+
+.edPadInfo{flex:1;min-width:0;line-height:1.25}
+.edPadInfo b{display:block;font-size:.85rem}
+#edPadPos{font-size:.75rem}
+
+.edPadActs{flex:none;display:flex;gap:.35rem}
+/* 44px is the minimum reliable touch target; these are the buttons that change
+   or discard work, so they get it. */
+.edPadActs button{min-width:44px;min-height:44px;font-size:1rem;border-radius:9px}
+.edPadOk{border-color:#2e7d4f;color:#7ee2a8}
+.edPadOk:active{background:#17301f}
+.edPadDanger{border-color:#7d3030;color:#ff9d9d}
+.edPadDanger:active{background:#2d1414}
+#edPadHalf{min-width:auto;padding:0 .6rem;font-size:.82rem}
+
+/* The pad covers the bottom of the scroll area, so give the canvas room to
+   scroll clear of it — otherwise the last row of objects is unreachable. */
+body:has(.edDotPad:not([hidden])) #edCanvasWrap{padding-bottom:5.5rem}
+
+@media (max-width:380px){
+  .edPadNudge{grid-template-columns:repeat(3,32px);grid-template-rows:repeat(2,30px)}
+  .edPadInfo{display:none}          /* the coordinates are the first thing to go */
+}
+
+/* ---- editor toolbar: inline on desktop, ⋯ menu on a phone --------------- */
+/* display:contents makes the wrapper vanish from layout entirely, so on wide
+   screens these buttons are laid out by .editorBar exactly as they were before
+   they were grouped. No DOM was moved, so every handler still binds by id. */
+.edMore{display:contents}
+.edMoreBtn{display:none}
+
+/* Collapsed help, expanded on tap.
+   NOT -webkit-line-clamp: it needs display:-webkit-box, which another rule in
+   this cascade was overriding, and the silent failure mode is the worst
+   possible one — the box stayed 2 lines tall while the text was 3, so it clipped
+   through the MIDDLE of a line of letters and simply looked broken. A max-height
+   in `em` is tied to this element's own font-size, so it is an exact whole
+   number of line boxes at any size and cannot half-cut a line whatever else the
+   cascade does. */
+.editorHelp{overflow:hidden;cursor:pointer;transition:max-height .2s ease}
+.editorHelp.open{max-height:none}
+@media (prefers-reduced-motion: reduce){.editorHelp{transition:none}}
+
+@media (max-width:760px){
+  /* Compact the bar itself: the title and position readout are worth more than
+     the padding around them. */
+  /* WRAP, and give the Done buttons their own row.
+     nowrap was right when the only things on this bar were ‹ › ⋯ Save Close —
+     they fit a 390px screen with 9px to spare. In the FIX QUEUE two more appear
+     ("✓ Done → training", "🎯 Done → test set") and nothing wrapped: measured on
+     an iPhone 13, edDoneTest started at x=387 of a 390px viewport and edClose at
+     x=450, so neither could be tapped — you could not finish an image OR close the
+     editor. The bar does not scroll (its parent clips), so they were simply
+     gone, which is why it looked like a styling wobble rather than two dead
+     controls.
+     Row 1 keeps its old contents; the two Done buttons take row 2 at half width
+     each, which is also the right emphasis — in the fix queue they ARE the
+     action, not an afterthought squeezed in beside Close. */
+  .editorBar{gap:.35rem;padding:.45rem .55rem;flex-wrap:wrap;row-gap:.4rem}
+  .editorBar button{padding:.4rem .55rem;min-height:40px}
+  #edDone,#edDoneTest{flex:1 1 calc(50% - .4rem);min-height:44px;
+    justify-content:center;order:9}
+  /* Close stays on row 1 — it must never be the thing that wrapped away. */
+  #edClose{order:8}
+  /* HIDDEN, not truncated. With Save, Close and ⋯ on the row there are ~37px
+     left, so the filename rendered as "IM…" — three characters that read as a
+     broken element rather than a name. #edPos ("1 / 160") already says where
+     you are, and the full name is one tap away in the grid you came from. */
+  #edTitle{display:none}
+  .editorBar .spacer{display:none}          /* #edTitle already takes the slack */
+  #edPos{font-size:.8rem;white-space:nowrap}
+
+  .edMoreBtn{display:grid;place-items:center;min-width:40px;font-size:1.1rem}
+
+  /* The menu: anchored under the bar, scrollable if it ever outgrows the
+     screen, and a plain column so every item is a full-width 44px target. */
+  .edMore{
+    display:none;position:absolute;top:100%;right:.5rem;z-index:2;
+    background:#141b2b;border:1px solid var(--edge);border-radius:12px;
+    box-shadow:0 12px 30px #000a;padding:.35rem;
+    max-height:70vh;overflow-y:auto;min-width:11rem}
+  .edMore.open{display:flex;flex-direction:column;gap:.15rem}
+  .edMore button{
+    width:100%;text-align:left;min-height:44px;border-color:transparent;
+    border-radius:9px}
+  .edMore button:hover,.edMore button.active{background:#1b2536}
+  /* − and + read as nothing in a vertical list of labelled items. */
+  #edZoomOut::after{content:" Zoom out";font-size:.9rem}
+  #edZoomIn::after{content:" Zoom in";font-size:.9rem}
+
+  .editorBar{position:relative}             /* the menu anchors to this */
+  /* ONE line on a phone (1.3em line-height + the .35rem padding above and
+     below), with a ⌄ to say there is more. Two lines was still 44px of a 664px
+     screen for text you have already read. */
+  /* Collapsed to exactly ONE line, and the arithmetic here is the whole point:
+     overflow:hidden clips at the PADDING box, not the content box, so bottom
+     padding is still paintable area. Budgeting top-padding + one line + bottom
+     padding therefore let ~6px of the SECOND line show through — a strip of
+     letter-tops under the first line that just reads as broken.
+     So: no bottom padding while collapsed, and a height of exactly top-padding
+     + one line box. The +1px is slack against sub-pixel rounding, and it is
+     safe because line-height 1.3 puts ~1.9px of half-leading above the glyphs —
+     one pixel into the next line box is still empty space. */
+  .editorHelp{
+    font-size:.78rem;padding:.35rem 1.4rem 0 .55rem;line-height:1.3;
+    max-height:calc(.35rem + 1.3em + 1px);position:relative}
+  .editorHelp.open{padding-bottom:.35rem}
+  .editorHelp::after{
+    content:"⌄";position:absolute;right:.5rem;top:.2rem;color:var(--mut)}
+  .editorHelp.open::after{content:"⌃"}
+}
+
+/* The class picker sits in the editor bar, next to the image name — it is a
+   labelling control, not a tool, so it stays out of the ⋯ menu where you would
+   have to open something to change class between dots. */
+.edClass{
+  background:var(--card,#1a1f2b);color:var(--txt);border:1px solid var(--edge);
+  border-radius:8px;padding:.35rem .5rem;font-size:.85rem;max-width:11rem}
+.edClass[hidden]{display:none}
+@media (pointer: coarse){ .edClass{min-height:40px} }
+@media (max-width:760px){ .edClass{max-width:6.5rem;font-size:.8rem} }
+
+/* ---- model-vs-label comparison marks ----------------------------------- */
+/* In the title, next to the dot count. Amber when they disagree, because that
+   is the state worth noticing — and the WORDS carry it, never the colour. */
+.auditMark{color:var(--warn);font-weight:600}
+.auditMark.ok{color:var(--ok)}
+
+/* ---- opening an image ----------------------------------------------------
+   Two waits stand between a click and a picture: the points call and the
+   photograph. The canvas is blank for both, so the editor used to open onto an
+   empty rectangle and the image appeared without warning.
+
+   THE SAME MARK AS THE LOGIN PAGE — brackets closing on a subject. It is the
+   product's own gesture, it is already what the reader has seen on the way in,
+   and it says "finding the picture" rather than "something is happening". */
+.edLoading{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:var(--gw-s3);
+  background:var(--gw-void);z-index:3;pointer-events:none}
+.edLoading[hidden]{display:none}
+.edLoadingMark{position:relative;width:38px;height:38px}
+.edLoadingMark::before,.edLoadingMark::after{
+  content:"";position:absolute;width:11px;height:11px;
+  border:2px solid var(--gw-act);
+  animation:edFind 1.5s ease-in-out infinite}
+.edLoadingMark::before{top:0;left:0;border-right:0;border-bottom:0}
+.edLoadingMark::after{bottom:0;right:0;border-left:0;border-top:0}
+@keyframes edFind{
+  0%,100%{transform:translate(-5px,-5px) scale(1)}
+  50%    {transform:translate(0,0) scale(.82)}}
+.edLoadingMark::after{animation-name:edFindB}
+@keyframes edFindB{
+  0%,100%{transform:translate(5px,5px) scale(1)}
+  50%    {transform:translate(0,0) scale(.82)}}
+.edLoadingText{
+  font:400 var(--gw-t-xs)/1 var(--gw-mono);color:var(--gw-ink-3);
+  letter-spacing:.1em}
+@media(prefers-reduced-motion:reduce){
+  .edLoadingMark::before,.edLoadingMark::after{animation:none}}

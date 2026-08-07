@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Groundwork">
+  <!-- A frame with four dots inside it: an image being LABELLED — the one
+       picture that means this app. -->
+  <rect x="2.5" y="4.5" width="27" height="23" rx="3.5"
+        fill="#141b29" stroke="#e0952a" stroke-width="2.2"/>
+  <!-- corner ticks: the "this is a frame you are annotating" cue -->
+  <g stroke="#e0952a" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".55">
+    <path d="M7 9.5v-1M9.5 7h1M22.5 7h1M25 9.5v-1M25 22.5v1M22.5 25h1M9.5 25h-1M7 22.5v1"/>
+  </g>
+  <g fill="#e0952a">
+    <circle cx="10.5" cy="12.5" r="2.6"/>
+    <circle cx="19"   cy="12.5" r="2.6"/>
+    <circle cx="14.5" cy="19.5" r="2.6"/>
+    <circle cx="23"   cy="19.5" r="2.6"/>
+  </g>
+</svg>
