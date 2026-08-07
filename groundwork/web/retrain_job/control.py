@@ -6,6 +6,7 @@ from .state import (LOG, STATE, WORKER_LOG, _STAGE, _lockfile,  # noqa: F401
                     gpu_lock, _alive, _read, _write, _update,
                     _pp, _lock)
 from .progress import status  # noqa: F401
+from .pipeline import _clamp
 import fcntl
 import json
 import os

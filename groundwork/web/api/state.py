@@ -265,7 +265,7 @@ def _mirror_health() -> dict:
     if _config.is_worker():
         return {}
     try:
-        d = json.loads((OUTPUTS_DIR / "jobs_status.json").read_text())
+        d = json.loads((_config.OUTPUTS_DIR / "jobs_status.json").read_text())
     except Exception:  # noqa: BLE001 — no scheduler record yet is a fresh box
         return {}
     j = (d or {}).get("mirror") or {}

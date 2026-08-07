@@ -90,10 +90,9 @@ async function loadState(){
     const note = $("#servingNote");
     if (note) note.textContent = exp
       ? ` — ⚠ ${sv.engine} is serving: the bot and this cockpit `
-        + `count with it. The iPhone app is unaffected — it runs its own `
-        + `bundled model.`
-      : " — the bot and this cockpit count with this model. The iPhone app "
-        + "runs its own bundled copy, updated when a new export ships.";
+        + `count with it. Exported files are unaffected — they are copies.`
+      : " — the bot and this cockpit count with this model. Exported files "
+        + "are separate copies and keep working unchanged.";
     const hero = $("#projdash .dashCard.hero");
     if (hero) hero.classList.toggle("experimental", exp);
   }
@@ -120,7 +119,7 @@ async function loadState(){
      * shrinking to 23h — a number that silently drops its largest component is
      * the same failure as a cached reading passed off as live. */
     + (f.hours != null
-        ? `<div class="sbRow"><span>GPU time, both machines${
+        ? `<div class="sbRow"><span>GPU time, all machines${
              f.complete ? "" : " <span class='mMeta'>(partial)</span>"}</span>`
           + `<span class="sbMae" title="${
                f.complete
@@ -141,7 +140,7 @@ async function loadState(){
     /* The tooltip must name the SAME hours the kWh was computed from. The server
      * charges the fleet total when it has one, so quoting this machine's 23.0h
      * beside a figure derived from 79.3h would read as an arithmetic error. */
-    + (o.power ? `<div class="sbRow" title="ESTIMATED, not metered: ${o.power.watts}W whole-system while training (PSU losses included) x ${(f.complete ? f.hours : o.total_hours) ?? o.gpu_hours}h x $${o.power.rate}/kWh${f.complete ? " across both machines" : ""}. Set GW_KWH_RATE / GW_TRAIN_WATTS to correct."><span>electricity (est.)</span>`
+    + (o.power ? `<div class="sbRow" title="ESTIMATED, not metered: ${o.power.watts}W whole-system while training (PSU losses included) x ${(f.complete ? f.hours : o.total_hours) ?? o.gpu_hours}h x $${o.power.rate}/kWh${f.complete ? " across all machines" : ""}. Set GW_KWH_RATE / GW_TRAIN_WATTS to correct."><span>electricity (est.)</span>`
         + `<span class="sbMae">$${o.power.usd} <span class="mMeta">${o.power.kwh} kWh</span></span></div>` : "")
     + `<div class="sbRow"><span>biggest capture on file</span><span class="sbMae">${o.biggest ?? "–"}</span></div>`;
   $("#stTrays").textContent = s.raw;

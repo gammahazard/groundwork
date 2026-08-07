@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .status import _NO_PICTURES, _VIS_SOURCES
 from .common import (router, MAIN_PY, GPU_BASE_ENV,          # noqa: F401
                      _alt, _every_alt, _trainable_archs,
                      _card_env, _local_active, _running_seed,

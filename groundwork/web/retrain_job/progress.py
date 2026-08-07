@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .state import (_tail,  # noqa: F401
+from .state import (_tail, _write,  # noqa: F401
                     LOG, STATE, _read, _pp, _alive, _update,  # noqa: F401
                     _IDLE, _lock)
 import fcntl

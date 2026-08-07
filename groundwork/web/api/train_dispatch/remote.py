@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .model import router, TrainReq, REMOTE_TIMEOUT  # noqa: F401
 from .busy import _busy_on, _yolo_busy_on  # noqa: F401
+from .cards import _AWARE_TTL, _PROJECT_AWARE
 
 import json
 import time

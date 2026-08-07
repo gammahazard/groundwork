@@ -20,6 +20,13 @@ jobs:
       - run: pip install -e .
       - run: python -m compileall -q groundwork altmodels checks
       - run: python checks/run.py
+      # NameErrors that only fire at call time — compileall cannot see them,
+      # and one (a split putting a function and its caller in different
+      # modules) reached the first real training launch before anything did.
+      - name: undefined names
+        run: |
+          pip install -q pyflakes
+          if python -m pyflakes groundwork altmodels checks | grep "undefined name"; then exit 1; fi
         env: {GW_AUTH: "0"}
 
   frontend:

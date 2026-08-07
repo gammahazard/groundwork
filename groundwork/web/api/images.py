@@ -155,8 +155,6 @@ def promote(stem: str, pp: ProjectPaths = Depends(project_paths)):
 def promote_testset(stem: str, pp: ProjectPaths = Depends(project_paths)):
     """Mark a needs_fix image done -> move it into the holdout test set instead."""
     lab_guard.no_lab_edits()
-    if (bar := _synth_barred(stem)):
-        return bar
     if (msg := _holdout_locked()):
         return {"ok": False, "error": msg}
     return {"ok": collect.graduate_to_testset(stem, pp)}
