@@ -25,12 +25,12 @@ _CONF, _IOU = 0.25, 0.5
 _MAX_FRAMES_TRAYS = 2
 
 
-def _gt(stem: str, pp=None) -> int:
+def _gt(stem: str, pp) -> int:
     f = pp.TESTSET_LABELS / f"{stem}.txt"
     return len([l for l in f.read_text().splitlines() if l.strip()]) if f.exists() else 0
 
 
-def _probe_stems(pp=None) -> list[str]:
+def _probe_stems(pp) -> list[str]:
     """Fixed, deterministic probes: the fullest capsule-tagged image + the
     fullest image overall — the two hardest exams the holdout offers."""
     counts = {p.stem: _gt(p.stem, pp) for p in pp.TESTSET_LABELS.glob("*.txt")}
@@ -65,7 +65,7 @@ def generate(run_name: str, device: str = "", keep_ckpts: bool = False,
         ((int(m.group(1)), p) for p in w.glob("epoch*.pt")
          if (m := re.match(r"epoch(\d+)", p.stem))), key=lambda t: t[0])
     ckpts.append((None, w / "best.pt"))          # final frame = the shipped pick
-    stems = _probe_stems()
+    stems = _probe_stems(pp)
     if not stems:
         print("[timelapse] no holdout images to probe")
         return None
@@ -75,7 +75,7 @@ def generate(run_name: str, device: str = "", keep_ckpts: bool = False,
 
     imgs = {}
     for stem in stems:
-        p = labelio.image_path("testset", stem)
+        p = labelio.image_path("testset", stem, pp)
         if p:
             imgs[stem] = Image.open(p).convert("RGB")
     manifest = {"imgsz": imgsz, "conf": _CONF, "iou": _IOU,
@@ -98,7 +98,7 @@ def generate(run_name: str, device: str = "", keep_ckpts: bool = False,
                 live / name, quality=85)
             manifest["images"][stem].append(
                 {"epoch": epoch, "file": name, "pred": len(centers),
-                 "gt": _gt(stem)})
+                 "gt": _gt(stem, pp)})
         del model
         print(f"[timelapse] {tag}: done", flush=True)
     (live / "timelapse.json").write_text(json.dumps(manifest), encoding="utf-8")

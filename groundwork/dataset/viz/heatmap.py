@@ -55,7 +55,7 @@ def generate(run_name: str, device: str = "", pp=None) -> dict | None:
     if not best.exists():
         print(f"[heatmap] no best.pt for {run_name}")
         return None
-    stems = _probe_stems()
+    stems = _probe_stems(pp)
     if not stems:
         print("[heatmap] no holdout images to probe")
         return None
@@ -79,7 +79,7 @@ def generate(run_name: str, device: str = "", pp=None) -> dict | None:
     manifest = {"layers": layers, "images": {}}
     try:
         for stem in stems:
-            p = labelio.image_path("testset", stem)
+            p = labelio.image_path("testset", stem, pp)
             if not p:
                 continue
             img = Image.open(p).convert("RGB")
