@@ -39,7 +39,7 @@ if [ -n "${TORCH_CHANNEL:-}" ]; then
 elif command -v nvidia-smi >/dev/null 2>&1; then
     # Highest capability wins on a mixed box — the newest card sets the floor.
     cap="$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null \
-           | tr -d '[:space:]' | sort -rn | head -n 1)" || cap=""
+           | tr -d ' \r' | sort -rn | head -n 1)" || cap=""
     major="${cap%%.*}"
     case "$major" in
         ''|*[!0-9]*)

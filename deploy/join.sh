@@ -9,14 +9,15 @@ DIR="${3:-$HOME/groundwork}"
 say() { printf '[join] %s\n' "$*"; }
 command -v python3 >/dev/null || { echo "python3 is required"; exit 1; }
 command -v rsync   >/dev/null || { echo "rsync is required (dataset sync)"; exit 1; }
-command -v sshd >/dev/null 2>&1 || [ -d /etc/ssh ] || \
+command -v sshd >/dev/null 2>&1 || [ -d /etc/ssh ] || {
   say "WARNING: no sshd — the HQ pulls runs over ssh. Fix: sudo apt install openssh-server"
   say "         (joining continues; the HQ shows the resume path once sshd exists)"
+}
 
 if [ ! -e "$DIR/pyproject.toml" ]; then
   say "downloading Groundwork from the hub"
   mkdir -p "$DIR"
-  curl -fsSL "$HUB/api/join/bundle?token=$TOKEN" | tar -xz -C "$(dirname "$DIR")"
+  curl -fsSL "$HUB/api/join/bundle?token=$TOKEN" | tar -xz -C "$DIR" --strip-components=1
 fi
 cd "$DIR"
 
@@ -30,7 +31,7 @@ fi
 if [ -z "${TORCH_CHANNEL:-}" ]; then
   if command -v nvidia-smi >/dev/null 2>&1; then
     cap="$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null \
-           | tr -d '[:space:]' | sort -rn | head -n1)"
+           | tr -d ' \r' | sort -rn | head -n1)"
     major="${cap%%.*}"
     case "$major" in (1[2-9]) TORCH_CHANNEL=cu128 ;; (*) TORCH_CHANNEL=cu126 ;; esac
   else
