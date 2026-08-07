@@ -126,3 +126,31 @@ def install(role: str | None = None, units_only: bool = False) -> int:
         print("[install] enabled. Open the cockpit and the setup wizard "
               "takes it from there.")
     return 0
+
+
+def main(argv=None) -> int:
+    """`python -m groundwork.install` — the form scripts/install.sh execs.
+
+    THIS DID NOT EXIST. The module had no entry point at all, so the native
+    installer's final line imported it, ran nothing, printed nothing and
+    exited 0: every native install ended looking successful with no units
+    written and no service to survive a reboot. The console script
+    (`groundwork install`) called install() correctly the whole time, which is
+    why this was invisible — the two doors did not do the same thing.
+    """
+    import argparse
+    ap = argparse.ArgumentParser(
+        prog="python -m groundwork.install",
+        description="Write and enable this machine's systemd user units.")
+    ap.add_argument("--role", choices=["hq", "worker"], default=None,
+                    help="bake GW_ROLE into the web unit")
+    ap.add_argument("--units-only", action="store_true",
+                    help="render units without enabling or starting anything")
+    ap.add_argument("--native", action="store_true",
+                    help=argparse.SUPPRESS)   # scripts/install.sh passes it
+    a = ap.parse_args(argv)
+    return install(role=a.role, units_only=a.units_only)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

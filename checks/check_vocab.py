@@ -139,8 +139,16 @@ def main() -> int:
     }
     MEDIA_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".ico",
                  ".mp4", ".webm", ".avif", ".bmp"}
+    # THE SAME UNIVERSE THE TEXT SCAN USES. This walked everything and skipped
+    # by prefix, so it never applied SKIP_DIRS or the gitignore filter: the day
+    # someone made a .venv in the checkout, the gate demanded a human review
+    # ultralytics' bus.jpg and every sympy plotting test PNG. What could SHIP is
+    # the question; a gitignored dependency tree cannot.
+    ignored_media = _ignored()
     for p2 in sorted(ROOT.rglob("*")):
         if not p2.is_file() or p2.suffix.lower() not in MEDIA_EXT:
+            continue
+        if any(part in SKIP_DIRS for part in p2.parts) or p2 in ignored_media:
             continue
         rel2 = p2.relative_to(ROOT).as_posix()
         if rel2.startswith((".git/", "outputs/", "private/", "data/")):

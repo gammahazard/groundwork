@@ -28,6 +28,38 @@ OUTPUTS_DIR = DATA_DIR / "outputs"
 ENV_PATH = (DATA_DIR / "config" / ".env") if os.environ.get("GW_DATA_DIR") \
     else (ROOT / ".env")
 
+
+def _load_env_file() -> None:
+    """Fold `.env` into the process environment, without overriding it.
+
+    THE WEB PROCESS NEVER DID THIS, and the systemd unit's own comment said it
+    did ("settings come from .env in the working directory, so no Environment=
+    lines belong here"). So every setting the wizard and the join flow persist
+    through env_file.set_key — GW_PORT, GW_ROLE, GW_SELF_URL, GW_AUTH — was
+    written to a file the service could not see. Measured: a worker joined on
+    port 8420 came back after `systemctl start` listening on 8000, because the
+    default won.
+
+    override=False is the precedence rule: a real environment variable —
+    systemd `Environment=`, a container's `-e`, `GW_PORT=9000 python -m ...` —
+    beats the file. The file is persisted DEFAULTS, not an override.
+
+    GW_DATA_DIR is deliberately NOT among the things this can set: it decides
+    where the file itself lives, so honouring it from inside the file is a
+    circle. It stays environment-only.
+    """
+    try:
+        from dotenv import load_dotenv
+    except ImportError:            # base dep, but never fail a boot over it
+        return
+    try:
+        load_dotenv(ENV_PATH, override=False)
+    except OSError:
+        pass
+
+
+_load_env_file()
+
 # --- machine role ---
 # What this machine IS in a fleet: "hq" curates and dispatches (the default —
 # a single-machine install is an HQ that trains locally); a "worker" trains and

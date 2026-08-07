@@ -31,6 +31,38 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
   owned imagery, allowlisted by name in the media gate.
 
 ### Fixed
+- **A joined worker now survives a reboot.** The one-command join started the
+  cockpit as a detached process and never installed a service, so a paired GPU
+  box vanished at its next reboot with nothing on screen to say why. It writes
+  and enables the systemd unit (with linger) where there is one, and says which
+  it used; the detached path remains the fallback for containers. Two bugs
+  under it: `python -m groundwork.install` had **no entry point at all**, so the
+  native installer's last line imported it, ran nothing and exited 0 — every
+  native install ended looking successful with no units written; and the web
+  process never read `.env`, though the unit template said it did, so
+  everything the wizard and join persist (GW_PORT, GW_ROLE, GW_SELF_URL) was
+  ignored under systemd — measured: a worker joined on 8420 came back on 8000.
+  A real environment variable still wins over the file. New
+  `check_module_entrypoints` guards the first of those (mutation-proven).
+- **Remote challenger training worked end to end for the first time.** Proven
+  by dispatching a D-FINE run from an HQ to a paired 3090: it exposed that
+  D-FINE could not start anywhere (it runs in the main venv but `transformers`
+  ships only in the `[la]` extra — new `[dfine]` extra, and the launcher now
+  refuses with the pip line instead of dying at the trainer's first import
+  after taking a card); that `autoscore` imported a name `lab_ops` never
+  exported, so no challenger run was ever scored; and that four of six
+  `lab_proxy` calls sent no `?project=`, so every proxied challenger view
+  (status, curve, log, previews) had 422'd silently since the default project
+  was removed.
+- Remote exports hand-rolled their own ssh options — the one path using
+  whatever key the agent offered, with no pinned host keys and no `ssh_port`
+  support. They go through the shared identity now. `/join.sh` read its script
+  at import, so a missing file took the whole cockpit down at boot; an
+  unreachable hub ended a join in a traceback.
+- Six copies of `is-this-process-alive` disagreed: five read a process owned by
+  another user as DEAD, which under Docker or a differently-owned training job
+  is the difference between refusing a second GPU job and starting one. One
+  implementation now (`groundwork/procs.py`).
 - **Full-repo audit pass**: four parallel read-throughs of every file, then 28
   verified fixes. The ones that would have bitten first: the Export tab bricked
   itself permanently when opened before the first run; the scheduler's adopt and

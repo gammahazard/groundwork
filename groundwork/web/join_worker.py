@@ -40,6 +40,38 @@ def _wait_healthy(port: int, tries: int = 40) -> bool:
     return False
 
 
+def _start_service(port: int) -> str | None:
+    """Bring the cockpit up. Returns how it was started, or None on failure."""
+    from . import botsup
+    if botsup.mode() == "systemd":
+        try:
+            from .. import install as installer
+            installer.install(role="worker")
+            if _wait_healthy(port):
+                return "systemd unit groundwork-web.service (survives reboots)"
+            print("[join] the unit was installed but the cockpit did not answer "
+                  "— check: systemctl --user status groundwork-web")
+        except SystemExit as e:
+            print(f"[join] could not install the service unit ({e}) — "
+                  f"falling back to a detached process")
+        except Exception as e:  # noqa: BLE001
+            print(f"[join] could not install the service unit "
+                  f"({type(e).__name__}: {e}) — falling back to a detached process")
+
+    from . import spawn
+    log = OUTPUTS_DIR / "webui.log"
+    import sys
+    py = ROOT / ".venv" / "bin" / "python"
+    interp = str(py) if py.exists() else sys.executable
+    spawn.spawn_detached("webui", [interp, "-m", "groundwork.web"],
+                         log_path=log, env={**os.environ}, cwd=str(ROOT))
+    if not _wait_healthy(port):
+        print(f"[join] the web service did not come up — see {log}")
+        return None
+    return ("a detached process — it will NOT survive a reboot. Install a "
+            "service with: .venv/bin/groundwork install --role worker")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Join this box to a Groundwork hub.")
     ap.add_argument("--hub", required=True)
@@ -79,20 +111,18 @@ def main() -> int:
         {"sha": hashlib.sha256(raw_key.encode()).hexdigest(),
          "minted": time.time()}), encoding="utf-8")
 
-    # 4. Start the web service, detached, so the hub's enroll can call back.
-    from . import spawn
-    started = False
+    # 4. Start the web service, so the hub's enroll can call back — AS A
+    #    SYSTEMD UNIT where there is one. A detached process serves the join
+    #    and then dies at the next reboot, which is the worst kind of broken:
+    #    the machine pairs, trains, and is silently gone tomorrow with nothing
+    #    in the cockpit to say why. `groundwork install` writes the unit,
+    #    enables it, and turns on linger (user units stop at logout without
+    #    it, and a GPU box is headless). The detached fallback stays for
+    #    containers and anything without a user systemd.
+    service = "already running"
     if not _wait_healthy(args.port, tries=1):
-        log = OUTPUTS_DIR / "webui.log"
-        import sys
-        py = ROOT / ".venv" / "bin" / "python"
-        interp = str(py) if py.exists() else sys.executable
-        spawn.spawn_detached(
-            "webui", [interp, "-m", "groundwork.web"],
-            log_path=log, env={**os.environ}, cwd=str(ROOT))
-        started = _wait_healthy(args.port)
-        if not started:
-            print(f"[join] the web service did not come up — see {log}")
+        service = _start_service(args.port)
+        if service is None:
             return 1
 
     url = (args.url or "").strip().rstrip("/")
@@ -145,6 +175,7 @@ def main() -> int:
               "tab has the resume path.")
         if result.get("manual_step"):
             print("[join] manual step:", result["manual_step"])
+    print(f"[join] running as {service}")
     if admin_pw:
         print(f"[join] this worker's own cockpit: {url}  "
               f"(user 'admin', password {admin_pw} — shown only this once)")
