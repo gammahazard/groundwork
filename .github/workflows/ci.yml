@@ -1,0 +1,79 @@
+name: ci
+on:
+  push: {branches: [main]}
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      # Torch-free on purpose: config.py keeps torch out of the web import
+      # graph, which is what makes a slim CI possible at all.
+      - run: pip install -e .
+      - run: python -m compileall -q groundwork altmodels checks
+      - run: python checks/run.py
+        env: {GW_AUTH: "0"}
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -e .
+      - name: every script parses
+        run: |
+          set -e
+          find frontend -name "*.js" | while read f; do node --check "$f"; done
+      - run: python checks/check_frontend.py
+        env: {GW_AUTH: "0"}
+      - run: python checks/check_editor_mirrors.py
+        env: {GW_AUTH: "0"}
+
+  boot-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -e .
+      - name: torch-free boot + login round trip + project create
+        env: {GW_AUTH: "1", GW_PORT: "8123"}
+        run: |
+          python - <<'PY'
+          import os, sys, threading, time, urllib.request, json
+          import importlib
+          sys.modules.pop("torch", None)
+          from groundwork.web.app import app
+          assert "torch" not in sys.modules, "torch leaked into the web import graph"
+          import uvicorn
+          t = threading.Thread(target=lambda: uvicorn.run(app, host="127.0.0.1", port=8123, log_level="error"), daemon=True)
+          t.start()
+          for _ in range(50):
+              try:
+                  urllib.request.urlopen("http://127.0.0.1:8123/healthz", timeout=1); break
+              except Exception: time.sleep(0.2)
+          def call(path, body=None, method=None, cookie=None):
+              req = urllib.request.Request("http://127.0.0.1:8123"+path,
+                  data=json.dumps(body).encode() if body is not None else None,
+                  method=method or ("POST" if body is not None else "GET"),
+                  headers={"Content-Type": "application/json", **({"Cookie": cookie} if cookie else {})})
+              r = urllib.request.urlopen(req, timeout=10)
+              return r, json.loads(r.read() or b"{}")
+          r, j = call("/api/setup/status"); assert j.get("needed") is True, j
+          r, j = call("/api/setup/claim", {"username": "ci", "password": "ci-passw0rd"})
+          cookie = r.headers.get("Set-Cookie", "").split(";")[0]
+          assert j.get("ok"), j
+          r, j = call("/api/me", cookie=cookie); assert j.get("username") == "ci", j
+          r, j = call("/api/projects", {"name": "CI Widgets", "classes": ["widget"]}, cookie=cookie)
+          slug = (j.get("project") or {}).get("slug")
+          assert slug, j
+          r, j = call(f"/api/train/options?project={slug}", cookie=cookie)
+          assert "models" in j, j
+          print("boot smoke OK:", slug, len(j["models"]), "models")
+          PY
