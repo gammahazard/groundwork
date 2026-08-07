@@ -12,6 +12,11 @@ updates:
       # breaking torch or fastapi release is never buried in a group.
       minor-and-patch:
         update-types: ["minor", "patch"]
+    ignore:
+      # torch/torchvision come from the CUDA wheel index (install.sh picks the
+      # channel; Docker bakes it) — PyPI bump PRs for them are pure churn.
+      - dependency-name: "torch"
+      - dependency-name: "torchvision" 
 
   - package-ecosystem: github-actions
     directory: /
