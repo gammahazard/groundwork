@@ -42,8 +42,10 @@ def _t(machine_key: str) -> tuple[list[str], str, str]:
 
 
 def _rel(p) -> str:
-    from ...config import ROOT
-    return p.relative_to(ROOT).as_posix()
+    # DATA_DIR == ROOT on a native checkout; on a data-dir install it is
+    # where the layout actually lives, and ROOT would refuse every path.
+    from ...config import DATA_DIR
+    return p.relative_to(DATA_DIR).as_posix()
 
 
 def _ssh(t, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
@@ -227,7 +229,8 @@ def _scan_alt(machine_key: str) -> int:
     targets = []                       # (remote_rel, local_alt_dir)
     for pp in _paths.every_project():
         try:
-            rel = pp.ALT_DIR.relative_to(ROOT).as_posix()
+            from ...config import DATA_DIR
+            rel = pp.ALT_DIR.relative_to(DATA_DIR).as_posix()
         except ValueError:
             print(f"[adopt-scan] {pp.slug}: alt dir is outside the install root, skipped")
             continue

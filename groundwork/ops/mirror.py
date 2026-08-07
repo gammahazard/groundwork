@@ -64,7 +64,8 @@ def _rel(p: Path) -> str:
     be mirrored to "the same place" on another machine, because there is no
     such place — say so rather than inventing a destination."""
     try:
-        return p.relative_to(ROOT).as_posix()
+        from ..config import DATA_DIR
+        return p.relative_to(DATA_DIR).as_posix()
     except ValueError:
         raise SystemExit(f"{p} is outside {ROOT} — this mirror only carries "
                          f"datasets that live under the install root") from None

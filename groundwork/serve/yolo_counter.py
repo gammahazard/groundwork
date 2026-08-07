@@ -123,7 +123,11 @@ class YoloCounter:
         t0 = time.time()
         self.model = YOLO(str(self.weights))
         if verbose:
-            print(f"[yolo] loaded {self.weights.relative_to(ROOT)} in "
+            try:
+                shown = self.weights.relative_to(ROOT)
+            except ValueError:      # data-dir install: weights live elsewhere
+                shown = self.weights
+            print(f"[yolo] loaded {shown} in "
                   f"{time.time()-t0:.1f}s | conf={conf} iou={iou} imgsz={imgsz}", flush=True)
 
     def _detect(self, image: Image.Image) -> list[list[float]]:

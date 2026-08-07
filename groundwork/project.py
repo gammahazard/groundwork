@@ -95,7 +95,8 @@ class Project:
         # machine still resolves — absolute paths in a manifest are a
         # portability trap.
         try:
-            d["dataset_root"] = str(self.dataset_root.relative_to(ROOT))
+            from .config import DATA_DIR
+            d["dataset_root"] = str(self.dataset_root.relative_to(DATA_DIR))
         except ValueError:
             d["dataset_root"] = str(self.dataset_root)
         return d

@@ -9,6 +9,18 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Fixed
+- Data-dir installs (Docker's `/data`, any `GW_DATA_DIR`) could not count,
+  sync, adopt, or save a portable project manifest: five call sites resolved
+  paths against the install root instead of the data root. Found by running
+  the Try-it tab on a data-dir instance; all five now use the data root,
+  which equals the install root on a native checkout.
+
+### Known
+- The live-run ticker can print "GPU undefined%" for a family with no VRAM
+  line; the champion's own job does not always paint its card busy; a
+  non-JSON error from /api/count leaves "counting…" on screen. Queued.
+
 ## [0.2.0] - 2026-08-07
 
 The first operationally tested cut: every headline feature was exercised
