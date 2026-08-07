@@ -9,6 +9,17 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-07
+
+Everything in 0.2.0 was tested against real data and a real fleet; 0.3.0 is
+what testing the paths 0.2.0 could not reach turned up. The two headliners:
+one-command worker join (mint a command on your HQ, paste it on any GPU box,
+it enrolls itself), and the GPU Docker stack actually training — proven by
+building and running it on a real two-card machine, which is where four
+container-only bugs were hiding. Plus a full-repo audit pass, remote
+challenger training working end to end for the first time, and the first-run
+experience hardened by installing from scratch in a browser.
+
 ### Added
 - **One-command worker join**: the Machines tab mints a single-use,
   30-minute join command; run on a GPU box it downloads the source bundle
@@ -31,6 +42,34 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
   owned imagery, allowlisted by name in the media gate.
 
 ### Fixed
+- **The GPU Docker stack could not train — now it does, proven on real
+  two-GPU hardware.** Building the compose stack (app + trainer + scheduler)
+  and dispatching a run through the spool surfaced four container-only bugs,
+  each of which failed every training run and none of which a native install
+  shows: ultralytics' `cv2` links against X11/Qt libraries a slim image lacks
+  (→ `opencv-python-headless`); the base weights download to the cwd, which
+  was the read-only code tree (→ training runs in the writable data dir, a
+  no-op on native); the arbitrary container uid has no `/etc/passwd` entry, so
+  torch's cache setup died in `getpwuid` (→ the entrypoint adds one); and the
+  VRAM fit guard logged **any** mid-training crash as an OOM, so an unrelated
+  failure then permanently refused a good config with a misleading "needs more
+  VRAM" message (→ a failure is recorded only on an actual CUDA
+  out-of-memory). End to end after the fixes: dispatch → trainer container →
+  GPU → evaluate → scored weights on disk, and GPU inference in the Try-it
+  tab. Docs gained the two-`.env` distinction (a repo-root `.env` is ignored
+  with `-f docker/…`) and the real image size (~13 GB).
+- **First-run polish, found by installing from scratch in a browser.** A run
+  could be *started* with zero labelled images — a doomed pipeline that read
+  as a failed run, now a refusal that names the fix queue. The empty holdout
+  score rendered as a filled green bar on a project that had never trained;
+  "All model dots" was enabled with no model and did nothing; the project bar
+  said "0 images" right after an upload (now "N to label" beside it); the
+  editor canvas sat flush-left with half the stage black; the setup wizard
+  showed "This machine" instead of the hostname; an empty error box painted a
+  rule under the first-run form; a chart loading skeleton let a phone scroll
+  sideways; and the Try-it tab — a bare file input — was rebuilt to match the
+  rest of the cockpit and no longer leaves "counting…" on screen when the
+  server refuses.
 - **A joined worker now survives a reboot.** The one-command join started the
   cockpit as a detached process and never installed a service, so a paired GPU
   box vanished at its next reboot with nothing on screen to say why. It writes
