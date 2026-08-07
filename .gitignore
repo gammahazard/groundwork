@@ -1,0 +1,25 @@
+# Data and artifacts — never in git. Anchored to the repo root on purpose:
+# unanchored patterns would also swallow package directories with the same
+# names (groundwork/models/, for one).
+/outputs/
+/data/
+/docker/data/
+/private/
+/models/
+
+# Model weights are artifacts wherever they land.
+*.pt
+*.pth
+
+# Secrets. The pattern matches exactly ".env", so .env.example stays tracked.
+.env
+
+# Python
+.venv*/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Frontend tooling
+node_modules/

@@ -1,0 +1,71 @@
+# Groundwork packaging. The base install is deliberately TORCH-FREE: the web
+# tier, CI and a label-only box must not drag in a multi-GB GPU stack. Torch
+# arrives via the [train] extra — and install ORDER is load-bearing there:
+# scripts/install.sh and docker/Dockerfile put torch/torchvision in FIRST, from
+# the right CUDA channel index, so the unpinned "torch" below is already
+# satisfied and nothing later can swap in a generic build.
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "groundwork"
+version = "0.1.0"
+description = "Self-hosted vision-model trainer: collect, label, train, evaluate, serve"
+license = "AGPL-3.0-or-later"
+requires-python = ">=3.10"
+dependencies = [
+    # Proven pins carried from the working install — loosen one only with a
+    # reason and a test, not because a newer version exists.
+    "fastapi==0.139.2",
+    "uvicorn[standard]==0.41.0",
+    "python-multipart",
+    "httpx",              # machine-to-machine calls; its absence once 500'd three endpoints
+    "pillow==12.3.0",
+    "numpy==2.5.1",
+    "python-dotenv==1.2.2",
+]
+
+[project.optional-dependencies]
+# Training. torch/torchvision are UNPINNED here on purpose: which build you
+# need (cu128 / cu126 / cpu) is a per-machine choice the installers make by
+# installing them first from the matching wheel index — a +cuXXX pin here
+# would fight that. ultralytics is likewise unpinned; with torch already
+# present it cannot pull a different one in.
+train = [
+    "torch",
+    "torchvision",
+    "ultralytics",
+    "pyyaml",
+    "matplotlib",
+    "pandas",
+    "tqdm",
+    "psutil",
+    "scipy",
+]
+
+# Telegram capture bots.
+bots = [
+    "python-telegram-bot==22.8",
+]
+
+# The auto-labeler (LocateAnything-3B). Installed by the setup wizard's opt-in
+# extras step, after license consent — not by default. Pins matter here:
+# transformers 5.x breaks the model's trust_remote_code path, and the rest are
+# what that remote code imports.
+la = [
+    "transformers==4.57.1",
+    "bitsandbytes==0.49.2",
+    "accelerate==1.14.0",
+    "peft==0.19.1",
+    "opencv-python-headless==5.0.0.93",
+    "decord==0.6.0",
+    "lmdb==2.3.0",
+]
+
+[project.scripts]
+groundwork = "groundwork.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["groundwork*", "altmodels*"]
