@@ -159,7 +159,8 @@ DEIMCriterion:
 
 
 def _build_classic_tree(src: Path, dest: Path,
-                        include_distill: bool = False) -> None:
+                        include_distill: bool = False,
+                        distill_dir: Path | None = None) -> None:
     """roboflow layout -> classic COCO layout, symlinked.
     Self-check: image counts in json vs on disk must match, per split.
     include_distill merges the champion-taught bucket (dataset/distill/) into
@@ -185,19 +186,30 @@ def _build_classic_tree(src: Path, dest: Path,
             f"{split}: json lists {len(ann['images'])} images, disk has {n}"
         if include_distill and name == "train":
             from PIL import Image
-            di = REPO / "outputs" / "dataset" / "distill" / "images"
-            dl = REPO / "outputs" / "dataset" / "distill" / "labels"
+            # NAMED, not derived. The bucket belongs to the PROJECT's dataset
+            # (teacher_label writes pp.DATASET_DIR/"distill"), which cannot be
+            # inferred from the converted tree — the old repo-level constant was
+            # from before projects existed and quietly added nothing on every
+            # install. No --distill-dir means no distillation, said out loud.
+            di = (distill_dir / "images") if distill_dir else None
+            dl = (distill_dir / "labels") if distill_dir else None
+            if dl is None:
+                print("[deim-ds] --include-distill given without --distill-dir "
+                      "— nothing to merge", flush=True)
             img_id = max((im["id"] for im in ann["images"]), default=0)
             box_id = max((a["id"] for a in ann["annotations"]), default=0)
             added = 0
-            for lbl in sorted(dl.glob("*.txt")) if dl.exists() else []:
-                src = next((q for q in di.glob(f"{lbl.stem}.*")), None)
-                if src is None:
+            for lbl in sorted(dl.glob("*.txt")) if dl and dl.exists() else []:
+                # NOT `src` — that is this function's SOURCE TREE parameter, and
+                # rebinding it here broke the val split that runs after train
+                # (it went looking for valid/ under a distill image file).
+                img = next((q for q in di.glob(f"{lbl.stem}.*")), None)
+                if img is None:
                     continue
-                (img_dir / src.name).symlink_to(src.resolve())
-                W, H = Image.open(src).size
+                (img_dir / img.name).symlink_to(img.resolve())
+                W, H = Image.open(img).size
                 img_id += 1
-                ann["images"].append({"id": img_id, "file_name": src.name,
+                ann["images"].append({"id": img_id, "file_name": img.name,
                                       "width": W, "height": H})
                 for ln in lbl.read_text().splitlines():
                     if not ln.strip():
@@ -235,6 +247,9 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tuning", type=Path, default=None,
                     help="COCO checkpoint to fine-tune from (-t); query embeds re-init")
+    ap.add_argument("--distill-dir", type=Path, default=None,
+                    help="the project's distill/ bucket (teacher-labelled "
+                         "images), merged into TRAIN with --include-distill")
     ap.add_argument("--include-distill", action="store_true",
                     help="merge champion-taught distill/ images into TRAIN")
     ap.add_argument("--no-aug-epochs", type=int, default=12,
@@ -290,7 +305,8 @@ def main() -> None:
         print(f"[train_deim] source {args.dataset_dir} -> classic {deim_ds}",
               flush=True)
         _build_classic_tree(args.dataset_dir, deim_ds,
-                            include_distill=args.include_distill)
+                            include_distill=args.include_distill,
+                            distill_dir=args.distill_dir)
         flat = 4 + args.epochs // 2
         # stop_epoch (augmentation off) and no_aug_epoch are the SAME boundary
         # seen from either end — they must move together or stage 2 desyncs
