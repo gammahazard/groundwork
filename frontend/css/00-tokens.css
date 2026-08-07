@@ -143,6 +143,9 @@
 /* A missing score is NOT a perfect one. Until loadState lands a number the
    readout holds a dash, and green would assert 0.0000 before anything is known. */
 .gwReadV:not(:has(*)){color:var(--gw-good)}
+/* ...and this is the rule that keeps that promise: the writer marks the
+   placeholder, because CSS cannot see that the text is a dash. */
+.gwReadV.gwReadNone{color:var(--gw-ink-3)}
 .gwRead .gwReadV.gwPending,.gwReadV.uiPending{color:transparent}
 .gwReadSub{display:block;font:400 var(--gw-t-sm) var(--gw-mono);
            color:var(--gw-ink-3);margin-top:var(--gw-s2)}

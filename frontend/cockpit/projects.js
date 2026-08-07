@@ -255,7 +255,10 @@ function openProject(slug, push = true) {
     bar.innerHTML = `<span class="pjOpenName">${pjEsc(p.name)}</span>
       <span class="pjSub"><button id="pjClasses" class="pjClsLink"
         title="Add, rename or remove this project's classes"
-        >${pjEsc((p.classes||[]).join(', '))}</button> · ${p.images ?? 0} images</span>
+        >${pjEsc((p.classes||[]).join(', '))}</button> · ${p.images ?? 0} images${
+          (p.collections?.needs_fix)
+            ? ` · <b class="pjWaiting">${p.collections.needs_fix} to label</b>` : ""
+        }</span>
       <button id="pjBack" class="pjBackBtn">← all projects</button>`;
     $("#pjBack").onclick = () => closeProject();
     const cls = $("#pjClasses");

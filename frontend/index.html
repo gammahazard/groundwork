@@ -1016,9 +1016,22 @@
 
 
   <!-- Count -->
+  <!-- TRY IT — the see-it-work moment, and for most people the first proof the
+       thing they trained does anything. It was one line of copy and a raw
+       browser file input while every other tab had a heading, a styled control
+       and a sentence saying what it does. -->
   <section id="count" class="tab">
-    <p class="hint">Ad-hoc count (not saved). Upload an image.</p>
-    <form id="countForm"><input type="file" id="countFile" accept="image/*" required><button>Count</button></form>
+    <div class="gwDatum"><h2>Try it</h2>
+      <span class="n">count one image — nothing is saved</span></div>
+    <p class="hint">Whatever serves this project answers, at its own tuned
+      thresholds — the same model and settings a bot or the phone would get.
+      The image is counted and discarded: it does not join the training set.</p>
+    <form id="countForm" class="ctForm">
+      <input type="file" id="countFile" accept="image/*" required hidden>
+      <label for="countFile" class="upBtn">⬆ Choose an image</label>
+      <span class="ctName hint" id="countName">no image chosen</span>
+      <button class="ctGo">Count</button>
+    </form>
     <div id="countResult"></div>
   </section>
   <!-- ===================== What is Groundwork? =========================

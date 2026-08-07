@@ -51,7 +51,12 @@
    these into containers it does not own: inside `.charts` (flex) they share the
    row exactly as .chartCard does; inside #labRuns (block) the flex values are
    simply ignored and the aspect-ratio still sizes it. */
-.uiSkelChart{flex:1 1 320px;min-width:280px;aspect-ratio:340/158;height:auto}
+.uiSkelChart{flex:1 1 320px;min-width:280px;max-width:100%;
+             aspect-ratio:340/158;height:auto}
+/* min-width:280px is a FLOOR, and a floor beats the container on a narrow
+   phone: at 390px the skeleton measured 387 wide starting at the 16px gutter,
+   so the page could be dragged sideways for as long as the charts took to
+   load. The real charts wrap; their placeholder must too. */
 /* A held container must never collapse to nothing mid-swap. */
 .uiSkelChart:only-child{min-height:180px}
 

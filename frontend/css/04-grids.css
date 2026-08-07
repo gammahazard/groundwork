@@ -58,6 +58,13 @@ select.bucket.b-untagged{border-left-color:var(--edge)}
 .dupeDel:hover{border-color:#e37}
 .dupeMeta{font-size:.7rem;color:var(--mut);align-self:center;max-width:6.5rem;text-align:center}
 #countResult{margin-top:1rem}#countResult img{max-width:100%;border-radius:10px}
+/* Try it: the same row shape as the upload controls — a styled label standing
+   in for the file input, the chosen name beside it, the action at the end. */
+.ctForm{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin:.9rem 0}
+.ctName{min-width:9rem}
+.ctGo{background:var(--gw-act);color:#141b28;border:0;border-radius:8px;
+      padding:.5rem 1.1rem;font-weight:700;cursor:pointer}
+.ctGo:hover{filter:brightness(1.06)}
 #countResult .big{font-size:2rem;font-weight:700}
 /* z-index 26 is NOT arbitrary: it must beat .navPanel's 25 (11-nav.css). The
    editor is a full-screen overlay, but at 20 the pinned desktop sidebar painted

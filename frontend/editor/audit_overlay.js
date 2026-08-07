@@ -150,6 +150,12 @@ async function auditLoad(force) {
 window.auditWant = () => { audit.want = true; };
 window.auditToggleAll = () => {
   audit.showAll = !audit.showAll;
+  // PRESSING THIS *IS* ASKING FOR MODEL DOTS. With no overlay loaded it used to
+  // flip a flag over an empty set: on a fresh project — no trained model — the
+  // button was enabled, did nothing, and said nothing. Load on demand instead,
+  // which routes a project with no model into auditLoad's own error path
+  // ("no model is serving this project"), an answer rather than silence.
+  if (audit.showAll && !audit.pts) { audit.want = true; auditLoad(true); return; }
   if (typeof redraw === "function") redraw();
 };
 window.auditAfterOpen = () => auditLoad(false);

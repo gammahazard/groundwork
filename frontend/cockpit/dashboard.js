@@ -84,7 +84,13 @@ async function loadState(){
       ? `${sv.name} @${sv.imgsz} (${exp ? `${sv.engine} — EXPERIMENTAL`
                                         : sv.pinned ? "pinned" : "newest"})`
       : "none";
-    $("#stServedMae").textContent = fmtScore(sv.mae);
+    // A MISSING SCORE IS NOT A PERFECT ONE — 00-tokens.css says exactly that
+    // above .gwReadV and then paints the placeholder green anyway. At 64px a
+    // lone dash in "good" green reads as a filled bar on a project that has
+    // never trained. The class mutes it; a real number keeps the green.
+    const maeEl = $("#stServedMae");
+    maeEl.textContent = fmtScore(sv.mae);
+    maeEl.classList.toggle("gwReadNone", sv.mae === null || sv.mae === undefined);
     $("#stExact").textContent = sv.exact ? `${sv.exact[0]}/${sv.exact[1]}` : "–";
     $("#stConf").textContent = s.conf; $("#stIou").textContent = s.iou;
     const note = $("#servingNote");

@@ -71,3 +71,8 @@ body.lab .dashCard.hero{background:linear-gradient(180deg,#241c11,#1d150c)}
   .actWaiting{ animation: actPulse 1.6s ease-in-out infinite; }
   @keyframes actPulse{ 0%,100%{ opacity:.55 } 50%{ opacity:.9 } }
 }
+
+/* The project bar's "N to label". "0 images" alone is true (a queue is not
+   data) and reads as nothing-happened right after an upload — the count that
+   answers "where did my 14 photos go" belongs beside it. */
+.pjWaiting{color:var(--gw-act);font-weight:600}

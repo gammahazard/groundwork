@@ -60,8 +60,12 @@ def status():
     if not setup_open():
         return {"needed": False}
     from .. import machines
+    from ...config import MACHINE
     return {"needed": True,
-            "machine": machines.here().name,
+            # THIS BOX'S NAME (hostname, or GW_MACHINE). here().name is the
+            # registry's label — "This machine" — which reads as a placeholder
+            # in the wizard's sentence and tells a first-time user nothing.
+            "machine": MACHINE,
             "suggested_url": machines.self_url(),
             "role": role()}
 

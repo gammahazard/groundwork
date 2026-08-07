@@ -47,6 +47,18 @@ def start(opts: RetrainOpts, p=Depends(current_project)):
     if la_job.running():
         return {"ok": False, "error": "a LocateAnything probe is running — "
                                       "wait ~a minute and retry"}
+    # NOTHING TO TRAIN ON is a refusal, not a failed run. Without this the
+    # launch "succeeded", a detached pipeline started, split exited, and the
+    # cockpit showed a failed run whose reason was only in the log — the first
+    # thing a new install does is press Train, and this was its answer.
+    from ...dataset.pipeline.split import _stems_with_labels
+    from ...dataset import paths as _paths
+    n = len(_stems_with_labels(_paths.for_project(p)))
+    if n == 0:
+        return {"ok": False, "error":
+                "no labelled images yet — open Images ▸ Fix queue, mark the "
+                "objects in a few, and press Done → training. Training needs "
+                "at least one labelled image."}
     return retrain_job.start(imgsz=opts.imgsz or 960, sizes=opts.sizes,
                              epochs=opts.epochs, batch=opts.batch,
                              project=p.slug,

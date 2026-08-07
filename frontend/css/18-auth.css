@@ -180,6 +180,10 @@ body.authUnknown #login{display:none}
   border-left:3px solid var(--gw-act);padding:.55rem 0 .55rem .75rem;
   font:400 var(--gw-t-sm)/1.55 var(--gw-sans);color:var(--gw-ink-2)}
 .loginErr[hidden]{display:none}
+/* ...and when it holds no text either. The setup card writes its message into
+   a permanent div, so an untouched first-run screen painted a 3px amber rule
+   and 17px of padding under the fields — a warning about nothing. */
+.loginErr:empty{display:none}
 
 .loginFoot{
   margin-top:var(--gw-s5);font:400 var(--gw-t-xs)/1.7 var(--gw-mono);

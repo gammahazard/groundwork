@@ -204,11 +204,42 @@ function showTab(name){
 }
 
 /* ---------- count ---------- */
+/* Server text reaches innerHTML here (a refusal detail, an exception message),
+   so it is escaped. File-scoped: core.js is loaded first and a top-level const
+   is shared lexically by every later script, so a generic name would collide —
+   see the load-order note in index.html. */
+const _ctEsc = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+/* The file input is hidden behind a styled label (every other control in this
+   cockpit is styled), so the chosen name has to be echoed or the button reads
+   as doing nothing. */
+if ($("#countFile")) $("#countFile").onchange = () => {
+  const f = $("#countFile").files[0];
+  $("#countName").textContent = f ? f.name : "no image chosen";
+};
 if ($("#countForm")) $("#countForm").onsubmit = async e => {
   e.preventDefault();
   const f = $("#countFile").files[0]; if (!f) return;
-  $("#countResult").innerHTML = "⏳ counting…";
+  const out = $("#countResult");
+  out.innerHTML = "⏳ counting…";
   const fd = new FormData(); fd.append("image", f);
-  const r = await api("/api/count", {method:"POST", body:fd});
-  $("#countResult").innerHTML = `<div class="big">🔢 ${r.count}</div><div class="hint">${r.seconds}s</div><img src="${r.overlay}?t=${Date.now()}">`;
+  try {
+    const r = await api("/api/count", {method: "POST", body: fd});
+    // A REFUSAL IS AN ANSWER. api() resolves for a non-2xx with a detail body,
+    // and this used to render `🔢 undefined` beside a broken image for it —
+    // most often on a project with no trained model, which is exactly when
+    // someone presses this button for the first time.
+    if (!r || r.count == null) {
+      out.innerHTML = `<p class="hint">${_ctEsc(r && (r.detail || r.error)
+        || "the server did not answer with a count")}</p>`;
+      return;
+    }
+    out.innerHTML = `<div class="big">🔢 ${r.count}</div>`
+      + `<div class="hint">${r.seconds}s</div>`
+      + `<img src="${r.overlay}?t=${Date.now()}" alt="the counted image with a dot on each object">`;
+  } catch (err) {
+    // ...and a thrown error (offline, a 500 with an HTML body) must not leave
+    // "counting…" on screen forever, which is what it did.
+    out.innerHTML = `<p class="hint">Could not count: ${_ctEsc(err.message || err)}</p>`;
+  }
 };

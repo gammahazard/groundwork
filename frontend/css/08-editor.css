@@ -17,7 +17,10 @@
    so the callout fires on the exact gesture the editor is built around and
    covers the object you were aiming at. user-select stops the text-selection
    handles the same press can start. Neither affects the mouse. */
-#edCanvas{display:block;cursor:crosshair;touch-action:pan-x pan-y;
+/* CENTRED. The canvas is sized to the image's aspect, so on a wide window a
+   portrait photo left ~40% of the stage black on one side only, which reads as
+   a broken layout rather than a letterbox. */
+#edCanvas{display:block;margin-inline:auto;cursor:crosshair;touch-action:pan-x pan-y;
   -webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 /* Same press can land on the wrapper if a tap misses the canvas edge. */
 #edCanvasWrap{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
