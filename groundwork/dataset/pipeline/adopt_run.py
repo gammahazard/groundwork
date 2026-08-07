@@ -283,24 +283,33 @@ def main() -> None:
     ap.add_argument("--note", default="")
     ap.add_argument("--scan", action="store_true",
                     help="auto-adopt every finished, un-adopted worker run")
-    from ...project import add_argument, load
-    add_argument(ap)
+    from ...project import load, slugs
+    # A MACHINE job, not a stage: --scan sweeps every project when none is
+    # named (the scheduler runs it that way every 5 minutes — requiring a
+    # project made every tick exit 2, so auto-adoption never ran). Adopting
+    # ONE named run still requires naming whose it is.
+    ap.add_argument("--project", default=None, help="project slug "
+                    "(--scan default: every project)")
     args = ap.parse_args()
-    proj = load(args.project)
-    pp = paths.for_project(proj)
-    # Quiet by design — the scheduler runs this every 5 minutes, and it already
-    # prints per adoption. One line naming the project is enough to make a
-    # journal entry legible.
     if args.scan:
         keys = [args.machine] if args.machine else list(machines_mod.workers())
         if not keys:
             print("[adopt-scan] no workers registered — nothing to scan")
             return
-        for key in keys:
-            scan(key, pp, proj.slug)
+        targets = ([load(args.project)] if args.project
+                   else [load(s) for s in slugs()])
+        for proj in targets:
+            pp = paths.for_project(proj)
+            print(f"[adopt-scan] project {proj.slug} | {proj.dataset_root}")
+            for key in keys:
+                scan(key, pp, proj.slug)
     elif args.run:
         if not args.machine:
             ap.error("--machine is required with --run")
+        if not args.project:
+            ap.error("--project is required with --run")
+        proj = load(args.project)
+        pp = paths.for_project(proj)
         print(f"[adopt] project {proj.slug} ({proj.name}) | {proj.dataset_root}")
         adopt(args.machine, args.run, args.note, pp, proj.slug)
     else:

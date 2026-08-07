@@ -116,16 +116,20 @@ def main() -> None:
     ap.add_argument("--older-than-hours", type=float, default=24.0)
     ap.add_argument("--overlay-days", type=float, default=7.0)
     ap.add_argument("--one-off-days", type=float, default=30.0)
-    from ...project import add_argument, load
-    add_argument(ap)
+    from ...project import load, slugs
+    # A MACHINE job: with no --project it sweeps every project (the scheduler
+    # runs it that way daily — requiring one made every run exit 2).
+    ap.add_argument("--project", default=None,
+                    help="project slug (default: every project)")
     args = ap.parse_args()
-    proj = load(args.project)
-    pp = paths.for_project(proj)
-    # This is the janitor job's systemd unit. It only ever touches pending/ — never
-    # raw/, never the holdout — but it DELETES, so it says which tree first.
-    print(f"[pending-janitor] project {proj.slug} ({proj.name}) | "
-          f"{proj.dataset_root}")
-    sweep(args.older_than_hours, pp)
+    targets = [load(args.project)] if args.project else [load(s) for s in slugs()]
+    for proj in targets:
+        pp = paths.for_project(proj)
+        # It only ever touches pending/ — never raw/, never the holdout — but
+        # it DELETES, so it says which tree first.
+        print(f"[pending-janitor] project {proj.slug} ({proj.name}) | "
+              f"{proj.dataset_root}")
+        sweep(args.older_than_hours, pp)
     # sweep_overlays prunes the bot's per-count PNGs from outputs/ root, which is
     # machine-global rather than per-project — no pp, deliberately.
     sweep_overlays(args.overlay_days)
