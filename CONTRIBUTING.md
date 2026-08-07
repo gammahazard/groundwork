@@ -113,12 +113,21 @@ Semantic Versioning: MAJOR for breaking changes to the HTTP API, on-disk
 layout, or unit/env contracts; MINOR for backwards-compatible features; PATCH
 for fixes.
 
-The flow, in order:
+One command does the whole cut:
 
-1. Move the `[Unreleased]` entries in CHANGELOG.md under a new
-   `[X.Y.Z] - YYYY-MM-DD` heading and update the compare links at the bottom.
-2. Commit, then tag: `git tag -a vX.Y.Z -m "..."` and push the tag.
-3. CI runs on the tag; the release workflow publishes
-   `ghcr.io/gammahazard/groundwork:X.Y.Z` (and `-cpu`) — public repo only.
-4. Write the GitHub Release notes from that changelog section — the
-   changelog is the source, the release page is a copy, never the reverse.
+```sh
+scripts/release.sh X.Y.Z            # or --dry-run to preview, changing nothing
+```
+
+It refuses on a dirty tree, a non-`main` branch, a version that isn't higher
+than the current one, or an empty `[Unreleased]`; then it stamps the changelog,
+bumps `pyproject.toml`, commits and pushes, **waits for CI to go green**, tags
+`vX.Y.Z`, and creates the GitHub Release from the changelog section. The tag
+fires the ghcr publish workflow (a no-op while the repo is private; a real
+publish of `ghcr.io/gammahazard/groundwork:X.Y.Z` and `-cpu` once public).
+
+So the only manual work is **keeping `[Unreleased]` stocked as you go** — a line
+per change under `### Added` / `### Fixed` / `### Security`. Keep those lines
+**short**: one sentence — the change and why it matters, not a post-mortem. The
+changelog is the source of truth; the Release page is a copy of it, never the
+reverse.
