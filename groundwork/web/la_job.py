@@ -83,7 +83,7 @@ def running() -> bool:
     return status()["status"] == "running"
 
 
-def start(collection: str, stem: str, desc: str) -> dict:
+def start(collection: str, stem: str, desc: str, slug: str) -> dict:
     # gpu_lock: cross-process admission mutex shared with retrain_job, so a
     # probe and a retrain can't both pass the other's busy check concurrently.
     with _lock, retrain_job.gpu_lock():
@@ -96,7 +96,10 @@ def start(collection: str, stem: str, desc: str) -> dict:
         log = open(LOG, "w")
         cmd = [sys.executable, "-m", "groundwork.dataset.teacher.la_probe",
                "--collection", collection, "--stem", stem,
-               "--desc", desc, "--out", str(RESULT)]
+               "--desc", desc, "--out", str(RESULT),
+               # A stage subprocess cannot inherit the project — it travels on
+               # the argv or the probe silently reads another project's image.
+               "--project", slug]
         log.write(f"$ {' '.join(cmd)}\n"); log.flush()
         proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT,
                                 env={**os.environ,

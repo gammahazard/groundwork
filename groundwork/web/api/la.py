@@ -28,7 +28,7 @@ def start(collection: str, stem: str, opts: ProbeOpts,
         return {"ok": False, "error": f"unknown collection {collection!r}"}
     if labelio.image_path(collection, stem, pp) is None:
         return {"ok": False, "error": f"no image for {stem!r} in {collection!r}"}
-    return la_job.start(collection, stem, desc)
+    return la_job.start(collection, stem, desc, pp.slug)
 
 
 @router.get("/api/la")

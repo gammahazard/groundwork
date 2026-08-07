@@ -20,14 +20,16 @@ from pathlib import Path
 _SAFE_RETRY_TOKENS = 1536
 
 
-def probe(collection: str, stem: str, desc: str, out: Path) -> dict:
+def probe(collection: str, stem: str, desc: str, out: Path, pp) -> dict:
     # Heavy imports inside so --help stays instant.
     from ...la.worker import Worker
     from ...la.infer import run_detection
     from ...la import image_ops
     from ..store import labelio
 
-    p = labelio.image_path(collection, stem)
+    # The house rule for stage subprocesses: say whose data, before any work.
+    print(f"[la_probe] project {pp.slug} | {pp.root}", flush=True)
+    p = labelio.image_path(collection, stem, pp)
     if p is None:
         raise FileNotFoundError(f"no image for {stem!r} in {collection!r}")
     img = image_ops.load(str(p))
@@ -63,8 +65,12 @@ def main() -> None:
     ap.add_argument("--stem", required=True)
     ap.add_argument("--desc", default="object")
     ap.add_argument("--out", type=Path, required=True)
+    from ... import project as project_mod
+    project_mod.add_argument(ap)
     args = ap.parse_args()
-    probe(args.collection, args.stem, args.desc, args.out)
+    from .. import paths
+    probe(args.collection, args.stem, args.desc, args.out,
+          paths.for_project(args.project))
 
 
 if __name__ == "__main__":
