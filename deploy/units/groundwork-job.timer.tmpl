@@ -1,0 +1,22 @@
+# Timer half of groundwork-job.service.tmpl — same renderer, same source of
+# truth: the scheduler's job table (groundwork/ops/scheduler.py). The table
+# carries each job's schedule; this file is only its systemd shape, so the
+# native timers and the Docker in-process scheduler cannot drift apart on
+# "what runs when". A timer activates the .service of its own name — the
+# renderer writes both halves together.
+
+[Unit]
+Description=Groundwork timer: {{JOB}}
+
+[Timer]
+# Rendered from the table's schedule. Interval jobs get OnUnitActiveSec= plus
+# OnBootSec=; calendar jobs get OnCalendar= plus Persistent= (catch up a
+# missed day). TWO placeholders, one directive each, because the renderer
+# refuses any value containing a newline — that rule is what stops a crafted
+# value from appending arbitrary directives to a file systemd executes, and
+# templates bend to it, never the other way around.
+{{SCHEDULE_1}}
+{{SCHEDULE_2}}
+
+[Install]
+WantedBy=timers.target

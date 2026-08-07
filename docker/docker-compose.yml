@@ -1,0 +1,79 @@
+# Groundwork — GPU stack. Three services, ONE image, built once and shared:
+#
+#   app        web UI + API + bot supervisor
+#   trainer    groundwork.ops.trainerd — watches the /data/jobs spool and
+#              PARENTS every training run, so recreating or upgrading `app`
+#              never kills a live run (the native install gets the same
+#              property from KillMode=process in its systemd unit)
+#   scheduler  groundwork.ops.scheduler — a 60s tick over the job table
+#              (mirror/adopt/backup/clean/autoscore, with role predicates);
+#              writes outputs/jobs_status.json, which the dashboard reads
+#
+# No NVIDIA GPU? Use docker-compose.cpu.yml instead.
+
+# Pin the project name so containers and the gw-venvs volume are named after
+# groundwork, not after whatever directory the compose file happens to sit in.
+name: groundwork
+
+# GPU reservation, written once and referenced where needed. Requires the
+# NVIDIA container toolkit — README.md has the one-command preflight.
+x-gpu: &gpu
+  resources:
+    reservations:
+      devices:
+        - driver: nvidia
+          count: all
+          capabilities: [gpu]
+
+x-base: &base
+  build:
+    context: ..                          # the repo root
+    dockerfile: docker/Dockerfile
+    args:
+      # cu128 is the default; pre-Blackwell cards can use cu126:
+      #   TORCH_CHANNEL=cu126 docker compose -f docker/docker-compose.yml up -d --build
+      TORCH_CHANNEL: ${TORCH_CHANNEL:-cu128}
+  image: groundwork:local                # one shared tag → one build for all three
+  # Run as YOUR uid/gid so everything under ./data is plain host files you own:
+  #   export GW_UID=$(id -u) GW_GID=$(id -g)
+  user: "${GW_UID:-1000}:${GW_GID:-1000}"
+  volumes:
+    # Host paths resolve relative to THIS file, so the data lands at
+    # docker/data. A bind mount, not a named volume, on purpose: datasets,
+    # runs and credentials stay ordinary files you can inspect and back up.
+    - ./data:/data
+    # Challenger venvs do get a named volume: tens of thousands of small files
+    # and ELF binaries, slow on a bind mount and broken on NTFS/exFAT hosts.
+    - gw-venvs:/data/venvs
+  restart: unless-stopped
+
+services:
+  app:
+    <<: *base
+    ports:
+      # GW_PORT is the HOST port (a compose-time variable, not an app setting);
+      # inside the container the app always listens on 8000.
+      - "${GW_PORT:-8000}:8000"
+    deploy: *gpu                         # inference (the Try-it tab) uses the GPU too
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  trainer:
+    <<: *base
+    command: ["python", "-m", "groundwork.ops.trainerd"]
+    deploy: *gpu
+    # Dataloader workers hand batches over /dev/shm; Docker's 64 MB default
+    # kills them mid-epoch.
+    shm_size: "2gb"
+
+  scheduler:
+    <<: *base
+    command: ["python", "-m", "groundwork.ops.scheduler"]
+    # No GPU on purpose: it moves files and shells rsync/ssh, nothing more.
+
+volumes:
+  gw-venvs:

@@ -1,0 +1,21 @@
+# Template for ONE background job, rendered by `groundwork install` — one
+# rendered copy per job, named after it (groundwork-<name>.service).
+#
+# The scheduler's job table (groundwork/ops/scheduler.py) is the SOURCE OF
+# TRUTH for job names, modules, arguments, intervals and role predicates.
+# These units are only that table's systemd shape; Docker installs run the
+# same table in-process instead. Change a job in the table and re-run the
+# installer — never by editing a rendered unit.
+
+[Unit]
+Description=Groundwork job: {{JOB}}
+
+[Service]
+Type=oneshot
+WorkingDirectory={{ROOT}}
+# ARGS already carries `-m <module> …` straight from the table — the
+# unit's NAME ({{JOB}}) is not a module and must never appear after -m.
+ExecStart={{PYTHON}} {{ARGS}}
+# A wedged job must die and report, not sit forever while its timer piles
+# start requests behind it.
+TimeoutStartSec={{TIMEOUT}}

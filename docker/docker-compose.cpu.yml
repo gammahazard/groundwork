@@ -1,0 +1,43 @@
+# Groundwork — CPU-only stack, for a machine with no NVIDIA GPU: collect,
+# label, curate and manage projects and accounts. Torch installs from the cpu
+# wheel channel, so the image is a fraction of the GPU one's size.
+#
+# There is deliberately NO trainer service here: this box cannot train, and a
+# trainer that exists but always fails would just be a lie on the dashboard.
+# Train by pairing a GPU worker machine, or run docker-compose.yml on a GPU
+# box — the data layout is identical, so switching files later is the whole
+# migration.
+
+name: groundwork
+
+x-base: &base
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+    args:
+      TORCH_CHANNEL: cpu
+  image: groundwork:cpu                  # its own tag, so it never shadows a GPU build
+  user: "${GW_UID:-1000}:${GW_GID:-1000}"
+  volumes:
+    - ./data:/data                       # same host directory as the GPU stack
+    - gw-venvs:/data/venvs
+  restart: unless-stopped
+
+services:
+  app:
+    <<: *base
+    ports:
+      - "${GW_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  scheduler:
+    <<: *base
+    command: ["python", "-m", "groundwork.ops.scheduler"]
+
+volumes:
+  gw-venvs:

@@ -1,0 +1,25 @@
+# Template — `groundwork install` renders {{ROOT}} and {{PYTHON}} with this
+# machine's real paths and writes the result to ~/.config/systemd/user/.
+# Edit the template, re-run the installer; never hand-edit the rendered unit.
+
+[Unit]
+Description=Groundwork cockpit (web UI + API)
+After=network.target
+
+[Service]
+WorkingDirectory={{ROOT}}
+# Settings come from .env in the working directory (python-dotenv reads it),
+# so no Environment= lines belong here.
+ExecStart={{PYTHON}} -m groundwork.web
+Restart=always
+RestartSec=5
+# KillMode=process is BAKED IN, not an option. systemd stops a unit by killing
+# its whole cgroup, and a detached training run still lives in that cgroup —
+# setsid does not leave it. Without this line, a routine cockpit restart kills
+# the run: measured on the predecessor, a 250-epoch run died 24 minutes in,
+# 6 seconds after a restart. The detached worker process AND this line
+# TOGETHER are what make restarts safe; either alone is not enough.
+KillMode=process
+
+[Install]
+WantedBy=default.target
