@@ -29,6 +29,12 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
   the Try-it tab on a data-dir instance; all five now use the data root,
   which equals the install root on a native checkout.
 
+### Security
+- transformers bumped to 5.14 (three advisories, two high — RCE-class in
+  model-loading paths, all fixed by ≥5.5). The auto-labeler integration needs
+  a functional revalidation against 5.x before the next release; it is opt-in
+  and loads only weights the user chose, so exposure was limited.
+
 ### Known
 - The live-run ticker can print "GPU undefined%" for a family with no VRAM
   line; the champion's own job does not always paint its card busy; a
