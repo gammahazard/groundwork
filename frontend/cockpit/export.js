@@ -104,11 +104,19 @@ async function loadExport() {
   const sel = $("#xRun");
   if (!sel) return;
   const runs = await _xRuns();
+  // The empty state HIDES the controls instead of replacing the panel's
+  // innerHTML — the old version destroyed #xRun and friends, and the null
+  // guard above then returned forever: opening Export before the first run
+  // bricked the tab until a full page reload.
+  const empty = $("#xEmpty");
+  const ctrls = $("#xControls");
   if (!runs.length) {
-    $("#xPanel").innerHTML = `<p class="hint">No runs yet — train one and it
-      appears here.</p>`;
+    if (empty) empty.hidden = false;
+    if (ctrls) ctrls.hidden = true;
     return;
   }
+  if (empty) empty.hidden = true;
+  if (ctrls) ctrls.hidden = false;
   const keep = sel.value;
   sel.innerHTML = runs.map(r => `<option>${_xEsc(r)}</option>`).join("");
   if (keep && runs.includes(keep)) sel.value = keep;

@@ -567,7 +567,12 @@
     <div class="gwDatum"><h2>Export</h2>
       <span class="n">turn a run into something you can deploy</span></div>
     <div id="xPanel" class="xPanel">
-      <div class="xControls">
+      <!-- The empty state is a SIBLING that toggles hidden, never an innerHTML
+           replacement of #xPanel — replacing the panel destroys #xRun, and
+           export.js's null guard then bricks the tab until a page reload. -->
+      <p class="hint" id="xEmpty" hidden>No runs yet — train one and it appears
+        here.</p>
+      <div class="xControls" id="xControls">
         <label>run <select id="xRun"></select></label>
         <label>format <select id="xFormat"></select></label>
         <span class="xSize gwNum" id="xSize"></span>
