@@ -5,11 +5,14 @@ from telegram import BotCommand
 
 HELP = (
     "💊 *Object Counter*\n"
-    "Send a photo and I'll reply with the count + a point overlay "
+    "Send a photo. With a trained model I reply with the count + a point overlay "
     "(a dot on each object) in about a second.\n\n"
     "• *Frame the image tightly* — fill the shot with it. Nothing is cropped for "
     "you any more, so a bench edge, your hand or a bottle cap in frame can be "
-    "counted as objects.\n"
+    "counted as objects.\n"    "Before this project has a model, I collect instead: photos go straight\n"
+    "to the fix queue for labeling, and I start counting by myself once the\n"
+    "first run is trained.\n"
+
     "• Send as a *File* (not compressed photo) for best detail on dense images.\n"
     "• Send several at once — they queue and run one at a time.\n\n"
     "Under each count, tap:\n"

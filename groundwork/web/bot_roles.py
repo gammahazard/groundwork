@@ -73,9 +73,11 @@ class Role:
 
 ROLES: dict[str, Role] = {
     "counter": Role(
-        key="counter", name="Counting bot",
-        what="Photograph a scene, get a count. ✓/✗ feeds the fix queue — this "
-             "is how training images can arrive continuously.",
+        key="counter", name="Collection / counting bot",
+        what="Photograph a scene. With a trained model it replies with a "
+             "count and an overlay to confirm or correct; before one exists, "
+             "every photo lands in the fix queue for labeling — either way, "
+             "training images arrive continuously.",
         module="groundwork.bots.telegram", token_hint="BOT_TOKEN"),
 }
 
