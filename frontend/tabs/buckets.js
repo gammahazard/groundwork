@@ -31,8 +31,10 @@
 const _bkEsc = t => String(t ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-let BUCKET_OPTS = ["untagged", "object", "capsule", "stacked", "stacked-capsule"];
-let BUCKET_ORDER = ["object", "capsule", "stacked", "stacked-capsule"];
+// Minimal until the API answers — the project's real vocabulary replaces
+// these on load, so anything listed here is a flash of someone else's tags.
+let BUCKET_OPTS = ["untagged", "object"];
+let BUCKET_ORDER = ["object"];
 
 async function loadBucketVocab(){
   try {

@@ -423,6 +423,9 @@ async function advanceAfterPromote(){
   edDirty = false;
   ed.list.splice(ed.idx, 1);                     // it is no longer in this queue
   loadGrid("needs_fix", "#fixGrid");             // keep the page behind honest
+  // The image LEFT this queue for train/testset — those panes are stale now
+  // too, not just the fix grid (they reload lazily on next open).
+  if (window.imagesInvalidate) { imagesInvalidate("train"); imagesInvalidate("test"); }
   loadState();
   if (!ed.list.length){                          // queue drained — that IS done
     closeEditor();

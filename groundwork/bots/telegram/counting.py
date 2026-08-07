@@ -1,5 +1,5 @@
 """The count flow: receive a photo, count it (serialized on the one GPU), reply
-with the point overlay + the ✓/🎯/✗/½/🗑 feedback buttons."""
+with the point overlay + the ✓/🎯/✗/🗑 feedback buttons."""
 from __future__ import annotations
 import asyncio
 import io

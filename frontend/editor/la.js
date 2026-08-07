@@ -11,8 +11,9 @@
 
 const la = {pts: null, desc: "", timer: null, t0: null, appliedAt: null};
 
-// Same object phrasings the playground A/Bs (groundwork/prompts.py).
-const LA_PRESETS = ["object", "white tablet", "oval caplet", "round object", "capsule"];
+// Starter phrasings — a describe-to-detect prompt works best short and
+// physical ("hex nut", "bottle cap"), so these seed that shape.
+const LA_PRESETS = ["object", "round object", "small metal part", "screw", "coin"];
 
 /* ---------- hooks editor.js calls ---------- */
 window.laReset = () => { la.pts = null; laButtons(); };

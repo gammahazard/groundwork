@@ -45,7 +45,7 @@
                                  : 'Remove this tag'}">×</button>
       </div>`).join('') + `
       <div class="tagEdAdd">
-        <input id="tagEdNew" placeholder="add a tag… (e.g. scuffed, low-light, non-image)"
+        <input id="tagEdNew" placeholder="add a tag… (e.g. scuffed, low-light, cluttered)"
                spellcheck="false" ${busy ? 'disabled' : ''}>
         <button id="tagEdAddBtn" ${busy ? 'disabled' : ''}>add</button>
       </div>

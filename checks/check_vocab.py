@@ -63,13 +63,29 @@ SKIP_DIRS = {".git", "__pycache__", "node_modules", "outputs", "private",
 SKIP_FILES = {"check_vocab.py"}          # this file names what it bans
 
 
+def _ignored() -> set:
+    """Paths git ignores. The gate's universe is what could SHIP — tracked
+    plus untracked-unignored — so a gitignored working note that QUOTES a
+    banned word (an audit file does exactly this) is not a leak. In CI the
+    checkout has no ignored strays, so this changes nothing there."""
+    import subprocess
+    try:
+        out = subprocess.run(
+            ["git", "ls-files", "--others", "--ignored", "--exclude-standard"],
+            cwd=ROOT, capture_output=True, text=True, timeout=30).stdout
+        return {ROOT / line for line in out.splitlines() if line}
+    except Exception:  # noqa: BLE001 — no git? scan everything, the strict arm
+        return set()
+
+
 def files():
+    ignored = _ignored()
     for p in ROOT.rglob("*"):
         if not p.is_file() or p.suffix.lower() not in EXTS:
             continue
         if any(part in SKIP_DIRS for part in p.parts):
             continue
-        if p.name in SKIP_FILES:
+        if p.name in SKIP_FILES or p in ignored:
             continue
         yield p
 

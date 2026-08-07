@@ -144,7 +144,7 @@ async function _paintBusy() {
    * mark is cleared here, by the poll that can actually see it happen. */
   for (const [k, started] of [...TRAIN_CANCELLING]) {
     const [mk, ci] = k.split(":");
-    if (mk !== mach.key) continue;              // another machine's card
+    if (!mach || mk !== mach.key) continue;     // no/other machine selected
     if (!jobs.some(x => String(x.card) === ci)) TRAIN_CANCELLING.delete(k);
     else if (Date.now() - started > CANCEL_SETTLE_MS) TRAIN_CANCELLING.delete(k);
   }
