@@ -42,16 +42,25 @@ class Metric:
     unit: str = ""
 
     def sort_key(self, row):
-        """(value, -test_trays, -finished) with value flipped when higher wins.
+        """(value, -test_images, -finished) with value flipped when higher wins.
 
         The secondary keys are not decoration: the holdout is saturated, several
         runs score identically, and "most holdout images, then most recent" is
         what stops a 0.0 on 63 images outranking a 0.0 on 65 — a real wrong
         answer this file's caller used to give.
         """
+        # A ROW WITHOUT THE METRIC SORTS LAST, rather than raising. An
+        # unscored run has no value to rank on, and the documented guard
+        # against that did not exist — `-v` on None was a TypeError that took
+        # the whole comparison down.
         v = row.get(self.field)
+        if v is None:
+            return (float("inf"), 0, 0)
         v = v if self.lower_is_better else -v
-        return (v, -(row.get("test_trays") or 0), -(row.get("finished") or 0))
+        # test_images: the ledger's own column. This read `test_trays`, a key
+        # nothing has ever written, so the tie-break was always 0 — exactly the
+        # wrong ranking the docstring above says it prevents.
+        return (v, -(row.get("test_images") or 0), -(row.get("finished") or 0))
 
 
 METRICS: dict[str, Metric] = {

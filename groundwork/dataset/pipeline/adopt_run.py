@@ -28,10 +28,38 @@ from .. import paths
 from . import run_snapshot, training_history
 
 
-def _next_local_name(pp) -> str:
-    ns = [int(m.group(1)) for p in pp.RUNS_DIR.glob("yolov8n-*")
-          if (m := re.fullmatch(r"yolov8n-(\d+)", p.name))]
-    return f"yolov8n-{max(ns, default=0) + 1}"
+def _next_local_name(pp, remote_name: str = "") -> str:
+    """The next free local number IN THE ADOPTED RUN'S OWN FAMILY.
+
+    This hardcoded `yolov8n-`, so adopting a challenger renamed it into the
+    champion's family — and the ledger's model and licence columns are
+    resolved from the run name, so a DEIM run arrived home recorded as an
+    AGPL yolo. The family comes from the registry, which is the one thing
+    that knows a name's prefix; an unrecognised name keeps its own stem.
+    """
+    from ...models import registry
+    m = registry.for_run(remote_name)
+    stem = (m.prefixes[0] if m and m.prefixes else
+            re.sub(r"-?\d+$", "", remote_name) or "run")
+    ns = [int(mm.group(1)) for p in pp.RUNS_DIR.glob(f"{stem}-*")
+          if (mm := re.fullmatch(rf"{re.escape(stem)}-(\d+)", p.name))]
+    return f"{stem}-{max(ns, default=0) + 1}"
+
+
+def _says_running(state_raw: str) -> bool:
+    """Is the worker's retrain_state.json reporting a live run? Unreadable
+    state answers TRUE — refusing to adopt costs one five-minute tick, while
+    adopting mid-run copies a checkpoint that is still being written."""
+    import json as _json
+    raw = (state_raw or "").strip()
+    if not raw:
+        return False
+    try:
+        return (_json.loads(raw) or {}).get("status") == "running"
+    except ValueError:
+        print("[adopt-scan] could not parse the worker's retrain state — "
+              "assuming a run is live and waiting")
+        return True
 
 
 def _t(machine_key: str) -> tuple[list[str], str, str]:
@@ -89,7 +117,7 @@ def adopt(machine_key: str, remote_run: str, note: str = "", pp=None,
     t = _t(machine_key)
     runs_rel = _rel(pp.RUNS_DIR)
     remote_runs = f"{t[2]}/{runs_rel}"
-    local = _next_local_name(pp)
+    local = _next_local_name(pp, remote_run)
     dst = pp.RUNS_DIR / local
     dst.mkdir(parents=True, exist_ok=True)
     # Weights, tuning, previews, curve, args — skip the fat epoch checkpoints.
@@ -193,7 +221,10 @@ def scan(machine_key: str, pp=None, project: str | None = None) -> int:
         print(f"[adopt-scan] {machine_key} unreachable: {probe.stderr.strip()[:120]}")
         return 0
     state_raw, _, listing = probe.stdout.partition("---")
-    if '"running"' in state_raw and '"status": "running"' in state_raw.replace("'", '"'):
+    # PARSED, not string-matched. This tested for one exact spacing of
+    # '"status": "running"', so a formatting change on the worker would let the
+    # scan adopt a half-evaluated run mid-retrain.
+    if _says_running(state_raw):
         print(f"[adopt-scan] {machine_key} is mid-retrain — waiting")
         return 0
     n = 0
