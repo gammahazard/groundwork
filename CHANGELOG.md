@@ -31,6 +31,22 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
   owned imagery, allowlisted by name in the media gate.
 
 ### Fixed
+- **Full-repo audit pass**: four parallel read-throughs of every file, then 28
+  verified fixes. The ones that would have bitten first: the Export tab bricked
+  itself permanently when opened before the first run; the scheduler's adopt and
+  clean jobs exited 2 on every tick (auto-adoption had never run); the bot's
+  /status, /engine and /model crashed on renamed ledger keys; timelapse and
+  heatmap crashed silently after every training run; challenger runs were
+  written to a directory the cockpit never reads. Security: worker API keys and
+  pairing tickets moved out of the HTTP-served `outputs/` tree, per-run history
+  endpoints are scoped to the caller's project (they leaked another project's
+  log and accepted notes onto its ledger), a CLI rename no longer orphans
+  sessions and keys, the Docker entrypoint parses `.env` instead of sourcing it,
+  and guess-list passwords are refused where the docs already claimed. Also: a
+  Blackwell card behind an older one got the wrong torch channel on multi-GPU
+  boxes; backup verification could never accept a backup once a dotfile existed;
+  the review gallery ignored .jpg and .png; supervisor-mode bots never started
+  at boot; the run ranking's tie-break read a key nothing writes.
 - Data-dir installs (Docker's `/data`, any `GW_DATA_DIR`) could not count,
   sync, adopt, or save a portable project manifest: five call sites resolved
   paths against the install root instead of the data root. Found by running
