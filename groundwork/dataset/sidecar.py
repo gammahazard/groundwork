@@ -1,7 +1,7 @@
 """Atomic read/write for the JSON sidecars several processes share.
 
 This repo runs at least four processes against the same files: the web service, the
-Telegram bot, the detached retrain pipeline, and the the adopt job/the janitor job timers.
+Telegram bot, the detached retrain pipeline, and the adopt/janitor timers.
 They coordinate through JSON on disk and nothing else, so every sidecar is a
 cross-process shared mutable object whether or not its module says so.
 

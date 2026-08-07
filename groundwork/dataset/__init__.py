@@ -26,7 +26,7 @@ At this level, deliberately not in a package:
     sidecar    atomic JSON for the files four processes share. Same reason.
     split, train, count_eval, run_snapshot, training_history, adopt_run
                the run pipeline. Grouping these is the next slice (REFACTOR.md);
-               they carry the the adopt job systemd unit, so they move deliberately.
+               they carry the adopt job's systemd unit, so they move deliberately.
     point_to_box, yolo_export       point <-> box <-> YOLO-line conversions
     gallery, heatmap, timelapse, live_trainer, point_editor, dedup_check,
     pending_janitor                 review + visualisation tools

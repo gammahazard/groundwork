@@ -25,7 +25,7 @@ than imported:
   - timelapse and heatmap run at the tail of every retrain. Their module paths
     live in web/retrain_job.py's `_STAGE`, alongside the pipeline stages, because
     cancel()'s pkill has to match the same strings the launches use.
-  - pending_janitor is the ExecStart of the the janitor job systemd unit on HQ, and it
+  - pending_janitor is the ExecStart of the janitor job's systemd unit on HQ, and it
     DELETES things. It only ever touches `pending/` (counted but never routed
     with a verdict) plus overlay images — never raw/, never the holdout. That
     boundary is the whole reason it is safe to run unattended at midnight.

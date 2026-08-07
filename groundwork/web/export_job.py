@@ -74,7 +74,7 @@ YOLO_FORMATS = (
     Fmt("coreml", "CoreML",
         "Apple's on-device format, for iPhone, iPad and Mac. It runs on the "
         "Neural Engine, so inference is fast and costs little battery, and the "
-        "photo never leaves the phone. This is what the the original project app ships.",
+        "photo never leaves the phone — the format the iOS deployment path exists for.",
         ext=".mlpackage"),
     Fmt("tflite", "TensorFlow Lite",
         "The Android counterpart — small, on-device, and the format Play "

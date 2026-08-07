@@ -23,7 +23,7 @@ Four of these are launched as SUBPROCESSES by web/retrain_job.py, not imported.
 Their module paths live in one place there (`_STAGE`), because cancel()'s
 last-resort pkill has to match the same strings the launches use — two lists
 that drift means a cancel leaves a stage running while the state says
-"cancelled". `adopt_run` is additionally the ExecStart of the the adopt job systemd
+"cancelled". `adopt_run` is additionally the ExecStart of the adopt job's systemd
 unit on HQ. Moving anything in this package means editing those too; a re-export
 shim does not help, because `python -m` resolves the real path.
 

@@ -142,7 +142,7 @@ async function loadState(){
      * beside a figure derived from 79.3h would read as an arithmetic error. */
     + (o.power ? `<div class="sbRow" title="ESTIMATED, not metered: ${o.power.watts}W whole-system while training (PSU losses included) x ${(f.complete ? f.hours : o.total_hours) ?? o.gpu_hours}h x $${o.power.rate}/kWh${f.complete ? " across all machines" : ""}. Set GW_KWH_RATE / GW_TRAIN_WATTS to correct."><span>electricity (est.)</span>`
         + `<span class="sbMae">$${o.power.usd} <span class="mMeta">${o.power.kwh} kWh</span></span></div>` : "")
-    + `<div class="sbRow"><span>biggest capture on file</span><span class="sbMae">${o.biggest ?? "–"}</span></div>`;
+    + `<div class="sbRow"><span>largest count on file</span><span class="sbMae">${o.biggest ?? "–"}</span></div>`;
   $("#stTrays").textContent = s.raw;
   $("#stTest").textContent = s.testset;
   // Thousands-separated, like every other big number on the page — it sits
