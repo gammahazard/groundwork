@@ -17,6 +17,7 @@ evidence of anything (this repo has shipped two of those).
 """
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -87,10 +88,27 @@ from groundwork.web import run_stats  # noqa: E402
 # status() lives in retrain_job.progress, which reads `gpu_facts.busy` off the
 # shared module object at call time — so patching the module attribute is what
 # re-introduces the old behaviour for every consumer at once.
+# THE RESTORED PATH MUST REACH THE SPAWN ON ANY HOST. run_stats.gpu()
+# returns None BEFORE spawning when no nvidia-smi exists anywhere — so on
+# a GPU-less runner the restored call spawns nothing and this arm would
+# conclude the check verifies nothing. A fake executable on PATH makes
+# the walk-to-spawn real everywhere; the interceptor still fires before
+# anything executes.
+import stat  # noqa: E402
+import tempfile  # noqa: E402
+_fkdir = tempfile.mkdtemp(prefix="fakesmi-")
+_fk = Path(_fkdir) / "nvidia-smi"
+_fk.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+_fk.chmod(_fk.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+_savedpath = os.environ.get("PATH", "")
+os.environ["PATH"] = _fkdir + os.pathsep + _savedpath
 _saved = gpu_facts.busy
 gpu_facts.busy = lambda running, tail="": run_stats.gpu()
-_, spawned_now = call_status_with_spawning_forbidden()
-gpu_facts.busy = _saved
+try:
+    _, spawned_now = call_status_with_spawning_forbidden()
+finally:
+    gpu_facts.busy = _saved
+    os.environ["PATH"] = _savedpath
 if spawned_now:
     print(f"  ✓ CAN FAIL: restoring the nvidia-smi call was caught -> {spawned_now}")
 else:

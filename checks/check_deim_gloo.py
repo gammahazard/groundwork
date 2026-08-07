@@ -57,8 +57,21 @@ def real_force_gloo():
     return ns["_force_gloo"]
 
 
+try:
+    import torch                  # noqa: E402
+except ModuleNotFoundError:
+    # A torch-free host (the CI base install) cannot run the behavioral
+    # arms. The STATIC arm still binds: the patch must exist in
+    # deim_entry.py and be extractable — a deleted or renamed _force_gloo
+    # fails here too, torch or no torch.
+    if real_force_gloo() is None:
+        print("FAIL: " + FAILURES[-1])
+        sys.exit(1)
+    print("  torch is not installed: behavioral arms skipped (they run")
+    print("  wherever the train extra exists — see checks/README.md);")
+    print("  the static extraction arm PASSED.")
+    sys.exit(0)
 print("  [1] torch's own default: an unnamed backend on CUDA means NCCL")
-import torch                      # noqa: E402
 import torch.distributed as dist  # noqa: E402
 
 # CAPTURED BEFORE ANYTHING PATCHES IT. Step [4] rebuilds an inert patch to prove
