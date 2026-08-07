@@ -31,7 +31,12 @@ from PIL import Image
 from .. import gpu
 
 REPO = Path(__file__).resolve().parents[2]
-ALT = REPO / "outputs" / "alt"
+# The challenger run tree. A run belongs to a PROJECT, and the cockpit reads
+# it at <project>/alt — so the launcher passes --alt-dir and this default is
+# only for a hand-run CLI in a single-project checkout. It also honours
+# GW_DATA_DIR, because on a Docker install the repo is the read-only image.
+_DATA = Path(os.environ.get("GW_DATA_DIR") or REPO)
+ALT = _DATA / "outputs" / "alt"
 DATASET_DEFAULT = ALT / "datasets" / "coco_rfdetr"
 DEFAULT_MODEL = "ustc-community/dfine-small-obj2coco"
 
@@ -98,13 +103,16 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--dataset-dir", type=Path, default=DATASET_DEFAULT)
     ap.add_argument("--run-name", required=True)
+    ap.add_argument("--alt-dir", type=Path, default=ALT,
+                    help="where the run directory goes (the cockpit passes "
+                         "the open project's alt/ tree)")
     args = ap.parse_args()
 
     if not (args.dataset_dir / "train" / "_annotations.coco.json").exists():
         raise SystemExit(f"no converted dataset at {args.dataset_dir} — run "
                          ".venv/bin/python -m altmodels.convert first")
 
-    run_dir = ALT / args.run_name
+    run_dir = args.alt_dir / args.run_name
     out_dir = run_dir / "train"
     out_dir.mkdir(parents=True, exist_ok=True)
     # The cockpit's log tail reads <run>/lab.log (that is where the cockpit's own

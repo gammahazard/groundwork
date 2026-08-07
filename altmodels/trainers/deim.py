@@ -29,7 +29,12 @@ from .. import gpu
 from .rtmdet import _vram_guard   # per-card smi row watchdog, reuse
 
 REPO = Path(__file__).resolve().parents[2]
-ALT = REPO / "outputs" / "alt"
+# The challenger run tree. A run belongs to a PROJECT, and the cockpit reads
+# it at <project>/alt — so the launcher passes --alt-dir and this default is
+# only for a hand-run CLI in a single-project checkout. It also honours
+# GW_DATA_DIR, because on a Docker install the repo is the read-only image.
+_DATA = Path(os.environ.get("GW_DATA_DIR") or REPO)
+ALT = _DATA / "outputs" / "alt"
 # LEGACY DEFAULTS ONLY. Both were fixed module constants until 2026-08-02, and
 # between them they were the reason DEIM could never train beside another
 # challenger: a second launch rebuilt coco_rfdetr out from under a live run, and
@@ -249,11 +254,14 @@ def main() -> None:
                          "so two challengers cannot rebuild each other's data; "
                          "the default is the legacy shared tree for a hand CLI.")
     ap.add_argument("--run-name", required=True)
+    ap.add_argument("--alt-dir", type=Path, default=ALT,
+                    help="where the run directory goes (the cockpit passes "
+                         "the open project's alt/ tree)")
     args = ap.parse_args()
     if not VENDOR.exists():
         raise SystemExit(f"vendor repo missing at {VENDOR} (git clone DEIMv2)")
 
-    run_dir = ALT / args.run_name
+    run_dir = args.alt_dir / args.run_name
     out_dir = run_dir / "train"
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()

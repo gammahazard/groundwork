@@ -26,7 +26,12 @@ from pathlib import Path
 from .. import gpu, mmdet_zoo
 
 REPO = Path(__file__).resolve().parents[2]
-ALT = REPO / "outputs" / "alt"
+# The challenger run tree. A run belongs to a PROJECT, and the cockpit reads
+# it at <project>/alt — so the launcher passes --alt-dir and this default is
+# only for a hand-run CLI in a single-project checkout. It also honours
+# GW_DATA_DIR, because on a Docker install the repo is the read-only image.
+_DATA = Path(os.environ.get("GW_DATA_DIR") or REPO)
+ALT = _DATA / "outputs" / "alt"
 DATASET_DEFAULT = ALT / "datasets" / "coco_rfdetr"   # same tree RF-DETR used
 PRETRAIN = ALT / "pretrain"
 # Which mmdet model this run trains — the zoo keeps the config/ckpt names so
@@ -116,6 +121,9 @@ def main() -> None:
                     help="mmdet model from altmodels/mmdet_zoo.py "
                          "(default: the original rtmdet-tiny)")
     ap.add_argument("--run-name", required=True)
+    ap.add_argument("--alt-dir", type=Path, default=ALT,
+                    help="where the run directory goes (the cockpit passes "
+                         "the open project's alt/ tree)")
     args = ap.parse_args()
     if not (args.dataset_dir / "train" / "_annotations.coco.json").exists():
         raise SystemExit(f"no converted dataset at {args.dataset_dir} — run "
@@ -144,7 +152,7 @@ def main() -> None:
             f"config — if the download succeeded, fix the 'ckpt' glob in "
             f"altmodels/mmdet_zoo.py")
 
-    run_dir = ALT / args.run_name
+    run_dir = args.alt_dir / args.run_name
     work_dir = run_dir / "train"
     work_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()

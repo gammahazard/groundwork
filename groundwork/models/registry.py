@@ -159,7 +159,7 @@ class Model:
         return p
 
     def train_argv(self, *, imgsz: int, epochs: int, batch: int,
-                   run_name: str, dataset_dir=None) -> list[str]:
+                   run_name: str, dataset_dir=None, alt_dir=None) -> list[str]:
         """The trainer's command line, minus the interpreter and -m module.
 
         ONE place builds this. A caller that assembled it itself would be the
@@ -175,8 +175,12 @@ class Model:
                 if self.size_flag == "--scale-factor"
                 else [self.size_flag, str(imgsz)])
         ds = ["--dataset-dir", str(dataset_dir)] if dataset_dir else []
+        # WHERE THE RUN LANDS. Challenger runs are per-project (pp.ALT_DIR) and
+        # the trainers defaulted to one flat repo-level alt/, so a cockpit
+        # launch wrote its artifacts where the cockpit never reads them.
+        alt = ["--alt-dir", str(alt_dir)] if alt_dir else []
         return ["--epochs", str(epochs), "--batch", str(batch),
-                *size, *ds, *self.train_extra, "--run-name", run_name]
+                *size, *ds, *alt, *self.train_extra, "--run-name", run_name]
 
     @property
     def venv_present(self) -> bool:

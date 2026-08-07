@@ -289,7 +289,7 @@ def train(req: TrainReq, p=Depends(current_project)):
                              imgsz=req.imgsz or 640 * req.scale_factor,
                              epochs=req.epochs or model.default_epochs or 60,
                              batch=req.batch or model.default_batch,
-                             run_name=req.run_name)]
+                             run_name=req.run_name, alt_dir=_alt(p))]
     if model.predictor == "deim":
         # Keyed on the FAMILY, not the entry name, so both DEIM venvs get the
         # COCO fine-tune. Naming one of them here is how the bug above happened.

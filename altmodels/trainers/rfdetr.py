@@ -11,6 +11,7 @@ resolution upward across nights: 560 (4,4) -> 728 (2,8) -> 896 (2,8; OOM ->
 """
 from __future__ import annotations
 import argparse
+import os
 import json
 import time
 from pathlib import Path
@@ -18,7 +19,12 @@ from pathlib import Path
 from .. import gpu
 
 REPO = Path(__file__).resolve().parents[2]
-ALT = REPO / "outputs" / "alt"
+# The challenger run tree. A run belongs to a PROJECT, and the cockpit reads
+# it at <project>/alt — so the launcher passes --alt-dir and this default is
+# only for a hand-run CLI in a single-project checkout. It also honours
+# GW_DATA_DIR, because on a Docker install the repo is the read-only image.
+_DATA = Path(os.environ.get("GW_DATA_DIR") or REPO)
+ALT = _DATA / "outputs" / "alt"
 DATASET_DEFAULT = ALT / "datasets" / "coco_rfdetr"
 
 
@@ -103,6 +109,9 @@ def main() -> None:
                          "this (round 1 capped at 299 on the 349-object capture)")
     ap.add_argument("--dataset-dir", type=Path, default=DATASET_DEFAULT)
     ap.add_argument("--run-name", required=True)
+    ap.add_argument("--alt-dir", type=Path, default=ALT,
+                    help="where the run directory goes (the cockpit passes "
+                         "the open project's alt/ tree)")
     args = ap.parse_args()
     assert args.res % 56 == 0, f"rfdetr resolution must be divisible by 56 (got {args.res})"
     assert args.batch * args.grad_accum == 16, \
@@ -111,7 +120,7 @@ def main() -> None:
         raise SystemExit(f"no converted dataset at {args.dataset_dir} — run "
                          ".venv/bin/python -m altmodels.convert first")
 
-    run_dir = ALT / args.run_name
+    run_dir = args.alt_dir / args.run_name
     out_dir = run_dir / "train"
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
