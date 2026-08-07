@@ -82,7 +82,20 @@ def main() -> int:
         except OSError:
             continue
         rel = p.relative_to(ROOT).as_posix()
+        in_case_study = False
         for i, line in enumerate(text.splitlines(), 1):
+            # README's case-study block is the ONE place the origin story is
+            # told, on purpose, by the owner. Delimited so the exemption can
+            # never widen silently: outside the markers the gate is as strict
+            # as everywhere else, and only README.md may open a block.
+            if rel == "README.md" and "case-study:begin" in line:
+                in_case_study = True
+                continue
+            if rel == "README.md" and "case-study:end" in line:
+                in_case_study = False
+                continue
+            if in_case_study:
+                continue
             for rx, why in BANNED:
                 if rx.search(line):
                     bad.append(f"{rel}:{i}: [{why}] {line.strip()[:90]}")
@@ -104,6 +117,9 @@ def main() -> int:
         "frontend/guide/label-editor.png",
         "frontend/guide/try-it.png",
         "frontend/guide/train-live.png",
+        # Owner-approved case-study imagery: the origin deployment, shown
+        # deliberately in README's marked case-study block.
+        "frontend/guide/case-editor.png",
     }
     MEDIA_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".ico",
                  ".mp4", ".webm", ".avif", ".bmp"}

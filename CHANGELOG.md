@@ -10,6 +10,10 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 ## [Unreleased]
 
 ### Added
+- README: table of contents, section dividers, and a marked case-study block
+  telling the origin deployment's story (owner-approved; the vocabulary gate
+  exempts exactly that delimited block and nothing else — mutation-proven).
+  GitHub description and topics set for discoverability.
 - In-app screenshots in the README and the guide (editor, live training,
   Try-it), shot on a synthetic dataset generated for the purpose — fully
   owned imagery, allowlisted by name in the media gate.

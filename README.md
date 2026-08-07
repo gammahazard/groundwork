@@ -19,6 +19,14 @@ over ssh and rsync.
 </p>
 <p align="center"><i>Then upload any photo and get the count back with an overlay.</i></p>
 
+---
+
+**Contents:** [Features](#features) · [Proven in the field](#proven-in-the-field) ·
+[Requirements](#requirements) · [Quickstart](#quickstart) ·
+[Documentation](#documentation) · [Philosophy](#philosophy) · [License](#license)
+
+---
+
 ## Features
 
 - **Projects.** Each project owns its classes, its image tags, its dataset tree, its bots
@@ -53,12 +61,38 @@ over ssh and rsync.
   (`read`/`train`/`full`) for scripts, scrypt passwords, throttled logins, per-project
   ownership, and an append-only audit trail.
 
+---
+
+## Proven in the field
+
+<!-- case-study:begin -->
+Groundwork wasn't designed on a whiteboard — it grew around a real deployment:
+a **pill-counting system** used by pharmacy technicians. That model was trained,
+evaluated and served entirely through this pipeline: photos arrive by Telegram
+bot, every count is verified by a person, corrections flow back into training,
+and the same trained detector runs on-device in an iOS app via the CoreML
+export and on a live bench camera. Across recent runs it counts exactly on
+95–100% of a frozen 69-photo holdout.
+
+<p align="center">
+  <img src="frontend/guide/case-editor.png" alt="The original deployment: a counting model's dots being verified in the editor" width="720">
+</p>
+<p align="center"><i>The original deployment in the editor — 30 tablets, 30 dots.</i></p>
+
+*Not a medical device: every count is checked by a person; the tooling exists
+to make that verification effortless.*
+<!-- case-study:end -->
+
+---
+
 ## Requirements
 
 Linux, or Windows via WSL2 / Docker Desktop. Docker is the recommended path;
 native installs need Python 3.10+. An NVIDIA GPU is only needed to *train* —
 projects, labeling and review all work without one, and GPU machines can be
 paired later.
+
+---
 
 ## Quickstart
 
@@ -88,6 +122,8 @@ Or, with no systemd at all, `groundwork run` starts everything in the foreground
 walkthrough — prerequisites, headless bootstrap, upgrades, WSL2 notes — is in
 [docs/install.md](docs/install.md).
 
+---
+
 ## Documentation
 
 - [docs/install.md](docs/install.md) — native install, first run, upgrades
@@ -97,6 +133,8 @@ walkthrough — prerequisites, headless bootstrap, upgrades, WSL2 notes — is i
 - [docs/bots.md](docs/bots.md) — Telegram bots
 - [docs/models.md](docs/models.md) — the model registry and the challenger stacks
 - Interactive API reference: `/docs` on your own instance, once signed in
+
+---
 
 ## Philosophy
 
@@ -114,6 +152,8 @@ walkthrough — prerequisites, headless bootstrap, upgrades, WSL2 notes — is i
 - **Look at the pictures.** The eval writes a preview for every holdout image. The most
   consequential model bugs this platform has caught were found by looking at previews, not
   by reading aggregate numbers.
+
+---
 
 ## License
 
