@@ -82,15 +82,16 @@ def train(cfg: TrainCfg, pp=None):
     # ultralytics wants an int for an explicit batch count; -1 (auto) or a
     # 0<f<1 VRAM fraction stay float.
     batch = int(cfg.batch) if cfg.batch >= 1 else cfg.batch
-    # WRAPPED so a CRASH still reports what it reached. The peak used to be
-    # printed after train() returned, so the one run whose VRAM you most want to
-    # know — the one that died reaching for it — recorded nothing, and the
-    # configuration stayed "unmeasured", which the fit check treats as allowed.
-    # A failure that teaches nothing invites the same failure again.
-    #
-    # A hypervisor fault still writes nothing: the process is gone. This covers
-    # OOM and every Python-level death, which is the reachable case.
+    # WRAPPED so a CRASH THAT RAN OUT OF MEMORY still reports what it reached —
+    # the one VRAM observation worth keeping (the ledger only takes completed
+    # runs). But ONLY an OOM records a failure: a run that died for an unrelated
+    # reason (a missing dependency, a bad label, a transient CUDA fault) reached
+    # a memory figure that says nothing about capacity, and recording it as
+    # "needs more than X GB" would permanently block a configuration that is
+    # actually fine. Measured live: a container crash unrelated to VRAM poisoned
+    # the fit guard into refusing YOLOv8n at batch 8 on a 24 GB card.
     results = None
+    oom = False
     try:
         results = model.train(
         trainer=_trainer,
@@ -114,6 +115,11 @@ def train(cfg: TrainCfg, pp=None):
         degrees=cfg.degrees, translate=cfg.translate, scale=cfg.scale,
         fliplr=cfg.fliplr, flipud=cfg.flipud,
         )
+    except BaseException as _e:  # noqa: BLE001 — classify the death, then re-raise
+        import torch as _torch
+        _oom_types = getattr(_torch.cuda, "OutOfMemoryError", ())
+        oom = isinstance(_e, _oom_types) or "out of memory" in str(_e).lower()
+        raise
     finally:
         try:
             import torch
@@ -123,17 +129,17 @@ def train(cfg: TrainCfg, pp=None):
                 print(f"[train] peak VRAM {peak:.2f} GB"
                       + ("" if ok else "  (run FAILED at this point)"),
                       flush=True)
-                # RECORDED EVEN ON FAILURE — see vram_log. The ledger only takes
-                # completed runs, so without this the single most useful VRAM
-                # observation on this system (the run that asked for more than
-                # the card had) teaches nothing and the configuration is offered
-                # again.
-                from . import vram_log
-                card_gb = round(
-                    torch.cuda.get_device_properties(0).total_memory / 2**30)
-                vram_log.record(cfg.model.replace(".pt", ""), cfg.imgsz,
-                                int(cfg.batch) if cfg.batch >= 1 else None,
-                                round(peak, 2), ok, card_gb)
+                # A SUCCESS is always recorded (real capacity data); a FAILURE
+                # only when it was an OOM — the case the fit guard exists for.
+                # An unrelated crash's peak is noise that would wrongly veto a
+                # good config forever, so it is not written.
+                if ok or oom:
+                    from . import vram_log
+                    card_gb = round(
+                        torch.cuda.get_device_properties(0).total_memory / 2**30)
+                    vram_log.record(cfg.model.replace(".pt", ""), cfg.imgsz,
+                                    int(cfg.batch) if cfg.batch >= 1 else None,
+                                    round(peak, 2), ok, card_gb)
         except Exception:  # noqa: BLE001
             pass
     print(f"[train] done. weights: {pp.RUNS_DIR}/{cfg.model.replace('.pt','')}/weights/best.pt")

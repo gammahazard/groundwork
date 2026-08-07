@@ -27,6 +27,16 @@ if [ "$(id -u)" = "0" ]; then
         [ -e "$data/$d" ] || mkdir -p "$data/$d"
         chown "$uid:$gid" "$data/$d"
     done
+    # GIVE THE RUNTIME UID A PASSWD ENTRY. An arbitrary GW_UID (or the compose
+    # default 1000, which the base image never created a user for) has no
+    # /etc/passwd row, and getpwuid(getuid()) then raises KeyError — which
+    # crashes torch's inductor cache setup, matplotlib and anything using
+    # getpass.getuser() at the first training step. Add the row while we are
+    # still root; the home matches HOME so ~ resolves to the writable volume.
+    if ! grep -q "^[^:]*:[^:]*:${uid}:" /etc/passwd 2>/dev/null; then
+        echo "groundwork:x:${uid}:${gid}:groundwork:${data}/home:/usr/sbin/nologin" \
+            >> /etc/passwd 2>/dev/null || true
+    fi
     exec gosu "$uid:$gid" "$0" "$@"
 fi
 
