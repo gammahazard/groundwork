@@ -102,3 +102,19 @@ Each check runs standalone:
 
 `python checks/run.py` runs the CI-safe set if present. `checks/gpu/` needs real hardware
 and is run manually before a release; `checks/ui/` drives a real browser.
+
+## Releases
+
+Semantic Versioning: MAJOR for breaking changes to the HTTP API, on-disk
+layout, or unit/env contracts; MINOR for backwards-compatible features; PATCH
+for fixes.
+
+The flow, in order:
+
+1. Move the `[Unreleased]` entries in CHANGELOG.md under a new
+   `[X.Y.Z] - YYYY-MM-DD` heading and update the compare links at the bottom.
+2. Commit, then tag: `git tag -a vX.Y.Z -m "..."` and push the tag.
+3. CI runs on the tag; the release workflow publishes
+   `ghcr.io/gammahazard/groundwork:X.Y.Z` (and `-cpu`) — public repo only.
+4. Write the GitHub Release notes from that changelog section — the
+   changelog is the source, the release page is a copy, never the reverse.
