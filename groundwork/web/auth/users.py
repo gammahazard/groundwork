@@ -58,7 +58,7 @@ FIRST-RUN BOOTSTRAP, for a fresh checkout (and for open-sourcing this)
 A cockpit nobody can log into is not a safe default, it is a brick. So:
 
     GW_ADMIN_USER=admin
-    GW_ADMIN_PASSWORD=change-me
+    GW_ADMIN_PASSWORD=a-real-password
 
 in `.env` creates that ONE account, and ONLY when no users exist yet.
 
@@ -116,6 +116,10 @@ _NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{1,31}$")
 # ~0.15s per attempt this KDF costs. Not a complexity rule: length is what
 # matters and complexity rules push people toward Passw0rd!.
 MIN_PASSWORD = 8
+# The passwords everyone tries first. Compared with case, hyphens and
+# underscores stripped, so "Change-Me" is as refused as "changeme".
+BANNED_PASSWORDS = {"changeme", "password", "password1", "12345678",
+                    "admin123", "groundwork", "letmein1"}
 
 BOOTSTRAP_USER_ENV = "GW_ADMIN_USER"
 BOOTSTRAP_PASS_ENV = "GW_ADMIN_PASSWORD"
@@ -131,6 +135,8 @@ def hash_password(password: str) -> str:
     """`scrypt$n$r$p$salt$key`. A fresh random salt every call."""
     if len(password or "") < MIN_PASSWORD:
         raise UserError(f"password must be at least {MIN_PASSWORD} characters")
+    if (password or "").lower().replace("-", "").replace("_", "") in BANNED_PASSWORDS:
+        raise UserError("that password is on every guess list — pick another")
     salt = secrets.token_bytes(_SALT_BYTES)
     key = hashlib.scrypt(password.encode(), salt=salt, n=_N, r=_R, p=_P,
                          dklen=_DKLEN, maxmem=_MAXMEM)

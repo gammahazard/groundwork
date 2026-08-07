@@ -69,13 +69,19 @@ def main() -> int:
              "a malformed digest is False, not an exception")
 
         # ---- 2. rules: 8 chars, unique names -------------------------------
-        print("\n2. the only rules are 8 characters and a unique name")
+        print("\n2. the rules: 8 characters, not on the guess list, unique name")
         try:
             users.hash_password("short7x")            # 7
             note(False, "a 7-character password was accepted")
         except users.UserError:
             note(True, "under 8 characters is refused")
-        note(users.hash_password("12345678") != "", "exactly 8 is accepted")
+        note(users.hash_password("abcdefgh") != "", "exactly 8 is accepted")
+    for bad in ("changeme", "Change-Me", "change_me", "12345678", "PASSWORD"):
+        try:
+            users.hash_password(bad)
+            note(False, f"guess-list password {bad!r} must be refused")
+        except users.UserError:
+            note(True, f"guess-list password {bad!r} is refused")
         note(users.hash_password("!!!!!!!!") != "",
              "no complexity rule — 8 identical symbols is fine")
         users.add("casey", PW, admin=True)
@@ -134,10 +140,14 @@ def main() -> int:
         # ...and it does work on an empty store, or a fresh install is a brick.
         users.USERS_PATH = tmp.with_name("empty.json")
         os.environ[users.BOOTSTRAP_USER_ENV] = "admin"
-        os.environ[users.BOOTSTRAP_PASS_ENV] = "changeme"
+        os.environ[users.BOOTSTRAP_PASS_ENV] = "Change-Me"
+        made = users.bootstrap()
+        note(made is None,
+             "a guess-list password ('Change-Me') is REFUSED, loudly not fatally")
+        os.environ[users.BOOTSTRAP_PASS_ENV] = "quartz-heron-42"
         made = users.bootstrap()
         note(made == "admin", f"on an EMPTY store it creates the account ({made})")
-        note(users.check("admin", "changeme"), "and that account can log in")
+        note(users.check("admin", "quartz-heron-42"), "and that account can log in")
         r = users.record("admin")
         note(r and r["admin"], "the first account is an admin (it must be able to add a second)")
         note(r and r["must_change"], "and is flagged must-change")

@@ -51,7 +51,11 @@ from groundwork.models import registry            # noqa: E402
 from groundwork import project as project_mod     # noqa: E402
 from groundwork.dataset import paths              # noqa: E402
 
-BASE = "http://127.0.0.1:8000"
+BASE = os.environ.get("GW_BASE", "http://127.0.0.1:8000")
+# A default cockpit has auth ON, so without a key every launch 401s and the
+# whole matrix reads "REFUSED" for a reason that has nothing to do with GPUs.
+_KEY = os.environ.get("GW_KEY", "")
+_AUTH = {"Authorization": f"Bearer {_KEY}"} if _KEY else {}
 EPOCHS = 2
 PREFIX = "zzz-smoke-"
 # One fixed card so a comparison between two venv builds of one family is
@@ -74,7 +78,8 @@ def _post(path: str, body: dict | None = None, timeout: int = 300):
     req = urllib.request.Request(
         BASE + path, method="POST",
         data=json.dumps(body).encode() if body is not None else None,
-        headers={"Content-Type": "application/json"} if body is not None else {})
+        headers={**({"Content-Type": "application/json"}
+                     if body is not None else {}), **_AUTH})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return True, json.loads(r.read() or b"{}")
@@ -89,7 +94,8 @@ def _post(path: str, body: dict | None = None, timeout: int = 300):
 
 def _get(path: str, timeout: int = 60, base: str | None = None):
     try:
-        with urllib.request.urlopen((base or BASE) + path, timeout=timeout) as r:
+        req = urllib.request.Request((base or BASE) + path, headers=_AUTH)
+        with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read() or b"{}")
     except Exception:  # noqa: BLE001
         return {}
