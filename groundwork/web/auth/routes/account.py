@@ -38,7 +38,8 @@ def login(body: Credentials, request: Request, response: Response):
     throttle.clear(name, ip)
     users.touch_login(name)
     _set_cookie(response, sessions.begin(
-        name, ua=request.headers.get("user-agent"), ip=ip))
+        name, ua=request.headers.get("user-agent"), ip=ip),
+        remember=body.remember)
     audit.record(audit.LOGIN_OK, actor=name, via="session", ip=ip,
                  device=_device(request))
     return {"ok": True, "user": users.record(name)}

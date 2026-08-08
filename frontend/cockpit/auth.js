@@ -201,9 +201,13 @@ function wireLogin() {
       }
       const username = _authEl("loginUser").value.trim();
       const password = _authEl("loginPw").value;
+      // Checked (the default) → a 30-day cookie that survives closing the
+      // browser; unchecked → a session cookie for a shared device. Absent
+      // element (older shell) falls back to true, the previous behaviour.
+      const remember = _authEl("loginRemember") ? _authEl("loginRemember").checked : true;
       const r = await fetch("/api/login", {
         method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username, password})});
+        body: JSON.stringify({username, password, remember})});
       if (!r.ok) {
         // The server says only "wrong username or password" — never which half.
         // Repeating that verbatim keeps the two layers telling one story.

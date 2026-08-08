@@ -73,6 +73,11 @@ def _refuse_key_auth(request: Request) -> None:
 class Credentials(BaseModel):
     username: str
     password: str
+    # Default TRUE keeps the long-standing behaviour (a 30-day persistent
+    # cookie) for every existing caller; a browser sends it False for a
+    # session-only cookie that dies when the browser closes — the "keep me
+    # signed in" checkbox, unchecked.
+    remember: bool = True
 
 
 class PasswordChange(BaseModel):
@@ -110,7 +115,7 @@ def _device(request: Request) -> str:
     return sessions.describe_agent(request.headers.get("user-agent"))
 
 
-def _set_cookie(response: Response, token: str) -> None:
+def _set_cookie(response: Response, token: str, remember: bool = True) -> None:
     """HttpOnly so JavaScript cannot read it — an XSS in the cockpit then cannot
     exfiltrate the session. SameSite=lax stops another site POSTing to /api/train
     with your cookie attached, while normal navigation still works.
@@ -119,10 +124,16 @@ def _set_cookie(response: Response, token: str) -> None:
     default plain-HTTP LAN deployment a Secure cookie would simply never be
     sent, locking everyone out — which is one more reason the box stays off
     the public internet (see the package docstring).
+
+    `remember` decides only the COOKIE's lifetime, never the server session's:
+    True → Max-Age 30 days (survives a browser restart — the default, and what
+    a phone wants); False → a session cookie the browser drops on close. The
+    server-side session lasts 30 days either way, so an unchecked box logs you
+    out client-side, it does not shorten what revocation must cover.
     """
     import os as _os
     response.set_cookie(sessions.COOKIE, token, httponly=True, samesite="lax",
                         secure=_os.environ.get("GW_TRUST_PROXY", "") == "1",
-                        max_age=sessions.TTL_S, path="/")
+                        max_age=sessions.TTL_S if remember else None, path="/")
 
 
