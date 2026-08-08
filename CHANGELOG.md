@@ -9,6 +9,13 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Added
+- "Keep me signed in" checkbox on login; unchecked, the session ends when the browser closes.
+- `scripts/release.sh` — one-command release: stamps the changelog, bumps the version, waits for CI, tags, and publishes the GitHub Release.
+
+### Fixed
+- Probing a machine updates its GPU list in place instead of re-rendering the whole section.
+
 ## [0.3.0] - 2026-08-07
 
 Everything in 0.2.0 was tested against real data and a real fleet; 0.3.0 is
