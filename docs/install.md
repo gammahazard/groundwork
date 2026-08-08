@@ -9,7 +9,9 @@ page is the native one — a venv, systemd user units, and the same first-run wi
 - An NVIDIA GPU with a working driver, *if* this machine will train. A GPU-less box can
   still run the cockpit, hold the data and label — the Train control will tell you,
   with the reason, what it cannot do.
-- `rsync`, `openssh-client` and `git` if this machine will be part of a fleet
+- `git` and `rsync` — the installer refuses without them (rsync is how datasets
+  move between machines, and a solo box today is a fleet member tomorrow)
+- `openssh-client` if this machine will be part of a fleet
 - `node` (any recent) only if you want to run the frontend checks
 
 ## scripts/install.sh
@@ -22,7 +24,8 @@ cd groundwork
 
 What it does, in order:
 
-1. **Preflight** — Python version, disk, and whether an NVIDIA driver answers.
+1. **Preflight** — Python 3.10+, the `venv` module, `git` and `rsync`; any
+   missing one aborts with the reason.
 2. **Picks the right torch build** by asking the driver for the GPU's compute
    capability, and selects the matching CUDA wheel index (or CPU wheels when there is no
    GPU). This matters: a torch build carries a fixed set of compiled kernels, and a wheel

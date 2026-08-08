@@ -6,15 +6,19 @@ data. No cockpit, no login — a phone camera and a chat.
 
 ## What the buttons do
 
-- **✓ Right** — the count was correct; the image and its machine labels are staged as a
-  training candidate.
-- **🎯 Test set** — earmark this image for the **frozen holdout**: it will measure
-  accuracy and never be trained on. (🎯 combines with ✗ for "wrong, *and* destined for
-  the holdout".)
-- **✗ Wrong** — flag it, then *reply to the photo* with the correct count. The image
-  enters the fix queue with your number attached, which is exactly the data a retrain
-  needs most.
-- **🗑 Discard** — a photo of the floor is a photo of the floor.
+Five buttons, one decision each — was the count right, and which side of the
+train/test wall does the image belong on:
+
+- **✓ Correct → train** — the count was right; the image and its machine labels
+  are staged as a training candidate.
+- **🎯 Correct → test** — the count was right, and the image is earmarked for the
+  **frozen holdout**: it will measure accuracy and never be trained on.
+- **✗ Wrong → train** — flag it, then *reply to the photo* with the correct
+  count. The image enters the fix queue with your number attached, which is
+  exactly the data a retrain needs most.
+- **🎯 Wrong → test** — wrong, *and* destined for the holdout: it gets corrected
+  and then measures accuracy instead of teaching.
+- **🗑 Dismiss** — a photo of the floor is a photo of the floor.
 
 **A bot works from day zero.** Before the project has any trained model it runs in
 intake mode: photos are accepted and land straight in the fix queue, unlabeled, with a
