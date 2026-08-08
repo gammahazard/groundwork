@@ -16,7 +16,9 @@ uvicorn  (GW_HOST:GW_PORT, default 0.0.0.0:8000)
 AuthGate — raw ASGI middleware (groundwork/web/auth/middleware.py)
         │   cookie → session → username        (a person)
         │   Authorization: Bearer gw_… → key   (a script/machine; scope enforced here)
-        │   open paths: /  /api/login  /api/me  /static/*  /healthz
+        │   open paths: /  /login  /api/login  /api/me  /static/*  /healthz  /favicon.ico
+        │   plus the join door (/join.sh, its bundle, the join POST — each validates its
+        │   own single-use token) and setup/claim only while zero accounts exist
         ▼
 FastAPI app (groundwork/web/app.py — a thin assembler)
    ├── every router in groundwork/web/api/  (one module per area)
@@ -164,8 +166,10 @@ that trains locally); a `worker` trains against a read-only mirror and refuses e
 dataset mutation server-side (`web/lab_guard.py`), because its copy is overwritten by the
 next sync tick. `GW_ROLE` sets it; `here` is the only built-in machine.
 
-Everything else is the **registry** (`outputs/machines_registry.json`, written 0600 —
-it holds the API key HQ presents to each worker): key, name, url, `role`, `transport`,
+Everything else is the **registry** (`private/machines_registry.json`, written 0600 —
+it holds the API key HQ presents to each worker, which is why it lives in `private/`
+and not the served `outputs/` tree; a legacy copy under `outputs/` is auto-migrated
+out on first read): key, name, url, `role`, `transport`,
 `ssh_host`, `ssh_port`, `remote_root`, `backup_target`, `verified`. A request names a
 machine *key*, never a URL — no request supplies a destination. Pairing fills the record;
 until its data plane is verified, a machine is "setup incomplete" and never dispatched.
@@ -233,12 +237,12 @@ erroring at machines that do not exist.
 │   │                           carries its project (cross-project questions are real)
 │   ├── retrain_state.json      the live run's cross-process contract
 │   ├── machines.json           measured inventory (cards, venvs, when)
-│   ├── machines_registry.json  paired machines + their API keys (0600)
 │   ├── jobs_status.json        scheduler outcomes
 │   └── gpu<N>.lock             per-card admission locks
 ├── jobs/                       spool-mode job files + cancel files (GW_TRAINER=spool)
 ├── private/                    NEVER mounted, NEVER served — that is a property
 │   ├── users.json sessions.json api_keys.json audit.jsonl
+│   ├── machines_registry.json  paired machines + their API keys (0600)
 │   ├── ssh/id_ed25519(.pub) known_hosts        HQ's data-plane identity
 │   └── meta.json               schema stamp for upgrades
 └── config/.env                 when GW_DATA_DIR is set; else <repo>/.env

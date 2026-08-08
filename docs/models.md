@@ -73,17 +73,19 @@ deleting the tree another is reading.
 
 ## The challenger stacks installer
 
-D-FINE needs nothing: it lives in the main venv and is the built-in challenger. The
-others install as **opt-in stacks** (setup wizard → Extras, re-runnable from Admin, or
-by CLI), each stack being a sidecar venv with its own torch pin:
+D-FINE needs nothing: it lives in the main venv and is the built-in challenger. Two
+families install as **opt-in stacks** (setup wizard → Extras, re-runnable from Admin,
+or by CLI), each stack being a sidecar venv with its own torch pin:
 
 - **DEIMv2** — clones the vendor repository `github.com/Intellindust-AI-Lab/DEIMv2`
-  pinned at commit `0fff8d4` (Apache-2.0) and builds `.venv-deim` around it. The pin is
-  the point: a moving vendor HEAD under a fixed exam is an uncontrolled variable.
+  pinned at commit `0fff8d4` (Apache-2.0) and builds `.venv-deim13` around it. The pin
+  is the point: a moving vendor HEAD under a fixed exam is an uncontrolled variable.
 - **RTMDet** (mmdetection) — builds `.venv-mmdet`; the same generic trainer also drives
   the YOLOX and CenterNet zoo entries.
-- **RF-DETR** — `.venv-alt`; its package auto-downloads its own pretrained weights on
-  first use.
+
+**RF-DETR** has no installer stack yet: it expects a hand-built `.venv-alt` (its
+package auto-downloads its own pretrained weights on first use), so today it only
+lights up on a machine where someone has made that venv by hand.
 
 A stack that is not installed simply does not appear as trainable — the registry's
 `venv_present` check is the whole test, and the Train control says which venv is missing
