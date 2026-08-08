@@ -118,6 +118,13 @@ Details that keep this honest:
 - Adoption only pulls runs that already have an eval; on the worker, the autoscore job
   scores any finished-but-unscored run every 5 minutes, so `train → score → adopt`
   completes with nobody watching.
+- **`/api/lab_status` is a cache, and it can serve the *previous* run's "done" for a
+  couple of minutes after a new launch** — `POST /api/train` returns before the worker's
+  status reflects the new run, and `age_s` on the response tells you how old the number
+  is. A script watching a remote run to completion should key on the *fact*, not the
+  proxy: the ledger gaining the run's row (adoption) is completion; a "done" status is
+  not. (Measured 2026-08-08: a watcher broke instantly on the prior run's cached
+  "done · adopted" while the new run was at epoch 15.)
 - `.last_sync.<machine>` is stamped only on success, so the dashboard's sync-age warning
   surfaces a broken path within a tick.
 
