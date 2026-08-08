@@ -15,6 +15,8 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ### Fixed
 - Probing a machine updates its GPU list in place instead of re-rendering the whole section.
+- Accepting the auto-labeler license now installs its Python dependencies before downloading the weights; it used to fetch weights only, and the first probe died on missing packages.
+- transformers pinned back to 4.57.1: the auto-labeler's vendored code cannot load on the 5.x line (measured), and D-FINE imports clean on 4.57.1.
 
 ## [0.3.0] - 2026-08-07
 

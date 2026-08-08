@@ -18,6 +18,8 @@ Everything else here requires an ADMIN session like any other admin surface.
 """
 from __future__ import annotations
 
+import re
+import sys
 import threading
 import time
 
@@ -25,7 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from ...config import MODEL_PATH, role
-from .. import env_file
+from .. import env_file, safe_proc
 from ..auth import audit as audit_mod
 from ..auth import sessions, users
 from ..auth.routes import require_admin
@@ -161,9 +163,50 @@ class LaReq(BaseModel):
     remember_token: bool = False
 
 
+def _dist_present(name: str) -> bool:
+    from importlib import metadata
+    try:
+        metadata.distribution(name)
+        return True
+    except metadata.PackageNotFoundError:
+        return False
+
+
+def _la_missing() -> list[str]:
+    """Pins from our own [la] extra that are absent from this venv.
+
+    Read from package metadata so pyproject stays the single source of truth —
+    a pin edited there changes what this installs, with no second copy to
+    forget. opencv is satisfied by EITHER distribution (full or headless):
+    both ship the one cv2 package, and installing headless beside an existing
+    full install leaves two dists fighting over the same files.
+    """
+    from importlib import metadata
+    try:
+        reqs = metadata.requires("groundwork") or []
+    except metadata.PackageNotFoundError:   # not pip-installed (bare checkout)
+        return []
+    missing = []
+    for r in reqs:
+        if 'extra == "la"' not in r:
+            continue
+        pin = r.split(";")[0].strip()
+        name = re.split(r"[=<>!\[ ]", pin, maxsplit=1)[0]
+        probe = (["opencv-python", "opencv-python-headless"]
+                 if name.startswith("opencv") else [name])
+        if not any(_dist_present(p) for p in probe):
+            missing.append(pin)
+    return missing
+
+
 @router.post("/api/setup/extras/la")
 def extras_la(body: LaReq, _: str = Depends(require_admin)):
-    """Download the LocateAnything-3B auto-labeler weights from Hugging Face.
+    """Set up the LocateAnything-3B auto-labeler: Python deps, then weights.
+
+    Both halves, deliberately. This endpoint once fetched only the weights,
+    which left the first probe dying on ImportError (decord, lmdb) on any
+    instance whose venv lacked the [la] extra — the checkbox must end with a
+    WORKING auto-labeler, not weights beside missing imports.
 
     CONSENT IS THE POINT: the weights are under NVIDIA's own license, between
     the user and NVIDIA — this platform never redistributes them. Anonymous
@@ -182,6 +225,22 @@ def extras_la(body: LaReq, _: str = Depends(require_admin)):
 
     def work():
         try:
+            missing = _la_missing()
+            if missing:
+                with _extras_lock:
+                    _extras["la"] = {"state": "running", "step": "deps",
+                                     "pct": 0, "at": time.time()}
+                r = safe_proc.run([sys.executable, "-m", "pip", "install",
+                                   *missing], timeout=900)
+                if not r.ok:
+                    tail = (r.stderr or r.stdout or "").strip()[-300:]
+                    with _extras_lock:
+                        _extras["la"] = {"state": "error", "at": time.time(),
+                                         "error": f"pip install failed: {tail}"}
+                    return
+            with _extras_lock:
+                _extras["la"] = {"state": "running", "step": "weights",
+                                 "pct": 0, "at": time.time()}
             from huggingface_hub import snapshot_download
             snapshot_download("nvidia/LocateAnything-3B",
                               local_dir=MODEL_PATH,
