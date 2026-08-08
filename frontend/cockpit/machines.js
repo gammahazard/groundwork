@@ -108,7 +108,20 @@ async function _probe(key, btn) {
     if (msg) msg.textContent = j.cards_stale
       ? `Cards not re-read: ${j.why || "it is busy"}`
       : `Found ${(j.cards || []).length} card(s).`;
-    loadMachines();
+    // UPDATE JUST THIS BOX IN PLACE — loadMachines() re-renders the whole list
+    // and flashes a loading skeleton over every machine, which reads as the
+    // panel breaking and rebuilding after a 10s wait. Swap only the probed
+    // box's card rows and let them fade in; nothing else on screen moves.
+    const box = document.querySelector(`.mBox[data-key="${(window.CSS && CSS.escape) ? CSS.escape(key) : key}"]`);
+    const cardsEl = box && box.querySelector(".mCards");
+    if (cardsEl && !j.cards_stale && (j.cards || []).length) {
+      cardsEl.innerHTML = j.cards.map(_mCardHTML).join("");
+      cardsEl.classList.remove("mCardsIn");
+      void cardsEl.offsetWidth;          // restart the animation on a re-probe
+      cardsEl.classList.add("mCardsIn");
+    } else if (!box) {
+      loadMachines();                    // box gone (rare) — fall back to a full refresh
+    }
   } catch (e) {
     if (msg) { msg.textContent = e.message || String(e); msg.classList.add("bad"); }
   } finally {

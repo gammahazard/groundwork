@@ -50,6 +50,14 @@
    A ruled list, not tiles: two GPUs is a comparison, and a comparison wants
    its figures in a column. */
 .mCards{margin-top:var(--gw-s3)}
+/* After a probe, the card rows are swapped in place (machines.js) rather than
+   the whole list being re-rendered. Fade them in so the result appears instead
+   of the panel appearing to break and rebuild. */
+.mCardsIn .mCard{animation:mCardIn .34s ease both}
+.mCardsIn .mCard:nth-child(2){animation-delay:.05s}
+.mCardsIn .mCard:nth-child(3){animation-delay:.1s}
+@keyframes mCardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.mCardsIn .mCard{animation:none}}
 .mCard{
   display:flex;align-items:baseline;gap:var(--gw-s3);flex-wrap:wrap;
   padding:.4rem 0;border-bottom:1px solid var(--gw-rule)}
