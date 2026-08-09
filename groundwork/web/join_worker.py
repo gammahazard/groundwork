@@ -177,12 +177,23 @@ def main() -> int:
     print()
     if ok:
         print(f"[join] ✓ this machine is registered and verified as "
-              f"{result.get('key')!r} — it appears in the hub's Train matrix.")
+              f"{result.get('key')!r}.")
+        print("[join] next: back on the hub, open the Machines tab (refresh "
+              "if already open) — this machine is listed with its cards "
+              "probed, ready to be picked in Train.")
     else:
-        print("[join] registered, but not fully verified — the hub's Machines "
-              "tab has the resume path.")
+        print(f"[join] registered as {result.get('key')!r}, but not fully "
+              "verified.")
         if result.get("manual_step"):
-            print("[join] manual step:", result["manual_step"])
+            print("[join] 1. run the manual step below (in this terminal — "
+                  "you are already on the right machine):")
+            print("       ", result["manual_step"])
+            print("[join] 2. then, back on the hub: Machines tab → refresh → "
+                  "find this machine → press its data-plane test, then Probe.")
+        else:
+            print("[join] next: back on the hub, Machines tab → refresh → "
+                  "find this machine → press its data-plane test, then "
+                  "Probe. Each failure explains itself in ssh's own words.")
     print(f"[join] running as {service}")
     if admin_pw:
         print(f"[join] this worker's own cockpit: {url}  "
