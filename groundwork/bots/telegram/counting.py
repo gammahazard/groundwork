@@ -5,12 +5,9 @@ import asyncio
 import io
 
 from PIL import Image
-
-try:                                    # iPhone Files-app sends can be true HEIC
-    from pillow_heif import register_heif_opener
-    register_heif_opener()
-except ImportError:
-    pass
+# HEIC/HEIF (iPhone Files-app sends) is registered once for every process in
+# groundwork/__init__ — importing this module imports that package, so a .heic
+# uploaded here decodes without a second registration.
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ChatAction

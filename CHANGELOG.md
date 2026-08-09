@@ -9,6 +9,9 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Fixed
+- HEIC/HEIF photos decode now — an iPhone photo sent as a *file* (uncompressed, not a "photo") was rejected as undecodable. The HEIF opener is registered once for every process via the new `pillow-heif` dependency; uploads store HEIC verbatim, so the training and eval subprocesses need it too, not just the bot and web.
+
 ## [0.4.0] - 2026-08-09
 
 The first public release. The notes below are the most recent round of hardening;

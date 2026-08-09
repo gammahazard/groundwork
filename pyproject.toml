@@ -23,6 +23,10 @@ dependencies = [
     "python-multipart",
     "httpx",              # machine-to-machine calls; its absence once 500'd three endpoints
     "pillow==12.3.0",
+    # HEIC/HEIF decoding for PIL — iPhones send it when a photo goes as a FILE,
+    # and uploads store it verbatim, so a .heic image reaches the pipeline too.
+    # Registered once in groundwork/__init__ (guarded).
+    "pillow-heif==1.5.0",
     "numpy==2.5.1",
     "python-dotenv==1.2.2",
 ]
