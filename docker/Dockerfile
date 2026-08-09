@@ -41,7 +41,11 @@ COPY docker/entrypoint.sh ./docker/entrypoint.sh
 
 # torch is already satisfied from the channel index above, so the unpinned
 # "torch" inside [train] resolves to it — nothing here can pull a generic build.
-RUN pip install --no-cache-dir -e ".[train,bots]"
+# [la] is baked in HERE because the runtime user cannot pip into this venv —
+# root built it, the app runs unprivileged, and the auto-labeler's accept
+# button used to die on `Permission denied: site-packages` in exactly this
+# spot. In a container the license click must only ever download weights.
+RUN pip install --no-cache-dir -e ".[train,bots,la]"
 
 # HEADLESS OpenCV. ultralytics depends on opencv-python, whose wheel links
 # against X11/Qt shared libraries (libxcb, libGL) that a slim image does not

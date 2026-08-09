@@ -18,6 +18,7 @@ Everything else here requires an ADMIN session like any other admin surface.
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
 import threading
@@ -123,13 +124,38 @@ def instance(body: Instance, _: str = Depends(require_admin)):
             "note": "takes effect for new processes; the page keeps working"}
 
 
+def _la_complete() -> bool:
+    """Weights present AND complete — a half-downloaded model must not read
+    as installed. The safetensors index names every shard the model needs, so
+    completeness is checked against the model's own manifest rather than
+    guessed from "directory is non-empty" (which a 5%-then-interrupted pull
+    also satisfies). Leftover *.incomplete files are an explicit no.
+    Re-clicking accept resumes an interrupted pull — downloads are per-file
+    and already-finished files are skipped."""
+    import json as _json
+    from pathlib import Path
+    d = Path(MODEL_PATH)
+    if not d.is_dir():
+        return False
+    if any(d.rglob("*.incomplete")):
+        return False
+    if not (d / "config.json").exists():
+        return False
+    idx = d / "model.safetensors.index.json"
+    if idx.exists():
+        try:
+            shards = set(_json.loads(idx.read_text()).get("weight_map", {}).values())
+        except (OSError, ValueError):
+            return False
+        return bool(shards) and all((d / s).exists() for s in shards)
+    return any(d.glob("*.safetensors"))
+
+
 @router.get("/api/setup/facts")
 def facts(_: str = Depends(require_admin)):
     """The derived post-claim checklist the wizard renders from."""
-    from pathlib import Path
     from ... import project as project_mod
     from .. import machines
-    la_dir = Path(MODEL_PATH)
     # "probed" = a probe has RUN, not "cards exist" — a CPU-only box is
     # probed and has zero cards, and the wizard must say that rather than
     # showing a spinner forever. train_env tells the two zero-card cases
@@ -139,8 +165,7 @@ def facts(_: str = Depends(require_admin)):
             "cards": machines.cards("here"),
             "train_env": bool(main_env.get("torch")),
             "projects": project_mod.slugs(),
-            "la_present": la_dir.exists() and any(la_dir.iterdir())
-            if la_dir.exists() else False,
+            "la_present": _la_complete(),
             "extras": _extras_state()}
 
 
@@ -227,6 +252,22 @@ def extras_la(body: LaReq, _: str = Depends(require_admin)):
         try:
             missing = _la_missing()
             if missing:
+                # A container's venv was built by root and the app runs
+                # unprivileged — pip would die on site-packages permissions.
+                # Current images bake [la] in, so `missing` is empty there;
+                # this guard turns the pip spew on OLDER images into words.
+                import sysconfig
+                site = sysconfig.get_paths()["purelib"]
+                if not os.access(site, os.W_OK):
+                    names = ", ".join(p.split("==")[0] for p in missing)
+                    with _extras_lock:
+                        _extras["la"] = {
+                            "state": "error", "at": time.time(),
+                            "error": ("this deployment's Python env is "
+                                      f"read-only and lacks: {names}. Rebuild "
+                                      "the image (current ones bake these in): "
+                                      "docker compose up -d --build")}
+                    return
                 with _extras_lock:
                     _extras["la"] = {"state": "running", "step": "deps",
                                      "pct": 0, "at": time.time()}
