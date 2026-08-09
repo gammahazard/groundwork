@@ -6,7 +6,7 @@
 
 <p>
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/License-AGPL--3.0-e0952a?style=flat-square"></a>
-  <img alt="Version 0.3.0" src="https://img.shields.io/badge/version-0.3.0-e0952a?style=flat-square">
+  <img alt="Version 0.4.0" src="https://img.shields.io/badge/version-0.4.0-e0952a?style=flat-square">
   <a href="https://github.com/gammahazard/groundwork/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gammahazard/groundwork/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white">
   <img alt="Docker Compose" src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white">
@@ -38,9 +38,17 @@ over ssh and rsync.
 
 ---
 
-**Contents:** [Features](#features) · [Proven in the field](#proven-in-the-field) ·
-[Requirements](#requirements) · [Quickstart](#quickstart) ·
-[Documentation](#documentation) · [Philosophy](#philosophy) · [License](#license)
+## Contents
+
+- [Features](#features)
+- [Proven in the field](#proven-in-the-field)
+- [Requirements](#requirements)
+- [Quickstart](#quickstart)
+  - [Docker (recommended)](#docker-recommended)
+  - [Native (systemd)](#native-systemd)
+- [Documentation](#documentation)
+- [Philosophy](#philosophy)
+- [License](#license)
 
 ---
 
