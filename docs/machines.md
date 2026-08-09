@@ -20,7 +20,9 @@ how pairing works, what syncs when, and what to do when ssh says no.
 ## Adding a worker — one command (recommended)
 
 On the HQ's Machines tab press **Create join command** and run the line it
-shows *on the GPU machine*:
+shows *on the GPU machine, in its Linux terminal* — on a Windows/WSL box that
+is the Ubuntu terminal, never PowerShell (the join installs a native Linux
+worker):
 
 ```sh
 curl -fsSL http://<hq>:8000/join.sh | bash -s -- http://<hq>:8000 gwj_…
