@@ -191,7 +191,11 @@ def adopt(machine_key: str, remote_run: str, note: str = "", pp=None,
         print(f"[adopt] {machine_key}:{remote_run} -> {local} | MAE {d.get('mae')} "
               f"({d.get('source')}) | recorded in the ledger")
         return local
-    r2 = _ssh(t, f"mv {remote_runs}/{remote_run} {remote_runs}/{local}",
+    # -T: if the target name already exists on the worker (numbering diverged,
+    # or it is the ACTIVE run's dir now that adoption can land mid-retrain),
+    # plain mv would nest one run directory INSIDE the other. -T makes that a
+    # refusal instead, and a refused rename is already handled as cosmetic.
+    r2 = _ssh(t, f"mv -T {remote_runs}/{remote_run} {remote_runs}/{local}",
               timeout=60)
     print(f"[adopt] worker copy renamed {remote_run} -> {local}"
           if r2.returncode == 0 else
@@ -201,22 +205,51 @@ def adopt(machine_key: str, remote_run: str, note: str = "", pp=None,
     return local
 
 
+def _probe_cmd(root: str, runs_rel: str) -> str:
+    """The one bash script that answers "what could come home?" — the worker's
+    retrain state, then one line per candidate run: `name|complete` when the
+    pipeline stamped it fully finished, bare `name` otherwise. A module-level
+    function so checks can run the EXACT script that ships against a fixture
+    tree, rather than asserting the string looks right."""
+    return (f"cat {root}/outputs/retrain_state.json 2>/dev/null; echo ---; "
+            f"for d in {root}/{runs_rel}/*/; do "
+            "n=$(basename $d); "
+            "[ -f $d/count_eval.json ] && [ ! -f $d/.adopted ] && "
+            '{ [ -f $d/.complete ] && echo "$n|complete" || echo "$n"; }; '
+            "done; exit 0")
+
+
+def _eligible(listing: str, running: bool) -> tuple[list[str], list[str]]:
+    """(adopt now, still waiting) from the probe's listing.
+
+    Mid-retrain, only runs the pipeline STAMPED `.complete` come home — the
+    stamp is the pipeline saying "nothing writes here again", which is what the
+    old machine-wide guard was actually protecting (count_eval.json exists
+    DURING eval, while the checkpoint promotion may still rewrite it). The
+    machine-wide version of that guard starved chained runs: back-to-back
+    training kept the state "running" so the 5-minute tick never saw idle, and
+    finished runs sat on the worker indefinitely. Idle, everything qualifies —
+    runs finished by older workers carry no stamp and keep the old cadence."""
+    go, wait = [], []
+    for line in listing.split():
+        name, _, flag = line.partition("|")
+        if not name:
+            continue
+        (go if not running or flag == "complete" else wait).append(name)
+    return go, wait
+
+
 def scan(machine_key: str, pp=None, project: str | None = None) -> int:
     """Auto-adopt: bring home every finished worker run not yet adopted.
 
     A run qualifies when it has a count_eval.json and no .adopted marker, and
-    the worker isn't mid-retrain (so we never grab a half-evaluated run). Runs
-    from the scheduler every few minutes — pressing Train is all a human ever
+    either carries the pipeline's `.complete` stamp or the worker isn't
+    mid-retrain (so we never grab a half-evaluated run). Runs from the
+    scheduler every few minutes — pressing Train is all a human ever
     has to do."""
     t = _t(machine_key)
     runs_rel = _rel(pp.RUNS_DIR)
-    probe = _ssh(
-        t, "bash", "-c",
-        f"'cat {t[2]}/outputs/retrain_state.json 2>/dev/null; echo ---; "
-        f"for d in {t[2]}/{runs_rel}/*/; do "
-        "n=$(basename $d); "
-        "[ -f $d/count_eval.json ] && [ ! -f $d/.adopted ] && echo $n; done; exit 0'",
-        timeout=60)
+    probe = _ssh(t, "bash", "-c", f"'{_probe_cmd(t[2], runs_rel)}'", timeout=60)
     if probe.returncode != 0:
         print(f"[adopt-scan] {machine_key} unreachable: {probe.stderr.strip()[:120]}")
         return 0
@@ -224,17 +257,22 @@ def scan(machine_key: str, pp=None, project: str | None = None) -> int:
     # PARSED, not string-matched. This tested for one exact spacing of
     # '"status": "running"', so a formatting change on the worker would let the
     # scan adopt a half-evaluated run mid-retrain.
-    if _says_running(state_raw):
-        print(f"[adopt-scan] {machine_key} is mid-retrain — waiting")
-        return 0
+    ready, waiting = _eligible(listing, _says_running(state_raw))
+    if waiting:
+        print(f"[adopt-scan] {machine_key} is mid-retrain — "
+              f"{', '.join(waiting)} not stamped complete; waiting")
     n = 0
-    for name in listing.split():
+    for name in ready:
         try:
             local = adopt(machine_key, name, pp=pp, project=project)
             _ssh(t, f"touch {t[2]}/{runs_rel}/{local}/.adopted", timeout=30)
             n += 1
         except SystemExit as e:
             print(f"[adopt-scan] {name}: {e}")
+    # Challenger results are safe to carry mid-retrain: their count_eval.json
+    # only ever appears after scoring completes, and autoscore refuses to score
+    # beside ANY GPU work — so "scored" and "still being written" cannot
+    # overlap the way a champion run's eval does.
     n += _scan_alt(machine_key)
     if n == 0:
         print(f"[adopt-scan] {machine_key}: nothing new to adopt")

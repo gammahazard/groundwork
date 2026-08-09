@@ -181,6 +181,18 @@ def run_pipeline(sizes: list[int], val_frac: float,
                 if _run([py, "-m", _STAGE["heatmap"],
                          "--run", run_dir.name, *proj_arg], log):
                     log.write("[retrain] heatmaps failed (non-fatal)\n")
+                # FULLY finished — evaluated, snapshotted, recorded, extras
+                # done; nothing will write into this run dir again. The stamp
+                # is what lets HQ's adopt scan carry THIS run home while the
+                # NEXT one trains. Without it adoption waits for the whole
+                # machine to go quiet, and chained runs never are: measured
+                # 2026-08-09, a 90-second idle gap between back-to-back runs
+                # never lined up with the 5-minute tick, so a finished run
+                # with MAE 0.0 sat unadopted with nothing anywhere saying why.
+                # Stamped AFTER the extras, not after the ledger write: the
+                # timelapse and heatmaps land images the adoption rsync copies,
+                # and a stamp before them invites a torn preview home.
+                (run_dir / ".complete").touch()
             last_mae = results[-1]["mae"] if results else None
             _update(status="done", step="", finished=time.time(), mae=last_mae)
         except Exception as e:  # noqa: BLE001

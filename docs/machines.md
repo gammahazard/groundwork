@@ -123,6 +123,10 @@ Details that keep this honest:
 - Adoption only pulls runs that already have an eval; on the worker, the autoscore job
   scores any finished-but-unscored run every 5 minutes, so `train → score → adopt`
   completes with nobody watching.
+- A run stamped `.complete` by the pipeline (fully finished: evaluated, snapshotted,
+  recorded, previews done) is adopted **even while the worker is training the next one** —
+  chained runs on a multi-GPU box don't wait for the machine to go quiet. A scored run
+  *without* the stamp (older worker code) waits for an idle tick, as everything used to.
 - **`/api/lab_status` is a cache, and it can serve the *previous* run's "done" for a
   couple of minutes after a new launch** — `POST /api/train` returns before the worker's
   status reflects the new run, and `age_s` on the response tells you how old the number

@@ -9,6 +9,13 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Fixed
+- Chained training runs no longer starve adoption. The pipeline now stamps each run `.complete` once it is fully finished (evaluated, snapshotted, recorded, previews done), and HQ's adopt scan brings stamped runs home even while the worker is already training the next one. Before, the scan skipped the *whole machine* whenever its retrain state said "running" — so back-to-back runs on a multi-GPU box sat finished-but-unadopted until the machine happened to be idle at a 5-minute tick, with the adopt job showing green the whole time (measured 2026-08-09: a finished run with MAE 0.0 waited behind a 90-second idle gap no tick ever landed in). Runs finished by older workers carry no stamp and keep the old cadence — adopted on the first tick that finds the machine idle. Challenger results also come home mid-retrain now; their `count_eval.json` only ever appears after scoring completes, which never overlaps a running retrain.
+- The worker-side rename after adoption uses `mv -T`, so a target run name that already exists on the worker (diverged numbering, or the active run's dir now that adoption lands mid-retrain) is a logged refusal instead of silently nesting one run directory inside the other.
+
+### Known limits
+- Two *champion* (yolo) retrains still cannot run concurrently on one machine — the retrain state is one file per machine and `start()` refuses a second, whatever the card count. A retrain plus challenger sidecar runs on other cards is the supported concurrency today; per-card retrain state is future work.
+
 ## [0.4.1] - 2026-08-09
 
 ### Fixed
