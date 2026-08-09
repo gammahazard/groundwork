@@ -765,12 +765,15 @@
     </div>
 
     <div class="panel">
-      <div class="row"><b>Pair a machine</b></div>
-      <p class="hint">On the new machine: install Groundwork with
-        <code>GW_ROLE=worker</code>, open ITS Machines tab, press
-        <b>Create pairing code</b>, and paste the string here. One paste
-        registers it, exchanges keys and probes its cards. <b>This machine
-        will receive full copies of every project you train on it.</b></p>
+      <div class="row"><b>Pair a machine — manual route</b></div>
+      <p class="hint"><b>Used the one-command join above? Skip this</b> — the
+        join already registered, exchanged keys and probed; the machine simply
+        appears in the list. This panel is for a box where you installed
+        Groundwork yourself: install with <code>GW_ROLE=worker</code>, open
+        ITS Machines tab, press <b>Create pairing code</b>, and paste the
+        string here. One paste registers it, exchanges keys and probes its
+        cards. <b>Either route: this machine will receive full copies of every
+        project you train on it.</b></p>
       <form id="pairForm" class="ctrls">
         <input id="pairCode" type="text" size="48" placeholder="GW1.…" required>
         <button>Pair</button>
