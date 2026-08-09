@@ -62,6 +62,18 @@ NTFS/exFAT hosts.
 
 ## Windows
 
+Before either route, three things must be true — each has a ten-second check:
+
+1. **Docker Desktop is installed and running** — the whale icon next to the
+   clock; `docker version` prints a Server section. ("Cannot connect to the
+   daemon" means it isn't running, nothing more.)
+2. **A Windows NVIDIA driver** is all the GPU needs — Desktop ships the
+   container GPU runtime itself; there is no toolkit to install on Windows.
+   The preflight at the top of this page works verbatim in PowerShell.
+3. **For the WSL route only**: a distro (`wsl --install` if you have none) with
+   Desktop's integration enabled for it — Settings → Resources → WSL
+   integration. If `docker` is "not found" inside WSL, this toggle is why.
+
 Docker Desktop runs every container in its WSL2 VM, so the *container* is
 equally fast no matter which shell typed the command. What differs is where
 the `./data` bind mount lives — and that gives you two supported routes:

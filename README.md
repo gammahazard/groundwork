@@ -126,18 +126,23 @@ creating the admin account, naming the machine, probing the GPU, and creating yo
 project. GPU selection, the CPU-only variant and the data volume are covered in
 [docker/README.md](docker/README.md).
 
-**On Windows**, run the same three commands inside WSL for browsable data at full speed —
-or straight from PowerShell with the fast-storage overlay:
-`docker compose -f docker-compose.yml -f docker-compose.windows.yml up`
-([why, and the trade](docker/README.md#windows)). No git installed? PowerShell
-alone can fetch the source — no tooling needed:
+**On Windows** — prerequisite either way: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+installed and *running*. Then pick your terminal:
 
-```powershell
-Invoke-WebRequest https://github.com/gammahazard/groundwork/archive/refs/heads/main.zip -OutFile groundwork.zip
-Expand-Archive groundwork.zip .
-cd groundwork-main\docker
-docker compose -f docker-compose.yml -f docker-compose.windows.yml up
-```
+- **WSL terminal** (recommended): the same three commands as above, unchanged —
+  full speed, and the data stays a browsable folder. Needs a WSL distro with
+  Desktop's WSL integration switched on (Settings → Resources → WSL
+  integration); no distro yet means `wsl --install` first.
+- **PowerShell terminal**: same commands, but add the fast-storage overlay to
+  the last one ([why, and the trade](docker/README.md#windows)) — and git is
+  optional, PowerShell can fetch the source itself:
+
+  ```powershell
+  Invoke-WebRequest https://github.com/gammahazard/groundwork/archive/refs/heads/main.zip -OutFile groundwork.zip
+  Expand-Archive groundwork.zip .
+  cd groundwork-main\docker
+  docker compose -f docker-compose.yml -f docker-compose.windows.yml up
+  ```
 
 ### Native (systemd)
 
