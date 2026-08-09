@@ -16,6 +16,9 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 - Windows support hardening: `.gitattributes` pins container-bound files to LF, a `docker-compose.windows.yml` overlay gives PowerShell users full-speed storage via a named volume, and the README gains a git-free fetch path (PowerShell downloads the source ZIP itself).
 
 ### Fixed
+- Probe now finishes an unverified pairing — host keys, ssh echo, rsync dry-run, verified — so a machine whose enroll verification failed is no longer a dead end with no recovering control; the Train tab's options also refetch after a probe instead of showing stale "unavailable" until a page reload.
+- An unreadable machines registry raises with the fix in words instead of silently answering "no machines" — a root-owned file made every registered machine vanish from the UI while root-run diagnostics kept seeing them.
+- A never-trained instance no longer prints a FileNotFoundError line on every models read.
 - A joining worker that announced an unreachable address (WSL NAT, multi-homed) no longer strands the enroll — the hub falls back to the address the join arrived from when only that one answers, and says so; the join command also honours a `GW_SELF_URL=` prefix, persisted like `GW_PORT`.
 - The GPU-busy guard counted any process merely mentioning a trainer marker — a leftover watcher's `pgrep` pattern kept a worker's card probe refused indefinitely; it now requires a python interpreter carrying the module, per its own docstring.
 - README: the first build's ~10-minute torch download is stated up front, and upgrades say `docker compose up --build` — plain `up` reuses a cached image and silently runs old code.

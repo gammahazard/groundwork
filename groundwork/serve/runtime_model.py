@@ -83,6 +83,12 @@ def _in_progress() -> set[str]:
     owner process died is ignored (it would hide finished runs forever)."""
     f = OUTPUTS_DIR / "retrain_state.json"
     try:
+        # No state file = this machine has never trained. Entirely normal on a
+        # fresh instance, and it used to print a FileNotFoundError line on
+        # EVERY models/serving read — dozens of identical "skipped" lines on a
+        # box that had nothing to skip.
+        if not f.exists():
+            return set()
         d = json.loads(f.read_text())
         if d.get("status") != "running":
             return set()

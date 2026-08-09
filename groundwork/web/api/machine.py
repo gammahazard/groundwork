@@ -402,8 +402,32 @@ def probe(key: str, _: str = Depends(require_admin)):
            if (d.get("cards_stale") or (not fresh and kept)) else {})}
     machines_mod.MAP_PATH.write_text(json.dumps(doc, indent=1) + "\n",
                                      encoding="utf-8")
+    # FINISH THE PAIRING FROM THE ONE BUTTON THAT EXISTS. When enroll's
+    # verification failed (wrong address, dead network — both measured), the
+    # machine sat "not finished pairing" with a message pointing at a tab
+    # whose only control was this probe — which never verified, so the dead
+    # end was permanent. The worker's describe() already carries its sshd
+    # host keys, so the probe can complete the same chain enroll runs:
+    # record keys → ssh echo → rsync dry-run → mark verified.
+    verify = None
+    if not m.local:
+        reg2 = machines_mod.registered(key)
+        if reg2.get("ssh_host") and not reg2.get("verified"):
+            from .. import ssh_identity
+            hks = d.get("ssh_host_keys") or []
+            if hks:
+                try:
+                    ssh_identity.record_host_keys(reg2["ssh_host"], hks)
+                except Exception as e:  # noqa: BLE001 — test below will say more
+                    print(f"[machines] host-key record for {key}: {e}",
+                          flush=True)
+            try:
+                verify = test_data_plane(key, _)
+            except HTTPException as e:
+                verify = {"ok": False, "error": str(e.detail)}
     return {"ok": True, "key": key, "cards": kept,
             "cards_stale": bool(d.get("cards_stale") or (not fresh and kept)),
+            "verify": verify,
             "why": d.get("why") or ("kept the previously measured cards — it is "
                                     "busy and would not re-read them" if not fresh
                                     and kept else None)}

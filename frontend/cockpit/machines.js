@@ -108,6 +108,16 @@ async function _probe(key, btn) {
     if (msg) msg.textContent = j.cards_stale
       ? `Cards not re-read: ${j.why || "it is busy"}`
       : `Found ${(j.cards || []).length} card(s).`;
+    // The probe now also finishes an unverified pairing (host keys + ssh +
+    // rsync dry-run). Say which way it went — a silent flag helps nobody.
+    if (msg && j.verify)
+      msg.textContent += j.verify.ok
+        ? " Data plane verified ✓ — it can be trained on now."
+        : ` Data plane still failing (${j.verify.step || "?"}: ${j.verify.error || "?"}).`;
+    // Availability in the Train tab is computed from what was just measured —
+    // refetch its options so a freshly probed/verified machine appears there
+    // without a page reload (it used to sit "unavailable" until one).
+    if (window.loadTrain) window.loadTrain();
     // UPDATE JUST THIS BOX IN PLACE — loadMachines() re-renders the whole list
     // and flashes a loading skeleton over every machine, which reads as the
     // panel breaking and rebuilding after a 10s wait. Swap only the probed

@@ -49,6 +49,18 @@ def _registry() -> dict:
     _migrate_legacy()
     try:
         d = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}                      # no machines registered yet — normal
+    except PermissionError as e:
+        # LOUD, NEVER {}. A root-owned registry (any tool touching this file
+        # as the wrong user) made every registered machine silently vanish
+        # from the UI while reads as root kept seeing them — measured
+        # 2026-08-09, and the divergence cost hours. Unreadable is a broken
+        # deployment, not an empty fleet.
+        raise RuntimeError(
+            f"machines registry exists but cannot be read ({e}) — fix "
+            f"ownership/permissions on {REGISTRY_PATH} (the app runs as the "
+            f"container user, not root)") from e
     except (OSError, ValueError):
         return {}
     return d.get("machines") or {} if isinstance(d, dict) else {}
