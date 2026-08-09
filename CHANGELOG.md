@@ -9,6 +9,8 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-09
+
 ### Fixed
 - HEIC/HEIF photos work end to end now — an iPhone photo sent as a *file* (uncompressed, not a "photo") was rejected as undecodable. The HEIF opener is registered once for every process (new `pillow-heif` dependency), and the web upload normalizes HEIC to JPEG on store so it also *trains* — YOLO's OpenCV dataloader can't read HEIC, so a stored `.heic` would have broken a later run. (The bot already stored JPEG.)
 
@@ -39,5 +41,6 @@ the [README](README.md) is the full picture of what Groundwork does.
 - Docker images bake the `[la]` extra in — the container venv is root-built and read-only to the app user, so the accept-time pip install died on permissions; in a container the license click now only downloads weights (older images get a clear message instead of pip's permission error).
 - transformers pinned back to 4.57.1: the auto-labeler's vendored code cannot load on the 5.x line (measured), and D-FINE imports clean on 4.57.1.
 
-[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/gammahazard/groundwork/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/gammahazard/groundwork/releases/tag/v0.4.0
