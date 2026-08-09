@@ -481,6 +481,16 @@
           <label id="tConcWrap" hidden class="tConc">
             <input type="checkbox" id="tConc">
             run alongside the job already training</label>
+          <!-- TWO CHAMPION RUNS AT ONCE (one per card) — NOT WIRED YET. The
+               retrain state is one file per machine and start() refuses a
+               second run, whatever the card count (CHANGELOG "Known limits").
+               The disabled control states the limit where someone reaching for
+               it would look, instead of leaving it to be discovered as a
+               refusal after picking two cards' worth of settings. -->
+          <label class="tConc tConcSoon"
+                 title="Running two runs on different cards of the same machine will not work yet — one retrain per machine at a time. Coming soon.">
+            <input type="checkbox" disabled>
+            two runs at once (one per card) — coming soon</label>
           <label>size <select id="tSize">
             <option value="960">960</option>
             <option value="1280" selected>1280</option>

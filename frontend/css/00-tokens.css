@@ -475,3 +475,7 @@ body.inProject #navPanel .navGroupLabel{display:none}
        font:400 var(--gw-t-sm) var(--gw-sans);color:var(--gw-act);
        white-space:nowrap}
 .tConc[hidden]{display:none}
+/* The not-yet-wired variant: muted, not action-coloured — it must read as a
+   stated limit ("coming soon"), never as an armed control. */
+.tConcSoon{color:var(--gw-ink-3);cursor:not-allowed}
+.tConcSoon input{cursor:not-allowed}
