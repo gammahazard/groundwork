@@ -121,6 +121,11 @@ cd groundwork/docker
 docker compose up
 ```
 
+The first `up` **builds the image — a multi-GB torch download, expect ~10 minutes
+once**; later starts are seconds. **Upgrading after a `git pull` needs
+`docker compose up --build`** — plain `up` reuses the cached image and silently
+runs the old code.
+
 Open `http://localhost:8000`. On a fresh instance the first-run wizard walks you through
 creating the admin account, naming the machine, probing the GPU, and creating your first
 project. GPU selection, the CPU-only variant and the data volume are covered in
