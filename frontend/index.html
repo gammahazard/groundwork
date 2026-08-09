@@ -971,15 +971,19 @@
       <div class="row"><b>Extras</b> <span class="mMeta" id="axState"></span></div>
       <p class="hint">Optional components the setup wizard offers. The
         auto-labeler (~6&nbsp;GB) downloads from Hugging Face under
-        <b>NVIDIA's license</b> — between you and them. Challenger stacks
-        build sidecar environments (their own torch builds) and clone pinned
-        vendor code.</p>
+        <b>NVIDIA's license</b> — between you and them. The enable buttons add
+        challenger <b>model families</b> to the Train tab (until then those
+        families show there as unavailable, with the reason). Each builds a
+        sidecar environment — its own torch, pinned vendor code, a few GB,
+        some minutes — and the families are <b>Apache-2.0</b>: a challenger
+        that matches your champion on the holdout ships without the default
+        family's AGPL strings.</p>
       <div class="ctrls">
         <label><input type="checkbox" id="axLaOk"> accept the auto-labeler's license</label>
         <button id="axLaBtn" type="button">⬇ Auto-labeler</button>
         <label><input type="checkbox" id="axStackOk"> accept Apache-2.0</label>
-        <button id="axStackDeim" type="button">⛏ DEIM stack</button>
-        <button id="axStackRtm" type="button">⛏ RTMDet stack</button>
+        <button id="axStackDeim" type="button">⛏ Enable DEIMv2</button>
+        <button id="axStackRtm" type="button">⛏ Enable RTMDet · YOLOX · CenterNet</button>
       </div>
       <div class="mMeta" id="axMsg"></div>
     </div>
