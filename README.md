@@ -129,7 +129,15 @@ project. GPU selection, the CPU-only variant and the data volume are covered in
 **On Windows**, run the same three commands inside WSL for browsable data at full speed —
 or straight from PowerShell with the fast-storage overlay:
 `docker compose -f docker-compose.yml -f docker-compose.windows.yml up`
-([why, and the trade](docker/README.md#windows)).
+([why, and the trade](docker/README.md#windows)). No git installed? PowerShell
+alone can fetch the source — no tooling needed:
+
+```powershell
+Invoke-WebRequest https://github.com/gammahazard/groundwork/archive/refs/heads/main.zip -OutFile groundwork.zip
+Expand-Archive groundwork.zip .
+cd groundwork-main\docker
+docker compose -f docker-compose.yml -f docker-compose.windows.yml up
+```
 
 ### Native (systemd)
 

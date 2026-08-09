@@ -12,7 +12,7 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 ### Added
 - "Keep me signed in" checkbox on login; unchecked, the session ends when the browser closes.
 - `scripts/release.sh` — one-command release: stamps the changelog, bumps the version, waits for CI, tags, and publishes the GitHub Release.
-- Windows support hardening: `.gitattributes` pins container-bound files to LF, and a `docker-compose.windows.yml` overlay gives PowerShell users full-speed storage via a named volume.
+- Windows support hardening: `.gitattributes` pins container-bound files to LF, a `docker-compose.windows.yml` overlay gives PowerShell users full-speed storage via a named volume, and the README gains a git-free fetch path (PowerShell downloads the source ZIP itself).
 
 ### Fixed
 - Probing a machine updates its GPU list in place instead of re-rendering the whole section.
