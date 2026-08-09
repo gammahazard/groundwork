@@ -24,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import os
 import secrets
 import tarfile
 import time
@@ -78,9 +79,32 @@ def mint_join_token(request: Request, user: str = Depends(require_admin)):
                  "minted": time.time(), "by": user})
     _save_tokens(rows)
     hub = machines_mod.self_url() or "http://<this-hq>:8000"
+    suspect, why = _hub_suspect(hub)
     return {"ok": True, "token": token, "ttl_minutes": _TTL_S // 60,
             "command": f"curl -fsSL {hub}/join.sh | bash -s -- {hub} {token}",
-            "note": "Single use, 30 minutes. Run it ON the GPU machine."}
+            "hub": hub, "hub_suspect": suspect, "hub_why": why,
+            "note": "Single use, 30 minutes. Run it ON the GPU machine, in "
+                    "its Linux shell (on a WSL box: the Ubuntu terminal)."}
+
+
+def _hub_suspect(hub: str) -> tuple[bool, str]:
+    """Is the advertised hub address one other machines cannot dial?
+
+    The interface scan is honest about what it sees, but inside a container
+    what it sees is the container's own bridge — so every Docker deployment
+    would mint a join command no worker can call home to, silently. Setting
+    GW_SELF_URL is both the override and the all-clear."""
+    if os.environ.get("GW_SELF_URL"):
+        return False, ""
+    host = hub.split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0]
+    if host in ("localhost", "127.0.0.1", "0.0.0.0", "<this-hq>"):
+        return True, ("this address is loopback — 'this machine talking to "
+                      "itself' — and no other machine can reach it")
+    if os.path.exists("/.dockerenv"):
+        return True, ("minted from inside a container, so this is the "
+                      "container's own network address — machines on your "
+                      "network cannot reach it")
+    return False, ""
 
 
 @router.get("/join.sh", response_class=PlainTextResponse)

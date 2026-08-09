@@ -256,6 +256,7 @@ async function _remove(key) {
   if (!mint) return;
   const out = document.getElementById("joinOut");
   const copy = document.getElementById("joinCopy");
+  const note = document.getElementById("joinNote");
   mint.onclick = async () => {
     mint.disabled = true;
     try {
@@ -265,6 +266,26 @@ async function _remove(key) {
       copy.hidden = false;
       copy.onclick = () => navigator.clipboard?.writeText(r.command)
         .then(() => { copy.textContent = "Copied ✓"; });
+      // The address is the part strangers get burned by, so guidance is
+      // ALWAYS shown — and becomes a warning when the server knows the
+      // scanned address is unreachable (container bridge, loopback).
+      if (note) {
+        if (r.hub_suspect) {
+          note.textContent = "⚠ Before pasting, replace " +
+            (r.hub || "the address") + " (both places) with this machine's " +
+            "address as the worker sees it — a LAN or VPN IP like " +
+            "http://192.168.1.20:8000 — because " + (r.hub_why || "") +
+            ". Set GW_SELF_URL on this instance to pin it permanently.";
+          note.classList.add("bad");
+        } else {
+          note.textContent = "The address in this command is this machine " +
+            "as it sees itself (" + (r.hub || "") + "). If the worker " +
+            "reaches you over a different path — a VPN, another subnet — " +
+            "swap in the address that path uses.";
+          note.classList.remove("bad");
+        }
+        note.hidden = false;
+      }
     } catch (e) {
       out.textContent = e.message || String(e);
       out.hidden = false;
