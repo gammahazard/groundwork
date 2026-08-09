@@ -156,7 +156,13 @@ def _prefer_reachable(p: dict, caller: str | None) -> str | None:
     announced its WSL-NAT IP, so key delivery and the ssh test dialed a
     void). But this request ARRIVED from somewhere, and that source address
     is one this HQ demonstrably can reach back. If the announced /healthz is
-    dead and the caller's answers, rewrite url + ssh host and say so."""
+    dead and the caller's answers, rewrite url + ssh host and say so.
+
+    LIMIT: behind a NAT (a Docker HQ with a published port), `caller` is the
+    gateway, not the worker, so this cannot heal that case — there the worker
+    must announce correctly itself, which is exactly what GW_SELF_URL on the
+    worker is for. This is a best-effort fallback for the bare-metal HQ, not a
+    substitute for a correct announcement."""
     import urllib.request
 
     def alive(base: str) -> bool:

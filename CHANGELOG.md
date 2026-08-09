@@ -16,6 +16,7 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 - Windows support hardening: `.gitattributes` pins container-bound files to LF, a `docker-compose.windows.yml` overlay gives PowerShell users full-speed storage via a named volume, and the README gains a git-free fetch path (PowerShell downloads the source ZIP itself).
 
 ### Fixed
+- Re-running the join command now UPGRADES a worker — it used to skip the download whenever the directory already existed, so a worker kept its old code forever and fixes in the hub's bundle never reached a box that had joined once (the bundle excludes data, credentials and the venv, so only code is replaced).
 - Probe now finishes an unverified pairing — host keys, ssh echo, rsync dry-run, verified — so a machine whose enroll verification failed is no longer a dead end with no recovering control; the Train tab's options also refetch after a probe instead of showing stale "unavailable" until a page reload.
 - An unreadable machines registry raises with the fix in words instead of silently answering "no machines" — a root-owned file made every registered machine vanish from the UI while root-run diagnostics kept seeing them.
 - A never-trained instance no longer prints a FileNotFoundError line on every models read.

@@ -14,11 +14,18 @@ command -v sshd >/dev/null 2>&1 || [ -d /etc/ssh ] || {
   say "         (joining continues; the HQ shows the resume path once sshd exists)"
 }
 
-if [ ! -e "$DIR/pyproject.toml" ]; then
-  say "downloading Groundwork from the hub"
-  mkdir -p "$DIR"
-  curl -fsSL "$HUB/api/join/bundle?token=$TOKEN" | tar -xz -C "$DIR" --strip-components=1
-fi
+# ALWAYS fetch the bundle, not only on a fresh directory. Re-running the join
+# command IS how a worker is upgraded, and the old `if [ ! -e pyproject.toml ]`
+# guard made a re-join silently keep the worker's OLD code — measured
+# 2026-08-09: a GW_SELF_URL fix that was in the hub's bundle never reached a
+# rig that had joined once before, so every re-join reproduced the same
+# failure. The bundle excludes outputs/, private/, .env and any .venv, so this
+# overwrites CODE only and leaves datasets, credentials and the venv untouched.
+# The bundle endpoint validates the token without consuming it, so a fetch here
+# costs nothing — the final announce is still the single use.
+say "downloading Groundwork from the hub"
+mkdir -p "$DIR"
+curl -fsSL "$HUB/api/join/bundle?token=$TOKEN" | tar -xz -C "$DIR" --strip-components=1
 cd "$DIR"
 
 if [ ! -x .venv/bin/python ]; then
