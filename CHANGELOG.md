@@ -15,6 +15,7 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 - Windows support hardening: `.gitattributes` pins container-bound files to LF, a `docker-compose.windows.yml` overlay gives PowerShell users full-speed storage via a named volume, and the README gains a git-free fetch path (PowerShell downloads the source ZIP itself).
 
 ### Fixed
+- Docker images ship `deploy/` and `scripts/` — without them a container HQ answered the flagship one-command join with a 500 (`/join.sh` serves `deploy/join.sh` verbatim) and minted source bundles missing the worker's installer and unit templates.
 - Join commands minted inside a container advertised the container's own bridge address with no warning — the mint now self-diagnoses (container, loopback) and the Machines card always shows address guidance, loud when the address is known-unreachable.
 - Probing a machine updates its GPU list in place instead of re-rendering the whole section.
 - Accepting the auto-labeler license now installs its Python dependencies before downloading the weights; it used to fetch weights only, and the first probe died on missing packages.

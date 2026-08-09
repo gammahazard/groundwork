@@ -38,6 +38,12 @@ COPY groundwork ./groundwork
 COPY altmodels ./altmodels
 COPY frontend ./frontend
 COPY docker/entrypoint.sh ./docker/entrypoint.sh
+# deploy/ and scripts/ are not needed to RUN the app — they are needed to
+# GROW it: /join.sh serves deploy/join.sh verbatim, and the join bundle tars
+# this tree for the enrolling worker (which then wants the unit templates and
+# installer). Without them a Docker HQ 500s on the flagship one-command join.
+COPY deploy ./deploy
+COPY scripts ./scripts
 
 # torch is already satisfied from the channel index above, so the unpinned
 # "torch" inside [train] resolves to it — nothing here can pull a generic build.
