@@ -147,6 +147,13 @@ does not care which, it only ever dials addresses you recorded. If a machine has
 interfaces and advertises the wrong one, set `GW_SELF_URL` on it; that value wins over
 the interface scan.
 
+When the machines are not in the same building, a mesh VPN (Tailscale, ZeroTier, plain
+WireGuard) is the recommended route: every box gets a stable private address and an
+encrypted path, and nothing is ever port-forwarded to the public internet. Do not solve
+cross-site reachability with a router port-forward — this is a machine that starts GPU
+jobs and holds your photos, and the security model above assumes it is never publicly
+exposed.
+
 ## Troubleshooting
 
 - **The data-plane test shows ssh's own words, verbatim.** "Permission denied
