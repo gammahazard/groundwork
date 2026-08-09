@@ -19,13 +19,43 @@ names the same place on each.
 """
 from __future__ import annotations
 import argparse
+import fcntl
 import json
 import re
 import shutil
 import subprocess
+from contextlib import contextmanager
 
 from .. import paths
 from . import run_snapshot, training_history
+
+
+@contextmanager
+def _machine_lock(machine_key: str):
+    """One adopter per machine at a time, across processes. Yields whether the
+    lock was taken; a caller that finds the machine claimed SKIPS, like finding
+    it mid-retrain — the holder is already doing this exact work.
+
+    Two adopters of the same worker interleave badly: both list the same
+    un-adopted run before either marks it, so both adopt it — a duplicate
+    ledger row and run dir at HQ — and the loser's worker-side rename lands on
+    a name the winner already created. Measured 2026-08-09: a manual `--scan`
+    beside the scheduler's tick adopted yolov8n-2 twice and the colliding
+    rename nested one run dir inside another. flock, not a pidfile: it cannot
+    leak past a crash, and it holds across the container/host boundary because
+    both open the same bind-mounted inode."""
+    from ...config import OUTPUTS_DIR
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(OUTPUTS_DIR / f".adopt-{machine_key}.lock", "w") as f:
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            yield False
+            return
+        try:
+            yield True
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 
 def _next_local_name(pp, remote_name: str = "") -> str:
@@ -247,36 +277,44 @@ def scan(machine_key: str, pp=None, project: str | None = None) -> int:
     mid-retrain (so we never grab a half-evaluated run). Runs from the
     scheduler every few minutes — pressing Train is all a human ever
     has to do."""
-    t = _t(machine_key)
-    runs_rel = _rel(pp.RUNS_DIR)
-    probe = _ssh(t, "bash", "-c", f"'{_probe_cmd(t[2], runs_rel)}'", timeout=60)
-    if probe.returncode != 0:
-        print(f"[adopt-scan] {machine_key} unreachable: {probe.stderr.strip()[:120]}")
-        return 0
-    state_raw, _, listing = probe.stdout.partition("---")
-    # PARSED, not string-matched. This tested for one exact spacing of
-    # '"status": "running"', so a formatting change on the worker would let the
-    # scan adopt a half-evaluated run mid-retrain.
-    ready, waiting = _eligible(listing, _says_running(state_raw))
-    if waiting:
-        print(f"[adopt-scan] {machine_key} is mid-retrain — "
-              f"{', '.join(waiting)} not stamped complete; waiting")
-    n = 0
-    for name in ready:
-        try:
-            local = adopt(machine_key, name, pp=pp, project=project)
-            _ssh(t, f"touch {t[2]}/{runs_rel}/{local}/.adopted", timeout=30)
-            n += 1
-        except SystemExit as e:
-            print(f"[adopt-scan] {name}: {e}")
-    # Challenger results are safe to carry mid-retrain: their count_eval.json
-    # only ever appears after scoring completes, and autoscore refuses to score
-    # beside ANY GPU work — so "scored" and "still being written" cannot
-    # overlap the way a champion run's eval does.
-    n += _scan_alt(machine_key)
-    if n == 0:
-        print(f"[adopt-scan] {machine_key}: nothing new to adopt")
-    return n
+    with _machine_lock(machine_key) as mine:
+        if not mine:
+            print(f"[adopt-scan] {machine_key}: another adoption is already "
+                  f"working this machine — skipping this tick")
+            return 0
+        t = _t(machine_key)
+        runs_rel = _rel(pp.RUNS_DIR)
+        probe = _ssh(t, "bash", "-c", f"'{_probe_cmd(t[2], runs_rel)}'",
+                     timeout=60)
+        if probe.returncode != 0:
+            print(f"[adopt-scan] {machine_key} unreachable: "
+                  f"{probe.stderr.strip()[:120]}")
+            return 0
+        state_raw, _, listing = probe.stdout.partition("---")
+        # PARSED, not string-matched. This tested for one exact spacing of
+        # '"status": "running"', so a formatting change on the worker would let
+        # the scan adopt a half-evaluated run mid-retrain.
+        ready, waiting = _eligible(listing, _says_running(state_raw))
+        if waiting:
+            print(f"[adopt-scan] {machine_key} is mid-retrain — "
+                  f"{', '.join(waiting)} not stamped complete; waiting")
+        n = 0
+        for name in ready:
+            try:
+                local = adopt(machine_key, name, pp=pp, project=project)
+                _ssh(t, f"touch {t[2]}/{runs_rel}/{local}/.adopted", timeout=30)
+                n += 1
+            except SystemExit as e:
+                print(f"[adopt-scan] {name}: {e}")
+        # Challenger results are safe to carry mid-retrain: their
+        # count_eval.json only ever appears after scoring completes, and
+        # autoscore refuses to score beside ANY GPU work — so "scored" and
+        # "still being written" cannot overlap the way a champion run's eval
+        # does.
+        n += _scan_alt(machine_key)
+        if n == 0:
+            print(f"[adopt-scan] {machine_key}: nothing new to adopt")
+        return n
 
 
 def _scan_alt(machine_key: str) -> int:
@@ -380,7 +418,11 @@ def main() -> None:
         proj = load(args.project)
         pp = paths.for_project(proj)
         print(f"[adopt] project {proj.slug} ({proj.name}) | {proj.dataset_root}")
-        adopt(args.machine, args.run, args.note, pp, proj.slug)
+        with _machine_lock(args.machine) as mine:
+            if not mine:
+                raise SystemExit(f"[adopt] another adoption is already working "
+                                 f"{args.machine} — retry in a moment")
+            adopt(args.machine, args.run, args.note, pp, proj.slug)
     else:
         ap.error("--run or --scan required")
 

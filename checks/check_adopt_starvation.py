@@ -36,15 +36,21 @@ READ-ONLY AND GPU-FREE: the fixture is a temp directory; nothing is started.
 """
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Before the import below: _machine_lock creates its lockfile under
+# OUTPUTS_DIR, which config resolves from this env at import time — the check
+# must never write into a real install's outputs/.
+_TMP = tempfile.mkdtemp(prefix="check_adopt_")
+os.environ["GW_DATA_DIR"] = _TMP
 
-from groundwork.dataset.pipeline.adopt_run import (_eligible, _probe_cmd,  # noqa: E402
-                                                   _says_running)
+from groundwork.dataset.pipeline.adopt_run import (_eligible, _machine_lock,  # noqa: E402
+                                                   _probe_cmd, _says_running)
 
 FAILS = 0
 
@@ -109,6 +115,21 @@ def main() -> int:
     expect(_says_running("{not json") is True,
            "an unparseable state answers RUNNING — waiting costs a tick, "
            "adopting mid-run costs a checkpoint")
+
+    print("[5] one adopter per machine — two scans must not interleave")
+    # Measured 2026-08-09: a manual --scan beside the scheduler's tick adopted
+    # the same run twice and the colliding worker-side rename nested one run
+    # dir inside another. flock conflicts between open file descriptions, so a
+    # second open() in this same process is a faithful stand-in for the
+    # scheduler's separate process.
+    with _machine_lock("m") as first:
+        expect(first is True, "the first adopter takes the machine")
+        with _machine_lock("m") as second:
+            expect(second is False, "a concurrent adopter is refused, not queued")
+        with _machine_lock("other") as other:
+            expect(other is True, "a different machine is not blocked")
+    with _machine_lock("m") as again:
+        expect(again is True, "released, the machine is takeable again")
 
     print("PASS" if not FAILS else f"{FAILS} FAILURE(S)")
     return 1 if FAILS else 0
