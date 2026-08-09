@@ -17,7 +17,7 @@ THE SSH QUOTING RULE, which cost an hour. ssh does not transmit argv — it JOIN
 the remaining arguments with spaces and hands one string to the remote login
 shell, which parses it again. So ["ssh", host, "bash", "-lc", script] arrives as
 
-    bash -lc cd /home/mongo/counter1 && ... && .venv-deim/bin/python ...
+    bash -lc cd /home/user/groundwork && ... && .venv-deim/bin/python ...
 
 and `bash -lc` receives only `cd`; every && clause after it runs in the OUTER
 shell, still in $HOME. It presented as ".venv-deim/bin/python: No such file or

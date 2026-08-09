@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # (pattern, why). Case-insensitive. Word-ish boundaries where needed.
 BANNED: list[tuple[re.Pattern, str]] = [
     (re.compile(r"pillcounter", re.I), "old package name"),
+    (re.compile(r"\bcounter1\b", re.I), "origin repo/dir name"),
     (re.compile(r"traytally", re.I), "old project name"),
     (re.compile(r"wheatley", re.I), "owner's machine name"),
     (re.compile(r"dual3090", re.I), "owner's machine hostname"),
