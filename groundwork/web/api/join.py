@@ -147,8 +147,44 @@ class JoinReq(BaseModel):
     payload: dict          # exactly the pairing-code payload, pushed not pasted
 
 
+def _prefer_reachable(p: dict, caller: str | None) -> str | None:
+    """Swap the announced worker address for the caller's when only the
+    caller's answers.
+
+    The worker announces the address IT detects — on WSL or a multi-homed
+    box that is often an interface nothing else can dial (measured: a worker
+    announced its WSL-NAT IP, so key delivery and the ssh test dialed a
+    void). But this request ARRIVED from somewhere, and that source address
+    is one this HQ demonstrably can reach back. If the announced /healthz is
+    dead and the caller's answers, rewrite url + ssh host and say so."""
+    import urllib.request
+
+    def alive(base: str) -> bool:
+        try:
+            with urllib.request.urlopen(base + "/healthz", timeout=4) as r:
+                return r.status == 200
+        except Exception:  # noqa: BLE001 — any failure means "cannot dial"
+            return False
+
+    ann = (p.get("url") or "").rstrip("/")
+    if not ann or alive(ann):
+        return None
+    if not caller:
+        return None
+    tail = ann.split("://", 1)[-1]
+    port = tail.split(":", 1)[1].split("/", 1)[0] if ":" in tail else "8000"
+    cand = f"http://{caller}:{port}"
+    if not alive(cand):
+        return None
+    p["url"] = cand
+    user = (p.get("ssh_user_host") or "").split("@", 1)[0]
+    p["ssh_user_host"] = f"{user}@{caller}" if user else caller
+    return (f"announced address {ann} did not answer; using the address the "
+            f"join arrived from ({cand}) for the URL and ssh host")
+
+
 @router.post("/api/machines/join")
-def join(body: JoinReq):
+def join(body: JoinReq, request: Request):
     """The worker announces itself. Auth is the join token — consumed here,
     exactly like the pairing ticket on the other side of the manual flow."""
     row = _token_row(body.token)
@@ -159,7 +195,11 @@ def join(body: JoinReq):
     p = body.payload or {}
     if int(p.get("v", 0)) != 1 or not p.get("url") or not p.get("key"):
         raise HTTPException(422, "join payload is not a v1 pairing payload")
-    return enroll(p, admin=row.get("by", ""))
+    note = _prefer_reachable(p, request.client.host if request.client else None)
+    result = enroll(p, admin=row.get("by", ""))
+    if note:
+        result.setdefault("steps", {})["url_rewritten"] = note
+    return result
 
 
 # The worker-side bootstrap lives as a real file so it can be shell-checked

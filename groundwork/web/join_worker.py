@@ -76,9 +76,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Join this box to a Groundwork hub.")
     ap.add_argument("--hub", required=True)
     ap.add_argument("--token", required=True)
-    ap.add_argument("--url", default=None,
-                    help="URL the hub should call this box on "
-                         "(default: http://<detected-ip>:<port>)")
+    ap.add_argument("--url", default=os.environ.get("GW_SELF_URL"),
+                    help="URL the hub should call this box on — honours a "
+                         "GW_SELF_URL= prefix on the join command, exactly "
+                         "like GW_PORT (default: http://<detected-ip>:<port>, "
+                         "and on a WSL or multi-homed box the detected "
+                         "interface is often one the hub cannot dial)")
     ap.add_argument("--port", type=int, default=int(os.environ.get("GW_PORT", "8000")))
     ap.add_argument("--name", default=None, help="machine name (default: hostname)")
     args = ap.parse_args()
@@ -93,6 +96,11 @@ def main() -> int:
     env_file.set_key("GW_PORT", str(args.port))
     os.environ["GW_ROLE"] = "worker"
     os.environ["GW_PORT"] = str(args.port)
+    if args.url:
+        # Persist the pinned self-address too — the announcement must stay
+        # true across restarts, not just for this one join.
+        env_file.set_key("GW_SELF_URL", args.url)
+        os.environ["GW_SELF_URL"] = args.url
 
     # 2. A bootstrap admin, so the worker's own cockpit is reachable later.
     #    Random password, printed exactly once — same posture as the wizard's

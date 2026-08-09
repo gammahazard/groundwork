@@ -16,6 +16,7 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 - Windows support hardening: `.gitattributes` pins container-bound files to LF, a `docker-compose.windows.yml` overlay gives PowerShell users full-speed storage via a named volume, and the README gains a git-free fetch path (PowerShell downloads the source ZIP itself).
 
 ### Fixed
+- A joining worker that announced an unreachable address (WSL NAT, multi-homed) no longer strands the enroll — the hub falls back to the address the join arrived from when only that one answers, and says so; the join command also honours a `GW_SELF_URL=` prefix, persisted like `GW_PORT`.
 - The GPU-busy guard counted any process merely mentioning a trainer marker — a leftover watcher's `pgrep` pattern kept a worker's card probe refused indefinitely; it now requires a python interpreter carrying the module, per its own docstring.
 - README: the first build's ~10-minute torch download is stated up front, and upgrades say `docker compose up --build` — plain `up` reuses a cached image and silently runs old code.
 - Training with exactly one labelled image crashed with a raw dataloader error — the split always reserves one image for validation, so the launch gate now refuses below two, with the reason.
