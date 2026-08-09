@@ -80,15 +80,25 @@ def _training_now() -> str | None:
     matches its own command line. That exact footgun has cost 35
     minutes: a `while pgrep -f "count_eval..."` loop waited on ITSELF forever, and
     the progress checks then reported the deadlocked wrapper as "still running".
+
+    BOTH HALVES OF THAT RULE, deliberately. The first cut checked only the
+    module substring, so any spectator merely MENTIONING a marker counted as
+    training — measured: a week-old `bash … pgrep -f "…ultralytics…"` watcher
+    left over on a worker kept its card probe refused indefinitely. A trainer
+    is a PYTHON process whose argv carries the module; argv[0] is the
+    interpreter, so both are checked.
     """
     for c in glob.glob("/proc/[0-9]*/cmdline"):
         try:
-            cl = open(c, "rb").read().decode("utf8", "replace")
+            argv = open(c, "rb").read().decode("utf8", "replace").split("\0")
         except OSError:
             continue
+        if "python" not in os.path.basename(argv[0] or ""):
+            continue
+        rest = "\0".join(argv[1:])
         for marker in ("altmodels.trainers", "ultralytics",
                        "dataset.pipeline.train"):
-            if marker in cl:
+            if marker in rest:
                 return marker
     return None
 
