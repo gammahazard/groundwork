@@ -15,6 +15,7 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 - Windows support hardening: `.gitattributes` pins container-bound files to LF, a `docker-compose.windows.yml` overlay gives PowerShell users full-speed storage via a named volume, and the README gains a git-free fetch path (PowerShell downloads the source ZIP itself).
 
 ### Fixed
+- Training with exactly one labelled image crashed with a raw dataloader error — the split always reserves one image for validation, so the launch gate now refuses below two, with the reason.
 - Docker images ship `deploy/` and `scripts/` — without them a container HQ answered the flagship one-command join with a 500 (`/join.sh` serves `deploy/join.sh` verbatim) and minted source bundles missing the worker's installer and unit templates.
 - Join commands minted inside a container advertised the container's own bridge address with no warning — the mint now self-diagnoses (container, loopback) and the Machines card always shows address guidance, loud when the address is known-unreachable.
 - Probing a machine updates its GPU list in place instead of re-rendering the whole section.

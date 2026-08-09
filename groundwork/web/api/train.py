@@ -51,6 +51,10 @@ def start(opts: RetrainOpts, p=Depends(current_project)):
     # launch "succeeded", a detached pipeline started, split exited, and the
     # cockpit showed a failed run whose reason was only in the log — the first
     # thing a new install does is press Train, and this was its answer.
+    # The floor is TWO, not one: select_val() always reserves at least one
+    # image for validation (max(1, …)), so a single labelled image launches a
+    # pipeline whose training side is empty — measured: ultralytics dies with
+    # a FileNotFoundError on images/train, a crash where a refusal belongs.
     from ...dataset.pipeline.split import _stems_with_labels
     from ...dataset import paths as _paths
     n = len(_stems_with_labels(_paths.for_project(p)))
@@ -58,7 +62,13 @@ def start(opts: RetrainOpts, p=Depends(current_project)):
         return {"ok": False, "error":
                 "no labelled images yet — open Images ▸ Fix queue, mark the "
                 "objects in a few, and press Done → training. Training needs "
-                "at least one labelled image."}
+                "at least two labelled images (the split reserves one for "
+                "validation)."}
+    if n == 1:
+        return {"ok": False, "error":
+                "only one labelled image — the split always reserves one for "
+                "validation, which would leave the training side empty. "
+                "Label at least one more."}
     return retrain_job.start(imgsz=opts.imgsz or 960, sizes=opts.sizes,
                              epochs=opts.epochs, batch=opts.batch,
                              project=p.slug,
