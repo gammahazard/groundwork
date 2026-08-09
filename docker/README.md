@@ -16,8 +16,8 @@ docker compose -f docker/docker-compose.yml pull
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-While the repo is private, build locally as below — the release workflow
-skips itself (private ghcr storage is smaller than a CUDA torch image).
+Or build locally as below — to modify Groundwork, run offline, or pin your
+own image.
 
 ## Quickstart (GPU)
 
