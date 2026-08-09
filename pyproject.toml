@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "groundwork"
-version = "0.4.1"
+version = "0.4.2"
 description = "Self-hosted vision-model trainer: collect, label, train, evaluate, serve"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.10"

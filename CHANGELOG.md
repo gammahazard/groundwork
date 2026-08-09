@@ -9,6 +9,8 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-08-09
+
 ### Added
 - The Trainer states the concurrency limit where someone would reach for it: a disabled "two runs at once (one per card) — coming soon" checkbox, so running two champion runs on different cards of one machine reads as a known limit rather than being discovered as a refusal.
 
@@ -52,6 +54,7 @@ the [README](README.md) is the full picture of what Groundwork does.
 - Docker images bake the `[la]` extra in — the container venv is root-built and read-only to the app user, so the accept-time pip install died on permissions; in a container the license click now only downloads weights (older images get a clear message instead of pip's permission error).
 - transformers pinned back to 4.57.1: the auto-labeler's vendored code cannot load on the 5.x line (measured), and D-FINE imports clean on 4.57.1.
 
-[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/gammahazard/groundwork/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/gammahazard/groundwork/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/gammahazard/groundwork/releases/tag/v0.4.0
