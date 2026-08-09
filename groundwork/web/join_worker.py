@@ -189,11 +189,13 @@ def main() -> int:
                   "you are already on the right machine):")
             print("       ", result["manual_step"])
             print("[join] 2. then, back on the hub: Machines tab → refresh → "
-                  "find this machine → press its data-plane test, then Probe.")
+                  "find this machine → press Probe to read its cards.")
         else:
             print("[join] next: back on the hub, Machines tab → refresh → "
-                  "find this machine → press its data-plane test, then "
-                  "Probe. Each failure explains itself in ssh's own words.")
+                  "find this machine → press Probe to read its cards.")
+        print("[join] the ssh data plane is proven at the first dispatched "
+              "run — a remote train syncs first and refuses, in ssh's own "
+              "words, if the path is broken.")
     print(f"[join] running as {service}")
     if admin_pw:
         print(f"[join] this worker's own cockpit: {url}  "
