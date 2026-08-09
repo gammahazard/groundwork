@@ -60,6 +60,29 @@ DEIMv2 checkout, `github.com/Intellindust-AI-Lab/DEIMv2` @ `0fff8d4`) —
 tens of thousands of small files that are slow on a bind mount and broken on
 NTFS/exFAT hosts.
 
+## Windows
+
+Docker Desktop runs every container in its WSL2 VM, so the *container* is
+equally fast no matter which shell typed the command. What differs is where
+the `./data` bind mount lives — and that gives you two supported routes:
+
+- **Clone inside WSL** (recommended): the data directory is native Linux
+  filesystem — full speed, and still browsable from Explorer at
+  `\\wsl$\<distro>\home\<you>\groundwork\docker\data`.
+- **Straight from PowerShell**: an NTFS checkout puts the bind mount on the
+  Windows↔Linux file bridge, which crawls on the many-small-file reads a
+  training run is made of. Add the fast-storage overlay and the data moves
+  into a named volume inside the VM instead:
+
+      docker compose -f docker-compose.yml -f docker-compose.windows.yml up
+
+  The trade: `/data` is no longer a folder next to the compose file — copy
+  things out with `docker compose cp app:/data/outputs ./outputs-copy`.
+
+Line endings are already handled: `.gitattributes` pins every file a container
+executes or parses to LF, so a PowerShell `git clone` cannot corrupt
+`entrypoint.sh` regardless of `autocrlf`.
+
 ## Settings: the `.env` rule
 
 There are **two** kinds of setting, and they live in different places:

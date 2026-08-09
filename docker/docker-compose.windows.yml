@@ -1,0 +1,32 @@
+# Windows/PowerShell overlay — full-speed storage without WSL.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.windows.yml up
+#
+# A bind mount from an NTFS checkout crosses the Windows<->Linux file bridge
+# on every read, and a training run is nothing but reads of small image files
+# — measured as the slow path by Docker's own docs. This overlay swaps the
+# /data bind for a named volume that lives inside Docker Desktop's Linux VM,
+# which is the same speed PowerShell or WSL alike.
+#
+# The trade is deliberate and worth knowing: /data stops being a browsable
+# folder next to this file. To pull files out, use
+#   docker compose cp app:/data/outputs ./outputs-copy
+# or browse \\wsl$\docker-desktop-data from Explorer. If you want ordinary
+# files you can back up by hand, clone inside WSL and skip this overlay —
+# both routes are supported, this one just makes PowerShell fast.
+services:
+  app:
+    volumes:
+      - gw-data:/data
+      - gw-venvs:/data/venvs
+  trainer:
+    volumes:
+      - gw-data:/data
+      - gw-venvs:/data/venvs
+  scheduler:
+    volumes:
+      - gw-data:/data
+      - gw-venvs:/data/venvs
+
+volumes:
+  gw-data:

@@ -1,0 +1,9 @@
+# A Windows checkout must not CRLF anything a Linux container executes or
+# parses — git-for-Windows defaults to autocrlf=true, which silently corrupts
+# entrypoint.sh ("bad interpreter") and YAML the moment the repo is cloned
+# from PowerShell. Pin the files that cross into containers to LF everywhere.
+*.sh       text eol=lf
+*.py       text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+Dockerfile text eol=lf

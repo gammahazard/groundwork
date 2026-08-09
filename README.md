@@ -126,6 +126,11 @@ creating the admin account, naming the machine, probing the GPU, and creating yo
 project. GPU selection, the CPU-only variant and the data volume are covered in
 [docker/README.md](docker/README.md).
 
+**On Windows**, run the same three commands inside WSL for browsable data at full speed —
+or straight from PowerShell with the fast-storage overlay:
+`docker compose -f docker-compose.yml -f docker-compose.windows.yml up`
+([why, and the trade](docker/README.md#windows)).
+
 ### Native (systemd)
 
 ```sh
