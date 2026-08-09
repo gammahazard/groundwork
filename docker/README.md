@@ -6,12 +6,14 @@ killing one), `scheduler` (background jobs). Compose v2 required.
 
 ## Published images
 
-Version tags publish images to ghcr.io (CUDA build plus a `-cpu` variant) —
-once the repository is public. Run one without building anything:
+Version tags publish images to ghcr.io (CUDA build plus a `-cpu` variant). To
+run one without building anything, `pull` it first — the compose file carries a
+build stage too, so a bare `up` would build instead of fetch:
 
 ```sh
-GW_IMAGE=ghcr.io/gammahazard/groundwork:latest \
-  docker compose -f docker/docker-compose.yml up -d
+export GW_IMAGE=ghcr.io/gammahazard/groundwork:latest   # or …:latest-cpu
+docker compose -f docker/docker-compose.yml pull
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 While the repo is private, build locally as below — the release workflow

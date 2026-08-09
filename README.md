@@ -123,26 +123,34 @@ paired later.
 
 ### Docker (recommended)
 
+**Pull the prebuilt image and run it** — no local build, no CUDA download:
+
 ```sh
 git clone https://github.com/gammahazard/groundwork.git
 cd groundwork/docker
-docker compose up
+export GW_IMAGE=ghcr.io/gammahazard/groundwork:latest
+docker compose pull && docker compose up -d
 ```
-
-The first `up` **builds the image — a multi-GB torch download, expect ~10 minutes
-once**; later starts are seconds. **Upgrading after a `git pull` needs
-`docker compose up --build`** — plain `up` reuses the cached image and silently
-runs the old code.
 
 Open `http://localhost:8000`. On a fresh instance the first-run wizard walks you through
 creating the admin account, naming the machine, probing the GPU, and creating your first
-project. GPU selection, the CPU-only variant and the data volume are covered in
+project. GPU selection, the CPU-only image and the data volume are covered in
 [docker/README.md](docker/README.md).
+
+**Prefer to build from source** — to modify Groundwork, or run it without pulling:
+
+```sh
+docker compose up --build     # a multi-GB torch download, ~10 minutes once
+```
+
+> The compose file carries both an image and a build stage, so a plain `docker compose up`
+> *builds*. Use the `GW_IMAGE` + `pull` above to run the published image; after a `git pull`,
+> re-run with `--build` (or `pull`) so you never silently run stale code.
 
 **On Windows** — prerequisite either way: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 installed and *running*. Then pick your terminal:
 
-- **WSL terminal** (recommended): the same three commands as above, unchanged —
+- **WSL terminal** (recommended): the same commands as above, unchanged —
   full speed, and the data stays a browsable folder. Needs a WSL distro with
   Desktop's WSL integration switched on (Settings → Resources → WSL
   integration); no distro yet means `wsl --install` first.
