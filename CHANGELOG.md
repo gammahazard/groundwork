@@ -10,7 +10,7 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 ## [Unreleased]
 
 ### Fixed
-- HEIC/HEIF photos decode now — an iPhone photo sent as a *file* (uncompressed, not a "photo") was rejected as undecodable. The HEIF opener is registered once for every process via the new `pillow-heif` dependency; uploads store HEIC verbatim, so the training and eval subprocesses need it too, not just the bot and web.
+- HEIC/HEIF photos work end to end now — an iPhone photo sent as a *file* (uncompressed, not a "photo") was rejected as undecodable. The HEIF opener is registered once for every process (new `pillow-heif` dependency), and the web upload normalizes HEIC to JPEG on store so it also *trains* — YOLO's OpenCV dataloader can't read HEIC, so a stored `.heic` would have broken a later run. (The bot already stored JPEG.)
 
 ## [0.4.0] - 2026-08-09
 

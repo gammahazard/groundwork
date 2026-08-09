@@ -145,6 +145,24 @@ async def upload(files: list[UploadFile] = File(...),
             # photos uploaded alongside it.
             skipped.append({"name": name, "why": f"unusable filename ({e.args[0]})"})
             continue
+        if suffix in (".heic", ".heif"):
+            # OpenCV — YOLO's training dataloader — cannot read HEIC, so a HEIC
+            # left in the dataset would break a future run even though counting
+            # it works. Normalise to JPEG at the storage boundary (upright, via
+            # EXIF transpose): same pixels, and the live count still decodes HEIC
+            # transiently. A file that will not decode is skipped with a reason,
+            # never a 500 — same rule as the filename backstop above.
+            try:
+                from PIL import Image, ImageOps
+                im = ImageOps.exif_transpose(
+                    Image.open(io.BytesIO(data)).convert("RGB"))
+                out = io.BytesIO()
+                im.save(out, "JPEG", quality=95)
+                data, suffix = out.getvalue(), ".jpg"
+            except Exception as e:  # noqa: BLE001 — corrupt / unsupported HEIC
+                skipped.append({"name": name,
+                                "why": f"HEIC would not decode ({type(e).__name__})"})
+                continue
         (img_dir / f"{stem}{suffix}").write_bytes(data)
         # The empty label file is what makes it an IMAGE rather than a loose image
         # — see the module docstring. Written FIRST, so an image exists even if the
