@@ -80,8 +80,14 @@ def mint_join_token(request: Request, user: str = Depends(require_admin)):
     _save_tokens(rows)
     hub = machines_mod.self_url() or "http://<this-hq>:8000"
     suspect, why = _hub_suspect(hub)
+    cmd = f"curl -fsSL {hub}/join.sh | bash -s -- {hub} {token}"
     return {"ok": True, "token": token, "ttl_minutes": _TTL_S // 60,
-            "command": f"curl -fsSL {hub}/join.sh | bash -s -- {hub} {token}",
+            "command": cmd,
+            # The same join, launchable from PowerShell on a Windows GPU box —
+            # `wsl` hands it to the default distro, where it runs identically.
+            # The worker it installs is Linux either way; this only moves
+            # which window the paste happens in.
+            "command_ps": f'wsl bash -c "{cmd}"',
             "hub": hub, "hub_suspect": suspect, "hub_why": why,
             "note": "Single use, 30 minutes. Run it ON the GPU machine, in "
                     "its Linux shell (on a WSL box: the Ubuntu terminal)."}

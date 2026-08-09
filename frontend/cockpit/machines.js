@@ -255,7 +255,11 @@ async function _remove(key) {
   const mint = document.getElementById("joinMint");
   if (!mint) return;
   const out = document.getElementById("joinOut");
+  const outPs = document.getElementById("joinOutPs");
   const copy = document.getElementById("joinCopy");
+  const copyPs = document.getElementById("joinCopyPs");
+  const lbl = document.getElementById("joinLbl");
+  const lblPs = document.getElementById("joinLblPs");
   const note = document.getElementById("joinNote");
   mint.onclick = async () => {
     mint.disabled = true;
@@ -263,9 +267,22 @@ async function _remove(key) {
       const r = await apiOrThrow("/api/machines/join-token", {method: "POST"});
       out.textContent = r.command;
       out.hidden = false;
+      if (lbl) lbl.hidden = false;
       copy.hidden = false;
       copy.onclick = () => navigator.clipboard?.writeText(r.command)
         .then(() => { copy.textContent = "Copied ✓"; });
+      // The same join for a Windows GPU box, pasted in PowerShell — `wsl`
+      // relays it into the distro, where it runs identically.
+      if (outPs && r.command_ps) {
+        outPs.textContent = r.command_ps;
+        outPs.hidden = false;
+        if (lblPs) lblPs.hidden = false;
+        if (copyPs) {
+          copyPs.hidden = false;
+          copyPs.onclick = () => navigator.clipboard?.writeText(r.command_ps)
+            .then(() => { copyPs.textContent = "Copied ✓"; });
+        }
+      }
       // The address is the part strangers get burned by, so guidance is
       // ALWAYS shown — and becomes a warning when the server knows the
       // scanned address is unreachable (container bridge, loopback).

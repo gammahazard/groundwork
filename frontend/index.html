@@ -752,9 +752,14 @@
         single-use and lives 30 minutes.</p>
       <div class="ctrls">
         <button id="joinMint" type="button">Create join command</button>
-        <button id="joinCopy" type="button" hidden>Copy</button>
+        <button id="joinCopy" type="button" hidden>Copy (WSL)</button>
+        <button id="joinCopyPs" type="button" hidden>Copy (PowerShell)</button>
       </div>
+      <p class="mMeta" id="joinLbl" hidden>In the machine's Linux / Ubuntu (WSL) terminal:</p>
       <pre class="hint" id="joinOut" hidden
+           style="user-select:all;white-space:break-spaces"></pre>
+      <p class="mMeta" id="joinLblPs" hidden>…or from PowerShell on a Windows GPU box (runs inside WSL):</p>
+      <pre class="hint" id="joinOutPs" hidden
            style="user-select:all;white-space:break-spaces"></pre>
       <p class="mMsg" id="joinNote" hidden></p>
     </div>
