@@ -9,6 +9,9 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Changed
+- The Train dropdown offers ONE DEIM entry. `DEIMv2-N (legacy env)` needed `.venv-deim` — a torch build whose kernels stop at sm_90, and which no installer ships — so it could only ever be offered and then refused. The installable stack builds `.venv-deim13`, whose cu128 torch runs every card the old env could and the newer ones it could not. The legacy entry stays in the registry with no trainer wired, which is exactly how the registry already says "names runs, cannot start one": the 50-odd existing DEIM runs and their re-scorings keep their family, licence and labels in the ledger.
+
 ### Fixed
 - Sidecar stacks (DEIM, RTMDet) install in a container HQ: their venvs now build under `DATA_DIR/venvs` — the volume the Docker image has always shipped world-writable for exactly this — instead of dying at the read-only code tree, and everything that resolves a sidecar interpreter (model registry, machine probe) checks both homes. Native installs keep today's checkout-root layout unchanged, and a container-built venv lives on the data volume, so it survives image rebuilds.
 - The DEIMv2 vendor repo is found where the stack installer puts it. Four modules (trainer, entry shim, predictor, ONNX exporter) each hardcoded the legacy `~/DEIMv2`, so a stack installed the documented way (`DATA_DIR/vendor/DEIMv2`) produced a vendor repo none of them could find — training would refuse "vendor repo missing" right after a successful install. One resolver now answers for all four, preferring the pinned home and falling back to the legacy one.
