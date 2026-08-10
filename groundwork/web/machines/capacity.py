@@ -35,6 +35,22 @@ def venv_info(key: str, venv: str) -> dict:
     return dict(((_map().get(key) or {}).get("venvs") or {}).get(venv) or {})
 
 
+def _installed_locally(key: str, venv: str) -> bool:
+    """Is `venv` on THIS box's disk? Answered only for the LOCAL machine —
+    stat'ing a path for a remote key would be this filesystem describing
+    somebody else's, which is worse than the stale map it is checking."""
+    try:
+        from . import get                      # at call time: no import cycle
+        m = get(key)
+        if m is None or not m.local:
+            return False
+        from ...config import ROOT, VENVS_DIR
+        return any((base / venv / "bin" / "python").exists()
+                   for base in (ROOT, VENVS_DIR))
+    except Exception:  # noqa: BLE001 — a check that fails is not evidence
+        return False
+
+
 def can_run(key: str, venv: str, card: dict) -> tuple[bool, str]:
     """Can a model needing `venv` train on `card` of machine `key`?
 
@@ -51,6 +67,16 @@ def can_run(key: str, venv: str, card: dict) -> tuple[bool, str]:
     if not info:
         return True, "not measured yet — press Probe on the Machines tab"
     if not info.get("present"):
+        # A venv that is on this box's disk RIGHT NOW, recorded absent, means
+        # the measurement predates the install — so say that, and answer it
+        # the way every other unknown here is answered: permissively, with the
+        # note carrying the reason. Stating "is not installed" about a venv
+        # that is installed sent someone hunting for an install that had
+        # already succeeded (2026-08-10), which is the failure this module's
+        # "unknown is answered as unknown" rule exists to prevent.
+        if _installed_locally(key, venv):
+            return True, (f"{venv} is installed but was measured before that — "
+                          f"press Probe on the Machines tab to record its kernels")
         return False, f"{venv} is not installed on {key}"
     archs = info.get("archs") or []
     if not archs:

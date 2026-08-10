@@ -86,6 +86,39 @@ def main_python() -> str:
     return _main_pythons()[0]
 
 
+def record_local_venvs() -> dict:
+    """Re-measure THIS machine's venvs and write them into machines.json.
+
+    `stacks.install` calls this so an install finishes with the map agreeing
+    with the disk. Without it the machine kept a measurement taken before the
+    venv existed, and `capacity.can_run` then refused every card with
+    ".venv-deim13 is not installed on here" — a false statement about a venv
+    that WAS installed. Measured 2026-08-10: a DEIM launch ran the dataset
+    sync, split and COCO convert, then died at card selection, and the only
+    hint anywhere was an install log line asking the operator to press Probe.
+    An installer that changed the venvs knows to re-read them.
+
+    VENVS ONLY, no card enumeration: reading card properties crosses
+    /dev/dxg, which has wedged this fleet twice, and installing a venv cannot
+    change what cards exist. `cards` and its `measured` stamp are left exactly
+    as they were, so this is safe to call while a run trains.
+    """
+    _cache.pop("d", None)              # the TTL cache predates the install
+    from . import machines as M
+    key = next((k for k, m in M.all_machines().items() if m.local), None)
+    if key is None:
+        return {}
+    venvs = describe(cards=False, venvs=True).get("venvs") or {}
+    try:
+        doc = json.loads(M.MAP_PATH.read_text())
+    except Exception:  # noqa: BLE001 — no map yet is a fine starting point
+        doc = {}
+    doc.setdefault("machines", {}).setdefault(key, {})["venvs"] = venvs
+    M.MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
+    M.MAP_PATH.write_text(json.dumps(doc, indent=1) + "\n", encoding="utf-8")
+    return venvs
+
+
 def _training_now() -> str | None:
     """What is using a GPU on this box, or None.
 

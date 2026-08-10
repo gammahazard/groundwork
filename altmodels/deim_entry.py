@@ -26,7 +26,15 @@ import runpy
 import sys
 from pathlib import Path
 
-from altmodels.deim_vendor import vendor_dir
+# THIS FILE IS EXECUTED AS A SCRIPT, not imported as a module: trainers/deim.py
+# runs `torchrun … altmodels/deim_entry.py` with cwd set to the VENDOR repo. So
+# sys.path[0] is altmodels/ and the cwd is somebody else's tree — neither makes
+# `altmodels` importable. A repo import added here without this line died with
+# "No module named 'altmodels'" at rank 0, AFTER the sync, split and convert had
+# all succeeded (measured 2026-08-10). Anything imported below needs this first.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from altmodels.deim_vendor import vendor_dir  # noqa: E402
 VENDOR = vendor_dir()
 
 

@@ -121,7 +121,24 @@ def install(key: str, log_cb=print) -> str:
                            text=True)
         else:
             log(f"vendor repo already present at {vdir}")
-    log("done — probe this machine so the new venv's kernels are recorded")
+    # RE-MEASURE, rather than asking a human to. This used to end with "probe
+    # this machine so the new venv's kernels are recorded", and nothing made
+    # that happen: the next launch read a map measured before the venv existed
+    # and refused every card, stating the venv "is not installed" about one
+    # that plainly was. Venvs only — no device calls — so it is safe even while
+    # the other card trains.
+    try:
+        from .web.machine_self import record_local_venvs
+        got = (record_local_venvs() or {}).get(st.venv) or {}
+        archs = got.get("archs") or []
+        log(f"recorded {st.venv}: torch {got.get('torch','?')}"
+            + (f", kernels up to {max(archs, key=lambda a: int(a.split('_')[1]))}"
+               if archs else "") if got.get("present") else
+            f"WARNING: {st.venv} still reads as absent after install")
+    except Exception as e:  # noqa: BLE001 — the install itself succeeded
+        log(f"could not refresh the venv map ({type(e).__name__}: {e}) — "
+            f"press Probe on the Machines tab before training this family")
+    log("done")
     return "\n".join(lines)
 
 

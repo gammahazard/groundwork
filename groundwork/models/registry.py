@@ -251,21 +251,23 @@ MODELS: tuple[Model, ...] = (
         default_epochs=250, peak_vram_gb=10.4,
     ),
     Model(
-        name="deimv2-n", label="DEIMv2-N",
+        name="deimv2-n", label="DEIMv2-N (legacy env)",
         predictor="deim", venv=".venv-deim",
         license="Apache-2.0", default_imgsz=1280,
         # reexam-/stg2- are diagnostic RE-SCORINGS of DEIM checkpoints, not new
         # models. They are recognised so the leaderboard is complete; the
         # attempts chart filters them out.
         prefixes=("deimv2-n", "reexam-", "stg2-"),
-        trainer_module="altmodels.trainers.deim",
-        # Isolated since 2026-08-02: --dataset-dir names the source tree and the
-        # classic layout is built inside it (_deim_tree), so nothing is shared.
+        # RETIRED FROM THE TRAIN CONTROL, kept for the ledger. `.venv-deim`
+        # (torch cu121, kernels stop at sm_90) has no installer — stacks ships
+        # only `.venv-deim13`, whose cu128 build runs every card the old env
+        # could and the ones it could not. No trainer_module is exactly how the
+        # registry already says "names runs, cannot start one": the dropdown
+        # excludes it while the prefixes keep labelling the legacy runs and
+        # their re-scorings.
+        trainer_module=None,
         default_epochs=60, size_flag="--size",
         sizes=(960, 1280, 1920), peak_vram_gb=17.2,
-        # The trainer defaults meta's `arch` to deimv2-<variant>; pass it
-        # explicitly so BOTH DEIM entries file their runs under themselves.
-        train_extra=("--arch", "deimv2-n"),
     ),
     Model(
         # THE SAME MODEL, A DIFFERENT ENVIRONMENT — and therefore a different
