@@ -9,6 +9,8 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-08-09
+
 ### Fixed
 - Exports and challenger launches work in a container HQ. Both spawned their subprocess as `ROOT/.venv/bin/python`, which does not exist in the Docker image (its venv is `/opt/venv`) — so every export died at spawn with "No such file or directory", and a challenger launch would have died the same way at its split step. The main-env interpreter is now resolved in one place (`machine_self.main_python`): the conventional `./.venv` when it exists, else the interpreter the service itself runs on — the same rule `machine_self` and the bot units already applied.
 
@@ -57,7 +59,8 @@ the [README](README.md) is the full picture of what Groundwork does.
 - Docker images bake the `[la]` extra in — the container venv is root-built and read-only to the app user, so the accept-time pip install died on permissions; in a container the license click now only downloads weights (older images get a clear message instead of pip's permission error).
 - transformers pinned back to 4.57.1: the auto-labeler's vendored code cannot load on the 5.x line (measured), and D-FINE imports clean on 4.57.1.
 
-[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/gammahazard/groundwork/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/gammahazard/groundwork/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/gammahazard/groundwork/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/gammahazard/groundwork/releases/tag/v0.4.0
