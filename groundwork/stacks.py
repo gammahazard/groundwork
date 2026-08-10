@@ -43,9 +43,9 @@ MANIFESTS: dict[str, Stack] = {
         # cu128, NOT cu126: the whole point of this venv over the legacy
         # .venv-deim is lifting the sm_90 kernel ceiling (deim_tv_compat:
         # "what unlocks the 5070 Ti"), and cu126 wheels still stop at sm_90 —
-        # measured on the dual3090 box 2026-08-10: torch 2.13.0+cu126 answered
-        # archs sm_50..sm_90, so the Blackwell card stayed refused right after
-        # a successful install. cu128 wheels carry sm_120.
+        # measured 2026-08-10 on a two-card worker: torch 2.13.0+cu126
+        # answered archs sm_50..sm_90, so the Blackwell card stayed refused
+        # right after a successful install. cu128 wheels carry sm_120.
         torch_spec=("torch", "torchvision",
                     "--index-url", "https://download.pytorch.org/whl/cu128"),
         pip_specs=("pyyaml", "tensorboard", "scipy", "opencv-python-headless",
