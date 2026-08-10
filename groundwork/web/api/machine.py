@@ -391,17 +391,21 @@ def probe(key: str, _: str = Depends(require_admin)):
     prev = (doc.get("machines") or {}).get(key) or {}
     fresh = d.get("cards") or []
     kept = fresh or (prev.get("cards") or [])
-    doc.setdefault("machines", {})[key] = {
-        "venvs": d.get("venvs") or prev.get("venvs") or {},
-        "cards": kept,
-        "busy": bool(d.get("busy")), "measured": time.time(),
+    # Through the locked, atomic writer — a probe and a finishing stack install
+    # (which re-measures the venvs) are two writers to one file, and the Extras
+    # card can have three installs in flight at once. `cards_stale` is written
+    # EITHER WAY rather than omitted when false: this merges into the existing
+    # row now, so an omitted key would leave a previous probe's staleness
+    # standing over freshly measured cards.
+    machines_mod.update_entry(
+        key,
+        venvs=d.get("venvs") or prev.get("venvs") or {},
+        cards=kept,
+        busy=bool(d.get("busy")), measured=time.time(),
         # Stale when the machine refused to look, OR when we are keeping an
         # older list because it returned none. Either way the UI must not
         # present these as just-measured.
-        **({"cards_stale": True}
-           if (d.get("cards_stale") or (not fresh and kept)) else {})}
-    machines_mod.MAP_PATH.write_text(json.dumps(doc, indent=1) + "\n",
-                                     encoding="utf-8")
+        cards_stale=bool(d.get("cards_stale") or (not fresh and kept)))
     # FINISH THE PAIRING FROM THE ONE BUTTON THAT EXISTS. When enroll's
     # verification failed (wrong address, dead network — both measured), the
     # machine sat "not finished pairing" with a message pointing at a tab

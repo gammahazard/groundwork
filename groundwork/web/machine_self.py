@@ -109,13 +109,9 @@ def record_local_venvs() -> dict:
     if key is None:
         return {}
     venvs = describe(cards=False, venvs=True).get("venvs") or {}
-    try:
-        doc = json.loads(M.MAP_PATH.read_text())
-    except Exception:  # noqa: BLE001 — no map yet is a fine starting point
-        doc = {}
-    doc.setdefault("machines", {}).setdefault(key, {})["venvs"] = venvs
-    M.MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
-    M.MAP_PATH.write_text(json.dumps(doc, indent=1) + "\n", encoding="utf-8")
+    # Through the locked, atomic writer: the Extras card can start three
+    # installs at once, and each finishes whenever its download does.
+    M.update_entry(key, venvs=venvs)
     return venvs
 
 

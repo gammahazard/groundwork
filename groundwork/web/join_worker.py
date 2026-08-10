@@ -68,8 +68,28 @@ def _start_service(port: int) -> str | None:
     if not _wait_healthy(port):
         print(f"[join] the web service did not come up — see {log}")
         return None
-    return ("a detached process — it will NOT survive a reboot. Install a "
-            "service with: .venv/bin/groundwork install --role worker")
+    # THE SCHEDULER IS NOT OPTIONAL ON A WORKER, and this branch used to start
+    # nothing but the cockpit.
+    #
+    # `autoscore` runs on the worker and nowhere else — a challenger's
+    # checkpoints never leave the machine that trained them (adopt copies
+    # results home with --exclude train/), so HQ physically cannot score one.
+    # And HQ only adopts a run that ALREADY has count_eval.json. So with no
+    # scheduler the chain has no middle: the run trains, writes its meta, and
+    # sits finished, correct and invisible — no row on HQ, no error anywhere,
+    # nothing saying why. Measured 2026-08-10 on a worker joined down exactly
+    # this path; its jobs_status.json had never been written.
+    #
+    # The systemd branch above installs timers for the same job table. This is
+    # the fallback's half of the same promise, and it carries the same caveat:
+    # a detached process does not survive a reboot.
+    spawn.spawn_detached("scheduler",
+                         [interp, "-m", "groundwork.ops.scheduler"],
+                         log_path=OUTPUTS_DIR / "scheduler.log",
+                         env={**os.environ}, cwd=str(ROOT))
+    return ("detached processes (cockpit + scheduler) — they will NOT survive "
+            "a reboot. Install services with: "
+            ".venv/bin/groundwork install --role worker")
 
 
 def main() -> int:

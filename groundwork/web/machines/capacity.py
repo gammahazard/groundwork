@@ -12,6 +12,45 @@ from .model import MACHINES, Machine, check  # noqa: F401
 
 MAP_PATH = OUTPUTS_DIR / "machines.json"
 
+
+def update_entry(key: str, **fields) -> dict:
+    """Merge fields into ONE machine's row — locked, and written atomically.
+
+    Two writers exist and can overlap. `probe` runs from a button, from the
+    worker's own startup, and from HQ's enroll; `stacks.install` re-measures
+    the venvs when it finishes — and the Extras card can start THREE installs
+    at once (auto-labeler, DEIM, RTMDet), each of which finishes whenever its
+    download does. Read-modify-write with a plain write_text loses one of two
+    overlapping updates, and a non-atomic write can hand a reader a truncated
+    file — which `_map()` swallows as "no machines", i.e. every card and venv
+    silently unknown.
+
+    So: an exclusive lock around the read-modify-write, and tmp+replace to
+    publish. Same shape as the ledger and the retrain state, for the same
+    reason.
+    """
+    import fcntl
+    MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(MAP_PATH.with_suffix(".lock"), "w") as lf:
+        fcntl.flock(lf, fcntl.LOCK_EX)
+        try:
+            try:
+                doc = json.loads(MAP_PATH.read_text())
+            except Exception:  # noqa: BLE001 — no map yet is a fine start
+                doc = {}
+            row = doc.setdefault("machines", {}).setdefault(key, {})
+            row.update(fields)
+            tmp = MAP_PATH.with_suffix(f".{os.getpid()}.tmp")
+            try:
+                tmp.write_text(json.dumps(doc, indent=1) + "\n", encoding="utf-8")
+                tmp.replace(MAP_PATH)
+            finally:
+                tmp.unlink(missing_ok=True)
+            return dict(row)
+        finally:
+            fcntl.flock(lf, fcntl.LOCK_UN)
+
+
 # ------------------------------------------------------------- measured map ---
 
 def _map() -> dict:
@@ -78,6 +117,17 @@ def can_run(key: str, venv: str, card: dict) -> tuple[bool, str]:
             return True, (f"{venv} is installed but was measured before that — "
                           f"press Probe on the Machines tab to record its kernels")
         return False, f"{venv} is not installed on {key}"
+    if info.get("error"):
+        # A venv whose python exists but cannot import torch is a HALF-BUILT
+        # STACK — an install that created the venv and then failed (measured:
+        # an RTMDet install died on `torch==2.1.2` having no wheel for the
+        # machine's Python, leaving .venv-mmdet/bin/python behind). That is
+        # not the "unknown" the next branch answers permissively: it is a
+        # measured fact that this environment cannot train. Refusing here is
+        # what keeps a broken stack out of the Train dropdown and out of
+        # pick_card, instead of failing at the trainer's first import.
+        return False, (f"{venv} exists but cannot import torch "
+                       f"({info['error']}) — re-run its install")
     archs = info.get("archs") or []
     if not archs:
         return True, f"{venv}'s arch list could not be read"

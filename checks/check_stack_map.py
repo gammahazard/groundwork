@@ -88,6 +88,19 @@ def main() -> int:
     expect(ok2 is False and "is not installed" in why2,
            "a venv that is genuinely absent is still refused, plainly")
 
+    print("[1b] a half-built stack is refused, not permitted as 'unknown'")
+    half = {"machines": {"here": {"venvs": {
+        ".venv-halfbuilt": {"present": True, "error": "torch import failed"},
+        ".venv-oddbuild": {"present": True, "torch": "9.9"}}}}}
+    capacity._map = lambda: half["machines"]                  # noqa: SLF001
+    ok3, why3 = capacity.can_run("here", ".venv-halfbuilt", CARD)
+    expect(ok3 is False and "cannot import torch" in why3,
+           "a venv whose torch import fails cannot train, so it is refused")
+    ok4, _ = capacity.can_run("here", ".venv-oddbuild", CARD)
+    expect(ok4 is True,
+           "...while a genuinely unreadable arch list stays permissive")
+    capacity._map = lambda: absent["machines"]                # noqa: SLF001
+
     print("[2] a REMOTE key never gets this box's filesystem as evidence")
     expect(capacity._installed_locally("a-worker", ".venv-onthedisk") is False,
            "a remote machine's venv is not answered from local paths")

@@ -166,7 +166,29 @@ def facts(_: str = Depends(require_admin)):
             "train_env": bool(main_env.get("torch")),
             "projects": project_mod.slugs(),
             "la_present": _la_complete(),
+            # WHAT IS ALREADY HERE, from the disk rather than from `_extras`.
+            # That dict is in-memory job state: it empties on restart, so a
+            # stack installed yesterday looked exactly like one never
+            # installed, and the card offered to download it again. Read as a
+            # path so the answer survives restarts and matches what the
+            # trainer will actually find.
+            "stacks": _stacks_present(),
             "extras": _extras_state()}
+
+
+def _stacks_present() -> dict:
+    """{stack: {installed, venv}} — is each sidecar venv on this box's disk?
+
+    Both legal homes: the checkout on a native install, DATA_DIR/venvs on a
+    data-dir one (Docker), which is where `stacks.install` builds because the
+    code tree is read-only to the container's runtime user.
+    """
+    from ... import stacks as stacks_mod
+    from ...config import ROOT, VENVS_DIR
+    return {k: {"venv": st.venv,
+                "installed": any((base / st.venv / "bin" / "python").exists()
+                                 for base in (ROOT, VENVS_DIR))}
+            for k, st in stacks_mod.MANIFESTS.items()}
 
 
 # ---------------------------------------------------------------- extras ----

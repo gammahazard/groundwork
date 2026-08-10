@@ -246,33 +246,86 @@ async function _adTrail() {
   const la = document.getElementById("axLaBtn");
   if (!la) return;
   const msg = $("#axMsg");
-  const post = async (path, body) => {
-    msg.textContent = "starting…";
-    const r = await fetch(path, {method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(body)});
-    const j = await r.json().catch(() => ({}));
-    msg.textContent = r.ok ? "started — progress shows here on refresh"
-                           : (j.detail || "refused");
+  /* EVERY BUTTON IS A ROW OF FACTS, not a hopeful click. Each knows the extras
+   * key it starts and the label it wears; paint() below decides from the
+   * server's facts whether it is offerable, already done, or mid-install. */
+  const BTNS = [
+    {el: la, key: "la", label: "⬇ Auto-labeler", done: f => f.la_present,
+     ok: () => $("#axLaOk").checked, path: "/api/setup/extras/la",
+     body: () => ({accept_license: $("#axLaOk").checked})},
+    {el: $("#axStackDeim"), key: "stack:deim", label: "⛏ Enable DEIMv2",
+     done: f => (f.stacks || {}).deim?.installed,
+     ok: () => $("#axStackOk").checked, path: "/api/setup/extras/stack",
+     body: () => ({stack: "deim", accept_license: $("#axStackOk").checked})},
+    {el: $("#axStackRtm"), key: "stack:rtmdet",
+     label: "⛏ Enable RTMDet · YOLOX · CenterNet",
+     done: f => (f.stacks || {}).rtmdet?.installed,
+     ok: () => $("#axStackOk").checked, path: "/api/setup/extras/stack",
+     body: () => ({stack: "rtmdet", accept_license: $("#axStackOk").checked})},
+  ].filter(b => b.el);
+
+  let _poll = null;
+  const post = async b => {
+    b.el.disabled = true;
+    msg.textContent = `starting ${b.key}…`; msg.classList.remove("bad");
+    try {
+      const r = await fetch(b.path, {method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(b.body())});
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.detail || "refused");
+      /* THE CARD FOLLOWS THE JOB NOW. It used to say "progress shows here on
+       * refresh" and then never change — an install that takes ten minutes
+       * (a multi-GB torch download) looked identical to one that had died,
+       * and a failure was only visible to someone who thought to reload. */
+      msg.textContent = j.already ? `${b.key} is already running`
+                                  : `${b.key}: installing…`;
+      window._axState();
+    } catch (e) {
+      msg.textContent = `✗ ${e.message || e}`; msg.classList.add("bad");
+      window._axState();
+    }
   };
-  la.onclick = () => post("/api/setup/extras/la",
-    {accept_license: $("#axLaOk").checked});
-  $("#axStackDeim").onclick = () => post("/api/setup/extras/stack",
-    {stack: "deim", accept_license: $("#axStackOk").checked});
-  $("#axStackRtm").onclick = () => post("/api/setup/extras/stack",
-    {stack: "rtmdet", accept_license: $("#axStackOk").checked});
-  // State line from the same facts endpoint the wizard reads — fetched when
-  // the Admin tab actually loads, never at script parse: this file is parsed
-  // on the login screen too, and a pre-auth fetch is a guaranteed 401 in the
-  // console of every signed-out visitor.
+  for (const b of BTNS) b.el.onclick = () => post(b);
+
+  /* State from the same facts endpoint the wizard reads — fetched when the
+   * Admin tab actually loads, never at script parse: this file is parsed on
+   * the login screen too, and a pre-auth fetch is a guaranteed 401 in the
+   * console of every signed-out visitor. */
   window._axState = () => fetch("/api/setup/facts")
     .then(r => r.ok ? r.json() : null).then(f => {
       if (!f) return;
-      const bits = [];
-      if (f.la_present) bits.push("auto-labeler ✓");
-      for (const [k, v] of Object.entries(f.extras || {}))
-        if (v.state) bits.push(`${k}: ${v.state}`);
+      const ex = f.extras || {}, bits = [];
+      let anyRunning = false;
+      for (const b of BTNS) {
+        const st = (ex[b.key] || {}).state;
+        const installed = !!b.done(f);
+        const running = st === "running";
+        anyRunning = anyRunning || running;
+        /* ALREADY INSTALLED READS AS INSTALLED. Re-running is not harmful —
+         * install() skips an existing venv — but a live button over a done
+         * job is an invitation to sit through a download for nothing. */
+        b.el.disabled = installed || running;
+        b.el.textContent = installed ? `✓ ${b.label.replace(/^\S+\s/, "")} installed`
+                         : running ? "installing…" : b.label;
+        b.el.title = installed ? "already installed on this machine"
+                   : running ? "installing now — this can take several minutes"
+                   : "";
+        if (installed) bits.push(`${b.key} ✓`);
+        else if (st) bits.push(`${b.key}: ${st}`);
+        /* A FAILURE MUST BE READABLE WITHOUT THE SERVER LOG. The state dict
+         * carries the tail of the install's own output; the card is where
+         * someone is standing when it fails. */
+        if (st === "error" && !installed) {
+          msg.textContent = `✗ ${b.key}: ${(ex[b.key].error
+            || ex[b.key].log_tail || "install failed").toString().slice(-300)}`;
+          msg.classList.add("bad");
+        }
+      }
       $("#axState").textContent = bits.join(" · ");
+      /* Poll only while something is running — no timer on an idle tab. */
+      clearTimeout(_poll);
+      if (anyRunning) _poll = setTimeout(window._axState, 4000);
     }).catch(() => {});
 })();
 

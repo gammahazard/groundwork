@@ -35,7 +35,7 @@ from __future__ import annotations
 from .model import MACHINES, Machine, here, check          # noqa: F401
 from .capacity import (MAP_PATH, _map, cards, measured_at,  # noqa: F401
                        venv_info, can_run, fits, pick_card, summary,
-                       VRAM_HEADROOM_GB)
+                       update_entry, VRAM_HEADROOM_GB)
 from .selfid import self_ip, vpn_ip, self_url               # noqa: F401
 from .registry import (REGISTRY_PATH, _registry, all_machines,  # noqa: F401
                        workers, get, registered, add_machine,

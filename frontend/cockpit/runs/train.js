@@ -177,8 +177,15 @@ function _paint(preferCard) {
   if (!TRAIN_OPTS) return;
   const m = _tModel(), mach = _tMachine();
   const why = $("#tWhy"), btn = $("#tTrain");
-  $("#tModelNote").textContent = m
-    ? `${m.license}${m.deprecated ? " · deprecated" : ""} · ${m.venv}` : "";
+  /* A HIDDEN FAMILY IS STILL SAID OUT LOUD. The server drops families whose
+   * sidecar venv is installed on no machine — every card would refuse them —
+   * but silence turns "where did DEIM go?" into the next question, so the one
+   * place someone is looking for it says where it comes from. */
+  const ns = TRAIN_OPTS.needs_stack || [];
+  $("#tModelNote").textContent = (m
+    ? `${m.license}${m.deprecated ? " · deprecated" : ""} · ${m.venv}` : "")
+    + (ns.length ? `${m ? " · " : ""}not installed: ${ns.join(", ")}`
+                 + ` — Admin → Extras` : "");
   $("#tMachineNote").textContent = mach ? (mach.blocked || mach.what) : "";
   _paintCards(preferCard);
 

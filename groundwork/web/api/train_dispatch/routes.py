@@ -49,7 +49,7 @@ def options(p=Depends(current_project)):
                                "not a training target — use the CLI here")
                               or (row["why"] if not row["reachable_name"] else "")
                               or ("" if r_ok else r_why)})
-    models = []
+    models, needs_stack = [], []
     for m in registry.MODELS:
         # NOT TRAINABLE IS NOT A CARD PROBLEM. Five of the nine families in the
         # registry have `trainer_module=None` — they are there so the ledger can
@@ -64,6 +64,22 @@ def options(p=Depends(current_project)):
             cells = _cells(m, key)
             per[key] = {"cards": cells, "default": _default_card(m, key),
                         "any": any(c["ok"] for c in cells)}
+        # A FAMILY WHOSE STACK IS NOWHERE IS NOT AN OPTION, it is an install.
+        #
+        # Same rule as the `trainer_module` skip above — "a permanently-
+        # disabled option is clutter, not information" — applied to the other
+        # way a family cannot start: its sidecar venv is not installed on any
+        # machine, so every card of every machine refuses it. Offering it then
+        # is a dropdown entry whose only outcome is a refusal.
+        #
+        # The MAIN venv is never hidden: it is the environment the service
+        # itself runs in, so yolo and D-FINE stay offerable on a fresh
+        # install, and an UNMEASURED machine answers can_run permissively —
+        # so a box nobody has probed keeps everything visible rather than
+        # hiding the whole dropdown on first boot.
+        if m.venv != ".venv" and not any(v["any"] for v in per.values()):
+            needs_stack.append(m.label)
+            continue
         models.append({
             "key": m.name, "label": m.label, "license": m.license,
             "deprecated": m.deprecated, "venv": m.venv,
@@ -88,6 +104,11 @@ def options(p=Depends(current_project)):
     any_remote_blocked = next(((ok, why) for ok, why in remote_answers.values()
                                if not ok), (True, ""))
     return {"project": p.slug, "machines": ms, "models": models,
+            # NAMED, not silently absent. Hiding an unusable option is right;
+            # hiding the FACT that it exists turns "where did DEIM go?" into
+            # the next question. The UI prints this under the model select
+            # with where to install them.
+            "needs_stack": needs_stack,
             "remote_ok": any_remote_blocked[0], "remote_why": any_remote_blocked[1]}
 
 
