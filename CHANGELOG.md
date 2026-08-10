@@ -9,6 +9,8 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-10
+
 ### Added
 - The Extras card reports what is already here. Installed stacks grey out and read "✓ … installed" (from the venv on disk, so it survives a restart — the previous state came from an in-memory dict that emptied on every boot, and a stack installed yesterday looked exactly like one never installed). A running install disables its own button, says "installing…", and the card polls itself until it finishes instead of asking you to reload; a failure prints the tail of the install's own output where you are standing. Starting all three at once is safe: they are separate jobs in separate venvs, and re-pressing a running one is answered "already running" rather than started twice.
 
@@ -78,7 +80,8 @@ the [README](README.md) is the full picture of what Groundwork does.
 - Docker images bake the `[la]` extra in — the container venv is root-built and read-only to the app user, so the accept-time pip install died on permissions; in a container the license click now only downloads weights (older images get a clear message instead of pip's permission error).
 - transformers pinned back to 4.57.1: the auto-labeler's vendored code cannot load on the 5.x line (measured), and D-FINE imports clean on 4.57.1.
 
-[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/gammahazard/groundwork/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/gammahazard/groundwork/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/gammahazard/groundwork/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/gammahazard/groundwork/compare/v0.4.0...v0.4.1
