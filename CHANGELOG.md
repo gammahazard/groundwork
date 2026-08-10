@@ -9,6 +9,9 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Fixed
+- Exports and challenger launches work in a container HQ. Both spawned their subprocess as `ROOT/.venv/bin/python`, which does not exist in the Docker image (its venv is `/opt/venv`) — so every export died at spawn with "No such file or directory", and a challenger launch would have died the same way at its split step. The main-env interpreter is now resolved in one place (`machine_self.main_python`): the conventional `./.venv` when it exists, else the interpreter the service itself runs on — the same rule `machine_self` and the bot units already applied.
+
 ## [0.4.2] - 2026-08-09
 
 ### Added

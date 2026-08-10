@@ -47,9 +47,12 @@ def _every_alt():
 router = APIRouter()
 
 # Which interpreter a MODEL needs is registry.py's business (Model.python).
-# MAIN_PY stays because it is not a model fact: it is this repo's own venv,
-# used below to run a groundwork module as a subprocess.
-MAIN_PY = REPO / ".venv" / "bin" / "python"
+# MAIN_PY stays because it is not a model fact: it is this repo's own main env,
+# used below to run a groundwork module as a subprocess — resolved by
+# machine_self.main_python, because REPO/.venv does not exist in the Docker
+# image (its venv is /opt/venv) and the hardcoded path died at spawn there.
+from ...machine_self import main_python
+MAIN_PY = main_python()
 
 
 def _trainable_archs() -> list[str]:

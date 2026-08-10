@@ -73,6 +73,19 @@ def _main_pythons() -> list[str]:
     return out
 
 
+def main_python() -> str:
+    """THE main-env interpreter, for anything that spawns a main-env subprocess.
+
+    The rule above, as one answer instead of a convention: spawners kept
+    hardcoding ROOT/.venv/bin/python, which does not exist in the Docker image
+    (its venv is /opt/venv) — so every export from a container HQ died at
+    spawn with "No such file or directory" (measured 2026-08-09), and a
+    challenger launch would have died the same way at its split. bot_roles
+    carries its own copy of this fallback for its systemd ExecStart line;
+    everything in-process should ask here."""
+    return _main_pythons()[0]
+
+
 def _training_now() -> str | None:
     """What is using a GPU on this box, or None.
 

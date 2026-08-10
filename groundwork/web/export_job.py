@@ -310,10 +310,11 @@ def _run_export(run_dir: Path, fmt: str, family: str, imgsz: int,
 
     from ..config import ROOT
     from . import safe_proc
+    from .machine_self import main_python
     code = ("import sys,json;from ultralytics import YOLO;"
             "print('EXPORTED:'+str(YOLO(sys.argv[1]).export("
             "format=sys.argv[2], imgsz=int(sys.argv[3]))))")
-    r = safe_proc.run([str(ROOT / ".venv" / "bin" / "python"), "-c", code,
+    r = safe_proc.run([main_python(), "-c", code,
                        str(weights), fmt, str(imgsz)],
                       cwd=str(ROOT), env=env, timeout=1800)
     line = next((l for l in (r.stdout or "").splitlines()

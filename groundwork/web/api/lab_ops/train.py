@@ -232,7 +232,7 @@ def train(req: TrainReq, p=Depends(current_project)):
     # dataloader hit a dangling link — ~90 MB of copies buys immunity.
     from ... import lab_dataset
     coco_tree = lab_dataset.tree_for(paths.for_project(p), req.run_name)
-    convert_cmd = [str(REPO / ".venv" / "bin" / "python"), "-m",
+    convert_cmd = [MAIN_PY, "-m",
                    "altmodels.convert", "--match-split", "--copy",
                    # ...and the converter reads the same project's tree. Without
                    # this it globbed paths.default() while writing into project
