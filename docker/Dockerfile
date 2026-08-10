@@ -51,7 +51,14 @@ COPY scripts ./scripts
 # root built it, the app runs unprivileged, and the auto-labeler's accept
 # button used to die on `Permission denied: site-packages` in exactly this
 # spot. In a container the license click must only ever download weights.
-RUN pip install --no-cache-dir -e ".[train,bots,la]"
+#
+# [export] is here for THE SAME REASON, found the same way: ultralytics
+# pip-installs a missing exporter mid-export, which in this image fails on that
+# identical unwritable site-packages — so an NCNN or OpenVINO export died on
+# `No module named 'ncnn'` seconds after the button (measured 2026-08-10). It
+# also could not be fixed by installing it into a running container: that lives
+# in a layer and is gone at the next rebuild.
+RUN pip install --no-cache-dir -e ".[train,bots,la,export]"
 
 # HEADLESS OpenCV. ultralytics depends on opencv-python, whose wheel links
 # against X11/Qt shared libraries (libxcb, libGL) that a slim image does not

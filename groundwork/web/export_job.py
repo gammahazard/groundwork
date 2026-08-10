@@ -52,6 +52,20 @@ class Fmt:
     # kernels FOR a specific physical card, so it must run on one, which makes it
     # the only format that has to respect the busy gate.
     needs_gpu: bool = False
+    # IMPORT NAMES THE CONVERSION NEEDS, checked before the job starts.
+    #
+    # ultralytics AutoUpdates a missing exporter dependency by pip-installing it
+    # at export time. That cannot work in the container: /opt/venv is root-owned
+    # and the service runs as the host uid, so pip fails instantly and the run
+    # dies on `No module named 'ncnn'` seconds later, naming a package rather
+    # than the problem (measured 2026-08-10). It is also wrong even where it
+    # succeeds — the install lands inside a container layer and is gone at the
+    # next image rebuild.
+    #
+    # The image now ships these (pyproject's `export` extra). This field is what
+    # turns a missing one into a sentence someone can act on instead of a
+    # traceback, and it stays useful on native installs that skipped the extra.
+    needs: tuple[str, ...] = ()
 
 
 # YOLO, through ultralytics' own exporter. Every one of these is a single
@@ -64,7 +78,7 @@ YOLO_FORMATS = (
         "ONNX Runtime, TensorRT, OpenCV, most cloud inference services — so it "
         "is the safe choice when you do not yet know where the model will run, "
         "and the usual first step into another format.",
-        ext=".onnx"),
+        ext=".onnx", needs=("onnx", "onnxslim", "onnxruntime")),
     Fmt("torchscript", "TorchScript",
         "PyTorch with the Python stripped out: the graph and the weights in one "
         "file that a C++ or mobile runtime can load on its own. Pick it to stay "
@@ -75,25 +89,25 @@ YOLO_FORMATS = (
         "Apple's on-device format, for iPhone, iPad and Mac. It runs on the "
         "Neural Engine, so inference is fast and costs little battery, and the "
         "photo never leaves the phone — the format the iOS deployment path exists for.",
-        ext=".mlpackage"),
+        ext=".mlpackage", needs=("coremltools",)),
     Fmt("tflite", "TensorFlow Lite",
         "The Android counterpart — small, on-device, and the format Play "
         "Services' ML stack expects. Also the usual choice for microcontrollers "
         "and other hardware too small for a full runtime.",
-        ext=".tflite"),
+        ext=".tflite", needs=("tensorflow", "onnx2tf")),
     Fmt("openvino", "OpenVINO",
         "Intel's CPU runtime. It makes a machine with NO GPU genuinely usable — "
         "an office desktop, a mini PC on a bench — by optimising hard for Intel "
         "chips and their built-in graphics. Pick it when the target has no "
         "NVIDIA card.",
-        ext="_openvino_model"),
+        ext="_openvino_model", needs=("openvino",)),
     Fmt("ncnn", "NCNN",
         "A tiny CPU runtime built for phones and single-board computers like a "
         "Raspberry Pi. No GPU, no big dependencies — it is what you use when "
         "the hardware is genuinely small.",
         caveat="Measured here: 4.3x faster on a Pi and one object worse. Good for "
                "a live preview, not for a count that matters.",
-        ext="_ncnn_model"),
+        ext="_ncnn_model", needs=("ncnn", "pnnx")),
     Fmt("engine", "TensorRT",
         "NVIDIA's compiler. It rebuilds the model into kernels tuned for one "
         "exact GPU, which makes it the fastest option on that card — the right "
@@ -105,7 +119,7 @@ YOLO_FORMATS = (
                "it runs on, so export on the card you will actually run "
                "inference on — an engine built on a different model of card will "
                "not load. It is a build artifact, not a portable model.",
-        ext=".engine", needs_gpu=True),
+        ext=".engine", needs_gpu=True, needs=("tensorrt",)),
 )
 
 # DEIM, through its own two-leg path — see web/export_deim.py for why it is
@@ -136,7 +150,7 @@ DEIM_FORMATS = (
                "(image input, raw logits + cxcywh boxes) and is verified after "
                "conversion — a mismatch is refused rather than shipped, "
                "because on the phone it presents only as \"no model\".",
-        ext=".mlpackage"),
+        ext=".mlpackage", needs=("coremltools",)),
 )
 
 # Kept as the message for a family with NO exporter at all — every other
@@ -311,6 +325,28 @@ def _run_export(run_dir: Path, fmt: str, family: str, imgsz: int,
     from ..config import ROOT
     from . import safe_proc
     from .machine_self import main_python
+    # REFUSE BEFORE THE JOB, with the reason. ultralytics would try to pip the
+    # missing package in at export time and die on the import seconds later,
+    # naming the module (`No module named 'ncnn'`) rather than saying that this
+    # environment cannot install one. Asked of the interpreter that will DO the
+    # export, not this one — in a container they are the same, on a native
+    # install they need not be.
+    if spec and spec.needs:
+        probe = safe_proc.run(
+            [main_python(), "-c",
+             "import importlib.util as u,sys;"
+             f"print(','.join(m for m in {list(spec.needs)!r} "
+             "if u.find_spec(m) is None))"], timeout=60)
+        missing = (probe.stdout or "").strip().splitlines()
+        missing = [m for m in (missing[-1].split(",") if missing else []) if m]
+        if missing:
+            raise RuntimeError(
+                f"{spec.label} export needs {', '.join(missing)}, which this "
+                f"environment does not have. The Docker image ships the common "
+                f"exporters (pyproject's `export` extra); a native install adds "
+                f"them with: pip install -e \".[export]\". "
+                f"(TensorRT and TensorFlow Lite are deliberately not bundled — "
+                f"they are GPU-specific and very large respectively.)")
     code = ("import sys,json;from ultralytics import YOLO;"
             "print('EXPORTED:'+str(YOLO(sys.argv[1]).export("
             "format=sys.argv[2], imgsz=int(sys.argv[3]))))")

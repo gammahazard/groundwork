@@ -9,6 +9,9 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Fixed
+- NCNN, OpenVINO, ONNX and CoreML exports work in the container instead of dying seconds after the button with `No module named 'ncnn'`. ultralytics installs a missing exporter dependency by pip-ing it in mid-export, which cannot work here: `/opt/venv` is root-owned and the service runs as the host uid, so pip fails instantly and the export dies on the import. Where it did appear to work it was still wrong — the install landed in a container layer and vanished at the next image rebuild, so an export that worked yesterday failed today with nothing visibly changed. The image now ships the exporters (`pyproject`'s new `export` extra: onnx, onnxslim, onnxruntime, coremltools, openvino, ncnn, pnnx), and each format declares the imports it needs so a missing one is refused up front with what to install — naming the two deliberately not bundled (TensorRT, GPU-specific and gigabytes; TensorFlow Lite, ~1 GB for a target nothing here deploys to).
+
 ## [0.5.0] - 2026-08-10
 
 ### Added

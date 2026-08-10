@@ -65,6 +65,31 @@ bots = [
     "python-telegram-bot==22.8",
 ]
 
+# THE EXPORTERS, shipped rather than fetched at export time.
+#
+# ultralytics AutoUpdates a missing exporter dependency by pip-installing it
+# mid-export. In the container that cannot work at all — /opt/venv is
+# root-owned and the service runs as the host uid, so pip fails instantly and
+# the export dies on `No module named 'ncnn'` a few seconds later (measured
+# 2026-08-10). And where it does work it is still wrong: the install lands in a
+# container layer and vanishes at the next image rebuild, so an export that
+# worked yesterday fails today with no change to anything anyone can see.
+#
+# NOT here, deliberately, and named in the refusal so the absence is legible:
+#   tensorrt   — GPU-specific, gigabytes, and only usable on the exact card it
+#                was built for (see the `engine` format's caveat).
+#   tensorflow — the tflite path pulls ~1 GB for a format nothing in this
+#                repo's deployments currently targets.
+export = [
+    "onnx",
+    "onnxslim",
+    "onnxruntime",
+    "coremltools",
+    "openvino",
+    "ncnn",
+    "pnnx",
+]
+
 # The auto-labeler (LocateAnything-3B). Installed by the setup wizard's opt-in
 # extras step, after license consent — not by default. Pins matter here: the
 # model loads through trust_remote_code, so its vendored code decides what the
