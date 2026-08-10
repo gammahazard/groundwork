@@ -9,6 +9,8 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-10
+
 ### Fixed
 - NCNN, OpenVINO, ONNX and CoreML exports work in the container instead of dying seconds after the button with `No module named 'ncnn'`. ultralytics installs a missing exporter dependency by pip-ing it in mid-export, which cannot work here: `/opt/venv` is root-owned and the service runs as the host uid, so pip fails instantly and the export dies on the import. Where it did appear to work it was still wrong — the install landed in a container layer and vanished at the next image rebuild, so an export that worked yesterday failed today with nothing visibly changed. The image now ships the exporters (`pyproject`'s new `export` extra: onnx, onnxslim, onnxruntime, coremltools, openvino, ncnn, pnnx), and each format declares the imports it needs so a missing one is refused up front with what to install — naming the two deliberately not bundled (TensorRT, GPU-specific and gigabytes; TensorFlow Lite, ~1 GB for a target nothing here deploys to).
 
@@ -83,7 +85,8 @@ the [README](README.md) is the full picture of what Groundwork does.
 - Docker images bake the `[la]` extra in — the container venv is root-built and read-only to the app user, so the accept-time pip install died on permissions; in a container the license click now only downloads weights (older images get a clear message instead of pip's permission error).
 - transformers pinned back to 4.57.1: the auto-labeler's vendored code cannot load on the 5.x line (measured), and D-FINE imports clean on 4.57.1.
 
-[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/gammahazard/groundwork/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/gammahazard/groundwork/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/gammahazard/groundwork/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/gammahazard/groundwork/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/gammahazard/groundwork/compare/v0.4.1...v0.4.2
