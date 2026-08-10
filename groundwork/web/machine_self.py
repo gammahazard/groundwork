@@ -120,8 +120,13 @@ def _venvs() -> dict:
     """{venv: {present, torch, cuda, archs}} — no device calls, safe any time."""
     out = {}
     for v in _venv_names():
+        from ..config import VENVS_DIR
         cands = (_main_pythons() if v == ".venv"
-                 else [str(ROOT / v / "bin" / "python")])
+                 # Both legal sidecar homes — the checkout on native installs,
+                 # VENVS_DIR on data-dir ones (Docker) — so the measured map
+                 # reports a container-built stack present, not missing.
+                 else [str(ROOT / v / "bin" / "python"),
+                       str(VENVS_DIR / v / "bin" / "python")])
         py = next((c for c in cands if Path(c).exists()), None)
         if py is None:
             out[v] = {"present": False}

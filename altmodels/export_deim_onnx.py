@@ -19,7 +19,8 @@ import os
 import sys
 from pathlib import Path
 
-VENDOR = Path.home() / "DEIMv2"
+from altmodels.deim_vendor import vendor_dir
+VENDOR = vendor_dir()
 
 
 def main() -> None:

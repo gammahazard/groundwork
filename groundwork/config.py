@@ -22,6 +22,14 @@ DATA_DIR = Path(os.environ.get("GW_DATA_DIR") or ROOT)
 MODEL_PATH = os.environ.get("LA_MODEL_PATH",
                             str(DATA_DIR / "models" / "LocateAnything-3B"))
 OUTPUTS_DIR = DATA_DIR / "outputs"
+# Where sidecar (challenger-stack) venvs live: the checkout root on a native
+# install — today's layout, unchanged — and venvs/ under DATA_DIR when the
+# data-dir seam is active, because there the code tree is read-only to the
+# runtime user (the Docker image ships /data/venvs world-writable for exactly
+# this, and a named-volume venv survives an image rebuild). Everything that
+# CREATES or RESOLVES a sidecar venv must go through this one answer;
+# stacks.install building at ROOT inside a container died at mkdir.
+VENVS_DIR = ROOT if DATA_DIR == ROOT else DATA_DIR / "venvs"
 # The .env lives in a CONFIG DIRECTORY under DATA_DIR when that seam is active
 # (a bind-mounted file breaks env_file's atomic os.replace — EBUSY), and at the
 # repo root otherwise, which is where native installs have always kept it.

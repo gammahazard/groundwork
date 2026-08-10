@@ -59,7 +59,8 @@ def _deim_tree(src: Path) -> Path:
     nothing about a hand-run CLI changes.
     """
     return DEIM_DS if src == SRC_DS else src / "_deim_classic"
-VENDOR = Path.home() / "DEIMv2"
+from altmodels.deim_vendor import vendor_dir
+VENDOR = vendor_dir()
 # THE INTERPRETER THAT LAUNCHED US, not a hardcoded venv.
 #
 # This was `REPO / ".venv-deim" / "bin" / "python"`, and it silently undid the

@@ -9,6 +9,12 @@ contracts; **MINOR** for backwards-compatible features; **PATCH** for fixes.
 
 ## [Unreleased]
 
+### Fixed
+- Sidecar stacks (DEIM, RTMDet) install in a container HQ: their venvs now build under `DATA_DIR/venvs` — the volume the Docker image has always shipped world-writable for exactly this — instead of dying at the read-only code tree, and everything that resolves a sidecar interpreter (model registry, machine probe) checks both homes. Native installs keep today's checkout-root layout unchanged, and a container-built venv lives on the data volume, so it survives image rebuilds.
+- The DEIMv2 vendor repo is found where the stack installer puts it. Four modules (trainer, entry shim, predictor, ONNX exporter) each hardcoded the legacy `~/DEIMv2`, so a stack installed the documented way (`DATA_DIR/vendor/DEIMv2`) produced a vendor repo none of them could find — training would refuse "vendor repo missing" right after a successful install. One resolver now answers for all four, preferring the pinned home and falling back to the legacy one.
+- A failed stack-install step logs the step's own output (pip's actual words) instead of a bare CalledProcessError — an RTMDet install died with the real reason (no torch==2.1.2 wheel for the machine's Python) captured and discarded.
+- The DEIM stack installs a cu128 torch instead of cu126. The `.venv-deim13` env exists to lift the legacy build's sm_90 kernel ceiling, but cu126 wheels also stop at sm_90 (measured: a fresh install answered `sm_50..sm_90`, so a Blackwell card stayed refused) — cu128 carries sm_120, so one venv runs both an sm_86 card and a 50-series.
+
 ## [0.4.3] - 2026-08-09
 
 ### Fixed

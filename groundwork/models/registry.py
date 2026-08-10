@@ -166,6 +166,16 @@ class Model:
         p = REPO / self.venv / "bin" / "python"
         if self.venv == ".venv" and not p.exists():
             return Path(sys.executable)
+        if not p.exists():
+            # Sidecars have a second legal home: VENVS_DIR, where a data-dir
+            # install (Docker) builds them because the code tree is read-only
+            # there. Conventional location first so native installs never
+            # change meaning; still no fallback to the MAIN interpreter — a
+            # missing path stays a legible refusal.
+            from ..config import VENVS_DIR
+            alt = VENVS_DIR / self.venv / "bin" / "python"
+            if alt.exists():
+                return alt
         return p
 
     def train_argv(self, *, imgsz: int, epochs: int, batch: int,

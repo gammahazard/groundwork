@@ -15,7 +15,8 @@ from pathlib import Path
 import numpy as np
 
 FLOOR = 0.01
-VENDOR = Path.home() / "DEIMv2"
+from altmodels.deim_vendor import vendor_dir
+VENDOR = vendor_dir()
 
 
 class DeimPredictor:

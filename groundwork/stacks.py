@@ -40,8 +40,14 @@ class Stack:
 MANIFESTS: dict[str, Stack] = {
     "deim": Stack(
         key="deim", venv=".venv-deim13", license="Apache-2.0",
+        # cu128, NOT cu126: the whole point of this venv over the legacy
+        # .venv-deim is lifting the sm_90 kernel ceiling (deim_tv_compat:
+        # "what unlocks the 5070 Ti"), and cu126 wheels still stop at sm_90 —
+        # measured on the dual3090 box 2026-08-10: torch 2.13.0+cu126 answered
+        # archs sm_50..sm_90, so the Blackwell card stayed refused right after
+        # a successful install. cu128 wheels carry sm_120.
         torch_spec=("torch", "torchvision",
-                    "--index-url", "https://download.pytorch.org/whl/cu126"),
+                    "--index-url", "https://download.pytorch.org/whl/cu128"),
         pip_specs=("pyyaml", "tensorboard", "scipy", "opencv-python-headless",
                    "pycocotools", "faster-coco-eval", "calflops",
                    "transformers"),
@@ -75,24 +81,34 @@ def install(key: str, log_cb=print) -> str:
         lines.append(msg)
         log_cb(f"[stacks:{key}] {msg}")
 
-    venv_dir = ROOT / st.venv
+    def run(argv: list[str]) -> None:
+        # Output captured, and SHOWN when the step fails. check=True with a
+        # bare capture swallowed pip's own words — an rtmdet install died
+        # with nothing in the log but a CalledProcessError, and the actual
+        # reason (no torch==2.1.2 wheel for this python) was in the captured
+        # stderr nobody could see.
+        r = subprocess.run(argv, capture_output=True, text=True)
+        if r.returncode != 0:
+            tail = (r.stderr or r.stdout or "").strip()[-800:]
+            log(f"FAILED ({' '.join(argv[:4])}…):\n{tail}")
+            raise subprocess.CalledProcessError(r.returncode, argv)
+
+    from .config import VENVS_DIR
+    venv_dir = VENVS_DIR / st.venv
     py = venv_dir / "bin" / "python"
     if not py.exists():
-        log(f"creating {st.venv}")
-        subprocess.run([sys.executable, "-m", "venv", str(venv_dir)],
-                       check=True, capture_output=True, text=True)
+        log(f"creating {st.venv}" +
+            ("" if VENVS_DIR == ROOT else f" under {VENVS_DIR}"))
+        venv_dir.parent.mkdir(parents=True, exist_ok=True)
+        run([sys.executable, "-m", "venv", str(venv_dir)])
     log("installing torch build")
-    subprocess.run([str(py), "-m", "pip", "install", "--no-cache-dir",
-                    *st.torch_spec], check=True, capture_output=True, text=True)
+    run([str(py), "-m", "pip", "install", "--no-cache-dir", *st.torch_spec])
     if st.pip_specs:
         log("installing stack packages")
-        subprocess.run([str(py), "-m", "pip", "install", "--no-cache-dir",
-                        *st.pip_specs], check=True, capture_output=True,
-                       text=True)
+        run([str(py), "-m", "pip", "install", "--no-cache-dir", *st.pip_specs])
     for step in st.extra_steps:
         log("running " + " ".join(step))
-        subprocess.run([str(py), *step], check=True, capture_output=True,
-                       text=True)
+        run([str(py), *step])
     if st.vendor_repo:
         vdir = DATA_DIR / "vendor" / (st.vendor_dir or st.key)
         if not vdir.exists():
