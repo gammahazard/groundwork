@@ -18,17 +18,17 @@ requires-python = ">=3.10"
 dependencies = [
     # Proven pins carried from the working install — loosen one only with a
     # reason and a test, not because a newer version exists.
-    "fastapi==0.141.1",
-    "uvicorn[standard]==0.52.1",
+    "fastapi==0.142.2",
+    "uvicorn[standard]==0.54.0",
     "python-multipart",
     "httpx",              # machine-to-machine calls; its absence once 500'd three endpoints
     "pillow==12.3.0",
     # HEIC/HEIF decoding for PIL — iPhones send it when a photo goes as a FILE,
     # and uploads store it verbatim, so a .heic image reaches the pipeline too.
     # Registered once in groundwork/__init__ (guarded).
-    "pillow-heif==1.5.0",
+    "pillow-heif==1.8.0",
     "numpy==2.5.1",
-    "python-dotenv==1.2.2",
+    "python-dotenv==1.2.4",
 ]
 
 [project.optional-dependencies]
@@ -105,9 +105,9 @@ export = [
 # (trust_remote_code), until LA ships 5.x-compatible code.
 la = [
     "transformers==4.57.1",
-    "bitsandbytes==0.49.2",
-    "accelerate==1.14.0",
-    "peft==0.19.1",
+    "bitsandbytes==0.50.2",
+    "accelerate==1.15.0",
+    "peft==0.21.2",
     "opencv-python-headless==5.0.0.93",
     "decord==0.6.0",
     "lmdb==2.3.0",
